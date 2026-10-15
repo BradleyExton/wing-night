@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wardrobe picker</title>
+    <!--
+      The recommendation in docs/research/bird-wardrobe.md, drawn: /me/wardrobe on a phone held
+      upright (390 wide), and beside it the same bird at the sizes the room sees it.
+
+      Every bird is the shipping hen from apparel-harness.js. The items are QUICK drawings that
+      show where each of the seven slots lives (Top, Sleeve, Tail, Boots, Prop, Stage, Move), not
+      the round's final art: milestone 2b draws them properly and judges them on the 76px row.
+      Moves are named here and only play a placeholder hop; the real ones are cast poses.
+
+      The phone is the Hearth language of mockups/guest-portal (DESIGN.md §2.2I). The page
+      chrome around it is the cast prototypes' (apparel-harness.css).
+
+      Serve apps/client/public (ES modules). Add ?head=rosi (or rob, sara, kenny) to wear a
+      photographed head; it needs the heads copied into public/local-assets/avatars/ (gitignored,
+      see docs/screenshots/wardrobe/README.md). Without it every bird has the drawn head.
+    -->
+    <link rel="stylesheet" href="./apparel-harness.css" />
+    <style>
+      :root {
+        --hearth: #2e1609; --mutedWarm: #b3a89a; --mutedWarmDim: #6b6157; --ember: #ffb35a;
+      }
+      .layout { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+      .genres { display: flex; gap: .5rem; margin: 0 0 1.5rem; flex-wrap: wrap; }
+      .genres button {
+        font: inherit; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+        padding: .5rem .9rem; border-radius: 999px; cursor: pointer; color: var(--text);
+        background: var(--surface); border: 1px solid rgba(255,255,255,.12);
+      }
+      .genres button.on { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+
+      /* ---------------------------------------------------------------- phone -- */
+      .phone {
+        width: 390px; min-height: 844px; border-radius: 28px; overflow: hidden; flex: none;
+        background: radial-gradient(ellipse at 50% 115%, rgba(46,22,9,1) 0%, var(--bg) 55%);
+        padding: 18px 16px 32px; display: flex; flex-direction: column; gap: 14px;
+        border: 1px solid rgba(255,255,255,.06);
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .back { color: var(--mutedWarm); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+      .eyebrow { margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: .36em; color: var(--mutedWarm); }
+      .title { margin: 2px 0 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 28px; }
+      .card {
+        position: relative; border-radius: 16px; padding: 14px;
+        border: 1px solid rgba(249,115,22,.25);
+        background: linear-gradient(180deg, rgba(46,22,9,.84), rgba(0,0,0,.93));
+        box-shadow: inset 0 1px 0 rgba(255,214,170,.14);
+        display: flex; flex-direction: column; gap: 12px;
+      }
+      .card::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--ember), transparent); }
+      .voice { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic;
+        color: var(--mutedWarm); line-height: 1.35; font-size: 15px; min-height: 1.35em; }
+      .studio {
+        position: relative; height: 270px; border-radius: 12px; display: grid; place-items: end center;
+        background: radial-gradient(ellipse at 50% 100%, rgba(249,115,22,.24), transparent 70%);
+        padding-bottom: 10px; cursor: pointer;
+      }
+      .studio .tvpill {
+        position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 800; letter-spacing: .2em;
+        text-transform: uppercase; padding: 5px 9px; border-radius: 999px; color: var(--text);
+        border: 1px solid rgba(255,179,90,.35); background: rgba(28,28,28,.6); cursor: pointer;
+      }
+      .studio .tvpill.on { border-color: var(--primary); background: rgba(249,115,22,.2); }
+      .studio .hint { position: absolute; left: 10px; top: 10px; font-size: 11px; color: var(--mutedWarmDim); }
+      .studio.tv { place-items: end center; background: #0d0d0d; }
+      .tvrow { display: flex; gap: 22px; align-items: flex-end; }
+      .tvrow figure { margin: 0; text-align: center; }
+      .tvrow figcaption { font-size: 10px; color: var(--mutedWarmDim); letter-spacing: .1em; margin-top: 6px; }
+      @keyframes moveHop { 0%,100% { transform: translateY(0) } 30% { transform: translateY(-14px) rotate(-6deg) } 60% { transform: translateY(0) rotate(4deg) } }
+      .hop { animation: moveHop .7s ease-out 2; transform-origin: 50% 100%; }
+
+      .looks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+      .look {
+        flex: none; padding: 9px 12px; border-radius: 12px; font-size: 13px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: .06em; cursor: pointer; color: var(--text);
+        background: rgba(28,28,28,.6); border: 1px solid rgba(255,179,90,.3);
+      }
+      .look.dice { background: var(--primary); color: var(--bg); border-color: var(--primary);
+        box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+
+      .tabs { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+      .tab {
+        position: relative; padding: 8px 0 7px; border-radius: 10px; text-align: center; cursor: pointer;
+        font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--mutedWarm);
+        border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.03);
+      }
+      .tab.on { color: var(--text); border-color: var(--primary); background: rgba(249,115,22,.14); }
+      .tab.filled::after { content: ""; position: absolute; top: 4px; right: 5px; width: 6px; height: 6px;
+        border-radius: 99px; background: var(--primary); }
+      .tab.gone { opacity: .25; pointer-events: none; }
+      .tabnote { margin: -4px 0 0; font-size: 12px; color: var(--mutedWarmDim); }
+
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .tile {
+        position: relative; aspect-ratio: 1; border-radius: 14px; cursor: pointer; overflow: hidden;
+        border: 1px solid rgba(255,179,90,.18); background:
+          radial-gradient(ellipse at 50% 100%, rgba(249,115,22,.16), rgba(255,255,255,.02) 70%);
+        display: grid; place-items: center;
+      }
+      .tile svg { width: 100%; height: 100%; display: block; }
+      .tile.on { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+      .tile .none { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mutedWarm); }
+      .tile .shared { position: absolute; left: 6px; bottom: 5px; font-size: 9px; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--mutedWarmDim); }
+      .tile .movename { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 11px;
+        font-weight: 800; letter-spacing: .04em; color: var(--text); }
+      .styles { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--mutedWarm); min-height: 30px; }
+      .swatch { width: 28px; height: 28px; border-radius: 99px; cursor: pointer; border: 2px solid rgba(255,255,255,.2); }
+      .swatch.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary); }
+
+      .team { display: flex; gap: 2px; align-items: flex-end; justify-content: center; padding: 10px 0 4px;
+        border-radius: 12px; background: radial-gradient(ellipse at 50% 100%, rgba(249,115,22,.18), transparent 70%); }
+      @keyframes paradeBob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+      .team > div { animation: paradeBob .5s ease-in-out infinite; }
+      .team > div:nth-child(2) { animation-delay: .12s } .team > div:nth-child(3) { animation-delay: .24s }
+      .team > div:nth-child(4) { animation-delay: .36s }
+      .fine { margin: 0; font-size: 12px; color: var(--mutedWarmDim); }
+
+      /* ------------------------------------------------------------- tv check -- */
+      .check { flex: 1; min-width: 520px; }
+      .blur svg { filter: blur(1px); }
+      .disco-floor rect { animation: floor 1.6s steps(1) infinite; }
+      .disco-floor rect:nth-child(2n) { animation-delay: -.8s; }
+      @keyframes floor { 0%, 49% { fill-opacity: 1 } 50%, 100% { fill-opacity: .25 } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>WARDROBE PICKER — seven slots, a rail per team</h1>
+      <p class="lede">
+        <strong>The recommendation in <code>docs/research/bird-wardrobe.md</code>, drawn.</strong>
+        Left: <code>/me/wardrobe</code> on a phone. Your bird stands in its stage at the top (tap
+        it to play its Move, tap <em>TV size</em> to see it as the room will). Under it are the
+        team's Looks and a <em>Dress me</em> dice, then seven slot tabs and a grid where
+        <strong>every tile is a zoomed crop of your own bird wearing that item</strong>. Tapping a
+        tile equips it, with no Save button. At the foot, your teammates dance in what they're
+        wearing. Right: the same bird at 130px (the lobby parade), blurred 130px (about 3 m from a
+        55" set) and 76px (the cut line), with every Look on the team at 76px.
+        <br /><br />
+        <strong>The items are quick drawings</strong> that show where each slot lives: the
+        <strong>kit</strong> (Top, Sleeve, Tail, Boots) that rides the bird everywhere, and the
+        <strong>showpieces</strong> (Prop, Stage, Move) that only appear on show. They are not
+        the round's art; milestone 2b draws and judges them. Switching team swaps the rail and
+        keeps each team's outfit, which is the plan's decision 6.
+      </p>
+      <div class="genres" id="genres"></div>
+      <div class="layout">
+        <div class="phone" id="phone"></div>
+        <div class="check" id="check"></div>
+      </div>
+    </main>
+
+    <script type="module">
+      import { PALETTE, HEADS, SILHOUETTE_SHAPES, birdMarkup } from "./apparel-harness.js";
+
+      const INK = PALETTE.bg;
+      const WHITE = PALETTE.text;
+      const EMBER = "#ffb35a";       // house token (ember), not the leg orange
+      const STRAW = "#b3a89a";       // house token (mutedWarm)
+      const GOLD = "#d4a72c";        // NOT a house token: open question 4 in the doc
+      const S = (w = 2) => `stroke="${INK}" stroke-width="${w}" stroke-linejoin="round"`;
+      const STYLE_FILL = { ink: INK, white: WHITE, gold: GOLD };
+      const styleFill = (style, fill) => (style === "team" ? fill : STYLE_FILL[style] ?? INK);
+
+      const params = new URLSearchParams(location.search);
+      const headName = params.get("head");
+      const MY_HEAD = headName && HEADS[headName] ? HEADS[headName] : undefined;
+      const MATE_HEADS = MY_HEAD ? Object.values(HEADS).filter((h) => h !== MY_HEAD) : [];
+
+      // ---------------------------------------------------------------- geometry --
+      const STOCK_WING =
+        "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 Q 28 50 31 54 Q 35 49 38 53 Q 42 48 45 51 C 49 46 51 40 47 35 Z";
+      const wingOf = (sil) => (sil ? SILHOUETTE_SHAPES[sil].wing : STOCK_WING);
+      const LEGS = [{ x: 44, y: 57, far: true }, { x: 32, y: 57, far: false }];
+      let uid = 0;
+      const clip = (d) => {
+        const id = `wp${(uid += 1)}`;
+        return { def: `<clipPath id="${id}"><path d="${d}"/></clipPath>`, url: `url(#${id})` };
+      };
+      const starPath = (cx, cy, r) => {
+        const p = [];
+        for (let i = 0; i < 10; i += 1) {
+          const rr = i % 2 === 0 ? r : r * 0.45;
+          const a = -Math.PI / 2 + (i * Math.PI) / 5;
+          p.push(`${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy + rr * Math.sin(a)).toFixed(1)}`);
+        }
+        return `M ${p.join(" L ")} Z`;
+      };
+
+      // ------------------------------------------------------------- the items --
+      // Each draw gets { head, fill, sil, style } and returns SVG in bird units.
+      // Layers, back to front: stage (behind the bird) · tail · boots · sleeve · top · prop.
+
+      // TOP — the chest panel, from head.shoulders down, inside the body.
+      const battleVest = ({ head, fill }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"
+          d="M 44 ${s + 1} L 50 ${s + 7.5} L 56 ${s + 1} L 59.5 ${s + 3} C 62 ${s + 8} 62 ${s + 13} 60 ${s + 17} L 40 ${s + 16.5} Q 41.5 ${s + 8} 44 ${s + 1} Z"/>
+          <rect fill="${fill}" x="53.5" y="${s + 9.5}" width="6.4" height="5.6" rx="1.1" transform="rotate(-8 56.7 ${s + 12.3})"/>`;
+      };
+      const bandolier = ({ head, fill, style }) => {
+        const s = head.shoulders;
+        const dash = style === "gold" ? GOLD : fill;
+        const dashes = [0.22, 0.45, 0.68, 0.9]
+          .map((t) => {
+            const x = 58.5 - 15 * t, y = s + 1.5 + 19 * t;
+            return `<rect fill="${dash}" x="${x - 1.4}" y="${y - 2.4}" width="2.8" height="4.8" rx=".6" transform="rotate(40 ${x} ${y})"/>`;
+          })
+          .join("");
+        return `<path fill="${INK}" d="M 56 ${s} L 61.5 ${s + 3} L 46.5 ${s + 22} L 41 ${s + 19} Z"/>${dashes}`;
+      };
+      const biker = ({ head, fill }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"
+          d="M 43 ${s + 1} L 61 ${s + 1} C 63.5 ${s + 6} 63.5 ${s + 12} 61 ${s + 18} L 41 ${s + 17} Q 40.5 ${s + 9} 43 ${s + 1} Z"/>
+          <path fill="none" stroke="${fill}" stroke-width="2" stroke-linecap="round" d="M 55 ${s + 2} L 50 ${s + 16.5}"/>
+          <path fill="${WHITE}" ${S(1.2)} d="M 55 ${s + 1.5} L 61 ${s + 1.5} L 57 ${s + 8} Z"/>`;
+      };
+      const cropJacket = ({ head }) => {
+        const s = head.shoulders;
+        return `<path fill="${WHITE}" ${S()} fill-rule="evenodd"
+          d="M 42.5 ${s + 1} L 61 ${s + 1} C 63.5 ${s + 5} 64 ${s + 9} 63 ${s + 13} L 41 ${s + 13} C 40.5 ${s + 9} 41 ${s + 5} 42.5 ${s + 1} Z M 49.5 ${s + 1} L 55 ${s + 1} L 52.8 ${s + 13} L 51.6 ${s + 13} Z"/>`;
+      };
+      const tracksuit = ({ head }) => {
+        const s = head.shoulders;
+        const c = clip(`M 42 ${s} L 62 ${s} C 65 ${s + 6} 65 ${s + 13} 62 ${s + 18} L 40 ${s + 17} Q 39.5 ${s + 8} 42 ${s} Z`);
+        return `<defs>${c.def}</defs><g clip-path="${c.url}">
+          <path fill="${INK}" d="M 42 ${s} L 62 ${s} C 65 ${s + 6} 65 ${s + 13} 62 ${s + 18} L 40 ${s + 17} Q 39.5 ${s + 8} 42 ${s} Z"/>
+          <path fill="none" stroke="${WHITE}" stroke-width="2.2" d="M 57.5 ${s - 1} C 61 ${s + 6} 61 ${s + 12} 58 ${s + 19}"/>
+          <path fill="none" stroke="${WHITE}" stroke-width="2.2" d="M 53 ${s - 1} C 56.5 ${s + 6} 56.5 ${s + 12} 53.5 ${s + 19}"/></g>`;
+      };
+      const lbd = ({ head }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"
+          d="M 47 ${s + 1} L 49 ${s + 4} L 58 ${s + 4} L 60 ${s + 1} C 62.5 ${s + 6} 62 ${s + 11} 60.5 ${s + 15} L 64 ${s + 22} C 56 ${s + 26} 45 ${s + 25} 39 ${s + 21} L 44 ${s + 15} C 43 ${s + 10} 44 ${s + 5} 47 ${s + 1} Z"/>`;
+      };
+      const unionJack = ({ head, fill }) => {
+        const s = head.shoulders;
+        const panel = `M 42 ${s + 1} L 62 ${s + 1} C 64.5 ${s + 6} 64.5 ${s + 13} 62.5 ${s + 18} L 40.5 ${s + 17} Q 40 ${s + 9} 42 ${s + 1} Z`;
+        const c = clip(panel);
+        return `<defs>${c.def}</defs><g clip-path="${c.url}">
+          <path fill="${INK}" d="${panel}"/>
+          <path stroke="${WHITE}" stroke-width="3.2" d="M 40 ${s} L 65 ${s + 19} M 65 ${s} L 40 ${s + 19}"/>
+          <path stroke="${WHITE}" stroke-width="5" d="M 52.5 ${s} L 52.5 ${s + 20} M 39 ${s + 9.5} L 66 ${s + 9.5}"/>
+          <path stroke="${fill}" stroke-width="2.6" d="M 52.5 ${s} L 52.5 ${s + 20} M 39 ${s + 9.5} L 66 ${s + 9.5}"/></g>
+          <path fill="none" ${S(1.6)} d="${panel}"/>`;
+      };
+      const chestX = (head) => head.cx - 5;
+      const bandana = ({ head }) => {
+        const x = chestX(head), y = head.shoulders;
+        return `<path fill="${WHITE}" ${S()} d="M ${x - 9} ${y} Q ${x} ${y + 7} ${x + 9} ${y + 1} Q ${x + 7} ${y + 9} ${x - 0.5} ${y + 16} Q ${x - 6} ${y + 10} ${x - 9} ${y} Z"/>
+          <path fill="${INK}" d="M ${x - 3.4} ${y + 1.4} Q ${x} ${y + 5.6} ${x + 3.4} ${y + 2} Q ${x + 2.4} ${y + 4.4} ${x + 0.2} ${y + 5.4} Q ${x - 2.2} ${y + 4.4} ${x - 3.4} ${y + 1.4} Z"/>`;
+      };
+      const yoke = ({ head, fill }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" d="M 40 ${s + 1} L 66 ${s + 1} C 67 ${s + 4} 67 ${s + 6} 66.5 ${s + 8} L 59 ${s + 8} L 53 ${s + 13} L 47 ${s + 8} L 39 ${s + 8} Z"/>
+          <path fill="none" stroke="${fill}" stroke-width="1.6" d="M 40.5 ${s + 6} L 47.5 ${s + 6} L 53 ${s + 10.5} L 58.5 ${s + 6} L 66 ${s + 6}"/>`;
+      };
+      const buckle = ({ head, style }) => {
+        const y = head.shoulders + 20;
+        const f = style === "gold" ? GOLD : WHITE;
+        return `<path fill="${INK}" d="M 47 ${y - 2.6} L 67 ${y - 2.6} L 67 ${y + 2.6} L 47 ${y + 2.6} Z"/>
+          <ellipse fill="${f}" ${S(2)} cx="59" cy="${y}" rx="7" ry="5"/>
+          <ellipse fill="none" stroke="${INK}" stroke-width="1.2" cx="59" cy="${y}" rx="4" ry="2.4" opacity=".0"/>`;
+      };
+      const fringedVest = ({ head }) => {
+        const s = head.shoulders;
+        const fringe = [44, 47, 50, 53, 56, 59, 62]
+          .map((x) => `<path stroke="${INK}" stroke-width="2" stroke-linecap="round" d="M ${x} ${s + 17} L ${x - 0.8} ${s + 22}"/>`)
+          .join("");
+        return `<path fill="${INK}" d="M 44 ${s + 1} L 50 ${s + 9} L 56 ${s + 1} L 64 ${s + 3} C 66.5 ${s + 9} 66.5 ${s + 14} 64.5 ${s + 18} L 42 ${s + 18} Q 41 ${s + 9} 44 ${s + 1} Z"/>${fringe}`;
+      };
+      const openShirt = ({ head }) => {
+        const { cx } = head, s = head.shoulders;
+        return `<path fill="${WHITE}" ${S()} d="M ${cx - 13.5} ${s} Q ${cx - 5} ${s + 6} ${cx + 2.5} ${s} L ${cx + 2} ${s + 9} L ${cx - 6} ${s + 16} Z"/>`;
+      };
+      const daggerCollar = ({ head, style }) => {
+        const s = head.shoulders, f = style === "white" ? WHITE : INK;
+        return `<path fill="${f}" ${S(1.6)} d="M 46 ${s} L 54 ${s + 1.5} L 43 ${s + 12} Z"/>
+          <path fill="${f}" ${S(1.6)} d="M 55 ${s + 1.5} L 62 ${s} L 60 ${s + 13} Z"/>`;
+      };
+      const satinJacket = ({ head, fill }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"
+          d="M 45 ${s + 1} L 61.5 ${s} C 63.5 ${s + 5} 63 ${s + 10} 61 ${s + 14} L 42 ${s + 14} Q 42 ${s + 7} 45 ${s + 1} Z"/>
+          <path fill="none" stroke="${fill}" stroke-width="2" d="M 52 ${s + 1} L 54 ${s + 13.5}"/>`;
+      };
+      const bib = ({ head, fill }) => {
+        const s = head.shoulders;
+        return `<path fill="${INK}" ${S(1.2)} d="M 45 ${s + 1} Q 53 ${s + 4} 61 ${s + 1} L 62 ${s + 12} Q 53.5 ${s + 21} 45 ${s + 12} Z"/>
+          <path fill="${fill}" d="M 51 ${s + 8} c 2 -2 5 -1 5 1.5 c 1.5 0 2 2 0.5 3 c 1 2 -2 3.5 -3.5 2 c -1.5 1.5 -4 0 -3 -2 c -1.5 -1 -0.5 -3.5 1 -4.5 Z"/>`;
+      };
+      const sash = ({ head, fill, style }) => {
+        const s = head.shoulders, f = style === "white" ? WHITE : INK;
+        return `<path fill="${f}" ${S(1.4)} d="M 60.5 ${s} L 64 ${s + 4} L 47 ${s + 23} L 43 ${s + 19.5} Z"/>
+          <path fill="none" stroke="${fill}" stroke-width="1.6" d="M 61.5 ${s + 2.5} L 45 ${s + 21.3}"/>`;
+      };
+
+      // SLEEVE — the whole near wing, in the wing's own drawing.
+      const wingFill = (color) => ({ sil }) => `<path fill="${color}" ${S()} d="${wingOf(sil)}"/>`;
+      const flameSleeve = ({ sil }) => {
+        const tips = sil === "spiky" ? [[27, 52], [34, 52], [41, 51]] : [[24, 55], [31, 54], [38, 53]];
+        const flames = tips
+          .map(([x, y]) => `<path fill="${EMBER}" ${S(1.4)} d="M ${x - 3} ${y - 1} Q ${x - 3.5} ${y + 3} ${x - 1} ${y + 6.5} Q ${x - 0.5} ${y + 3} ${x + 2.5} ${y + 1} Z"/>`)
+          .join("");
+        return `${flames}<path fill="${INK}" ${S()} d="${wingOf(sil)}"/>`;
+      };
+      const stripeSleeve = ({ sil, fill }) => {
+        const c = clip(wingOf(sil));
+        return `<defs>${c.def}</defs><path fill="${fill}" ${S()} d="${wingOf(sil)}"/>
+          <g clip-path="${c.url}" fill="none" stroke="${WHITE}" stroke-width="2.4">
+            <path d="M 49 33 C 38 30 26 35 21 46"/><path d="M 50 37.5 C 39 34.5 28 39 23.5 49.5"/></g>
+          <path fill="none" ${S()} d="${wingOf(sil)}"/>`;
+      };
+      const puffSleeve = ({ sil, fill }) =>
+        `<path fill="${fill}" ${S()} d="${wingOf(sil)}"/>
+         <path fill="${WHITE}" ${S()} d="M 36 38 C 35 32.5 41 31 44 34 C 46 31.5 51 33 49.5 37.5 C 52 40 49 44.5 45.5 43 C 44 46 38.5 45.5 38.5 42 C 35.5 41.5 34.5 39.5 36 38 Z"/>`;
+      const fringeSleeve = ({ sil, fill }) => {
+        const edge = sil === "broody"
+          ? [[30, 50.5], [33, 49], [36, 48.5], [39, 49.5], [42, 48.5], [45, 46]]
+          : [[23, 54], [27, 52], [31, 53], [35, 51], [39, 51.5], [43, 49]];
+        const strands = edge
+          .map(([x, y]) => `<path stroke="${INK}" stroke-width="2" stroke-linecap="round" d="M ${x} ${y} L ${x - 1.5} ${y + 5.5}"/>`)
+          .join("");
+        return `${strands}<path fill="${fill}" ${S()} d="${wingOf(sil)}"/>`;
+      };
+      const flareSleeve = ({ sil }) => {
+        const c = clip(wingOf(sil));
+        return `<defs>${c.def}</defs><path fill="${INK}" ${S()} d="${wingOf(sil)}"/>
+          <g clip-path="${c.url}"><path fill="${WHITE}" d="M 10 30 L 27 30 L 25 60 L 10 60 Z"/></g>
+          <path fill="none" ${S()} d="${wingOf(sil)}"/>`;
+      };
+
+      // TAIL — added to the genre's own tail, never replacing it.
+      const lavaTips = () =>
+        [[[2, 46], [30, 48], [28, 40]], [[0, 26], [28, 42], [29, 33]], [[7, 9], [29, 34], [31, 27]]]
+          .map(([t, a, b]) => {
+            const p = (q) => [t[0] + 0.32 * (q[0] - t[0]), t[1] + 0.32 * (q[1] - t[1])];
+            const [ax, ay] = p(a), [bx, by] = p(b);
+            return `<path fill="${EMBER}" ${S(1.6)} stroke-linejoin="miter" d="M ${t[0]} ${t[1]} L ${ax} ${ay} L ${bx} ${by} Z"/>`;
+          })
+          .join("");
+      const chainLoop = () =>
+        `<ellipse fill="none" stroke="${INK}" stroke-width="2.4" cx="21" cy="38" rx="3" ry="6.5" transform="rotate(-20 21 38)"/>
+         <ellipse fill="none" stroke="${INK}" stroke-width="2.4" cx="16" cy="37" rx="3" ry="6" transform="rotate(-25 16 37)"/>`;
+      const tailBow = () =>
+        `<path fill="${WHITE}" ${S()} d="M 13 33 L 4 27 L 5 39 Z M 13 33 L 22 27 L 21 39 Z"/>
+         <circle fill="${INK}" cx="13" cy="33" r="2.4"/>`;
+      const streamers = () =>
+        `<path fill="none" stroke="${INK}" stroke-width="4.2" stroke-linecap="round" d="M 2 20 C -4 24 0 30 -6 35 M 11 10 C 4 12 7 19 0 22"/>
+         <path fill="none" stroke="${WHITE}" stroke-width="2.2" stroke-linecap="round" d="M 2 20 C -4 24 0 30 -6 35 M 11 10 C 4 12 7 19 0 22"/>`;
+      const tailBandana = () =>
+        `<path fill="${WHITE}" ${S()} d="M 4 41 L 15 45 L 6 52 Z"/><circle fill="${INK}" cx="13" cy="45.5" r="2"/>`;
+      const ropeCoil = () =>
+        [0, 4, 8].map((d) => `<ellipse fill="none" stroke="${INK}" stroke-width="2.2" cx="${9 + d}" cy="${37 + d * 0.6}" rx="2.6" ry="6" transform="rotate(-30 ${9 + d} ${37 + d * 0.6})"/>`).join("");
+      const tinsel = () => {
+        const zig = (x, y) => `M ${x} ${y} l -3 4 l 3 4 l -3 4 l 3 4`;
+        const paths = [zig(16, 1), zig(12, 3), zig(8, 11), zig(4, 14)].join(" ");
+        return `<path fill="none" stroke="${INK}" stroke-width="4" stroke-linejoin="miter" d="${paths}"/>
+                <path fill="none" stroke="${WHITE}" stroke-width="2" stroke-linejoin="miter" d="${paths}"/>`;
+      };
+      const boa = () =>
+        `<path fill="${WHITE}" ${S()} d="M 20 35 C 17 31 22 28 25 31 C 27 28 32 30 31 34 C 34 36 32 41 28 40 C 27 44 21 44 21 40 C 17 40 17 36 20 35 Z"/>`;
+
+      // BOOTS — around the existing leg; the sole never below 72.75.
+      const boot = (x, f, top = 61, toe = 7) =>
+        `<path fill="${f}" ${S(1.8)} d="M ${x - 3.5} ${top} L ${x + 2.5} ${top} L ${x + 2.5} 66.5 L ${x + toe} 68.5 L ${x + toe} 71.8 L ${x - 4} 71.8 Z"/>`;
+      const bothLegs = (draw) =>
+        LEGS.map((l) => `<g opacity="${l.far ? 0.7 : 1}">${draw(l.x - 1)}</g>`).join("");
+      const combat = ({ style }) => bothLegs((x) => boot(x, styleFill(style)));
+      const spiked = () => bothLegs((x) => boot(x, INK) + `<path fill="${INK}" d="M ${x - 3.5} 63 L ${x - 8} 64.5 L ${x - 3.5} 66.5 Z"/>`);
+      const platforms = ({ style }) =>
+        bothLegs((x) => boot(x, styleFill(style), 63, 6.5) + `<path fill="${INK}" d="M ${x - 4} 69.3 L ${x + 6.5} 69.3 L ${x + 6.5} 72.5 L ${x - 4} 72.5 Z"/>`);
+      const gogo = () => bothLegs((x) => boot(x, INK, 58.5, 6));
+      const skates = () =>
+        bothLegs((x) => `<path fill="${WHITE}" ${S(1.8)} d="M ${x - 3.5} 60 L ${x + 2.5} 60 L ${x + 2.5} 65.5 L ${x + 6.5} 67 L ${x + 6.5} 69.3 L ${x - 4} 69.3 Z"/>
+          <circle fill="${INK}" cx="${x - 1.5}" cy="71.1" r="1.6"/><circle fill="${INK}" cx="${x + 4.2}" cy="71.1" r="1.6"/>`);
+
+      // PROP — held at the wing tip, back or down, at most ~10u past the outline.
+      const flyingV = ({ style }) => {
+        const f = styleFill(style);
+        return `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="M 25 54 L 11 62.5"/>
+          <path fill="${INK}" d="M 12 61 L 6 63 L 7.5 66.5 L 13 64 Z"/>
+          <path fill="${f}" ${S(2)} d="M 21 56.5 L 41 41.5 L 44.5 46 L 35 51.5 L 46 51 L 45 56.5 Z"/>`;
+      };
+      const drumsticks = () => {
+        const stick = (x1, y1, x2, y2) =>
+          `<path stroke="${INK}" stroke-width="4.2" stroke-linecap="round" d="M ${x1} ${y1} L ${x2} ${y2}"/>
+           <path stroke="${WHITE}" stroke-width="2.2" stroke-linecap="round" d="M ${x1} ${y1} L ${x2} ${y2}"/>
+           <ellipse fill="${WHITE}" ${S(2)} cx="${x2}" cy="${y2}" rx="4.4" ry="3.2" transform="rotate(${(Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI} ${x2} ${y2})"/>`;
+        return stick(30, 50, 14, 63) + stick(26, 47, 17, 66);
+      };
+      const starMic = () =>
+        `<path stroke="${INK}" stroke-width="4" stroke-linecap="round" d="M 27 52 L 15 60"/>
+         <path fill="${WHITE}" ${S(2)} d="${starPath(12, 62, 5.6)}"/>`;
+      const pomPom = () =>
+        `<path fill="${WHITE}" ${S(2)} d="M 14 58 C 12 53 18 50 21 53 C 24 50 30 53 28 57 C 31 60 28 66 24 64 C 22 68 15 67 16 63 C 12 63 11 59 14 58 Z"/>
+         <path stroke="${INK}" stroke-width="2" d="M 22 59 L 26 55"/>`;
+      const lasso = () =>
+        `<path fill="none" stroke="${INK}" stroke-width="2.4" d="M 25 54 C 20 57 19 58 17 58"/>
+         <ellipse fill="none" stroke="${INK}" stroke-width="2.4" cx="11" cy="61" rx="8" ry="5.5" transform="rotate(-15 11 61)"/>`;
+      const acoustic = ({ fill }) =>
+        `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="M 24 55 L 9 63"/>
+         <path fill="${INK}" d="M 10 61.5 L 5 63.5 L 6.5 66.5 L 11 64.5 Z"/>
+         <circle fill="${INK}" cx="34" cy="50.5" r="6"/><circle fill="${INK}" cx="27.5" cy="54" r="4.5"/>
+         <circle fill="${fill}" cx="31.5" cy="52" r="1.6"/>`;
+      const cornCob = () =>
+        `<ellipse fill="${WHITE}" ${S(2)} cx="16" cy="60" rx="9" ry="3.6" transform="rotate(30 16 60)"/>
+         <path fill="${INK}" d="M 24 53 L 28 51 L 26 57 Z"/>`;
+      const mirrorEgg = () =>
+        `<path stroke="${INK}" stroke-width="2" d="M 24 54 L 19 57"/>
+         <ellipse fill="${INK}" cx="15" cy="61" rx="5.2" ry="6.6" transform="rotate(-20 15 61)"/>
+         <rect fill="${WHITE}" x="12" y="57.5" width="3" height="3" transform="rotate(-20 13.5 59)"/>`;
+      const fan = () =>
+        `<path fill="${WHITE}" ${S(2)} d="M 22 55 L 6 56 A 16 16 0 0 0 14 69 Z"/>
+         <path fill="none" stroke="${INK}" stroke-width="1.6" d="M 22 55 L 9 63 M 22 55 L 11 67"/>`;
+      const vinyl = ({ fill }) =>
+        `<circle fill="${INK}" cx="15" cy="61" r="7"/><circle fill="${fill}" cx="15" cy="61" r="2.6"/>`;
+      const goldenEgg = ({ style }) =>
+        `<ellipse fill="${style === "gold" ? GOLD : WHITE}" ${S(2)} cx="16" cy="61" rx="5" ry="6.4" transform="rotate(-25 16 61)"/>`;
+      const drumstick = () =>
+        `<path stroke="${INK}" stroke-width="4.2" stroke-linecap="round" d="M 27 52 L 16 60"/>
+         <path stroke="${WHITE}" stroke-width="2.2" stroke-linecap="round" d="M 27 52 L 16 60"/>
+         <ellipse fill="${WHITE}" ${S(2)} cx="13" cy="62.5" rx="5.6" ry="4" transform="rotate(-36 13 62.5)"/>`;
+
+      // STAGE — behind the bird, under its feet; the surface's ground, never a collider.
+      const disc = (f, extra = "") => `<ellipse fill="${f}" cx="38" cy="71.5" rx="31" ry="4.6"/>${extra}`;
+      const lavaDisc = () =>
+        disc(INK, `<path fill="none" stroke="${EMBER}" stroke-width="1.6" stroke-linejoin="round" d="M 12 71 L 20 72.5 L 26 70.6 L 34 72.8 L 42 70.8 L 50 72.4 L 58 71 L 64 72"/>`);
+      const cab = ({ fill }) =>
+        `<rect fill="${INK}" x="6" y="62" width="66" height="13" rx="2"/>
+         <rect fill="none" stroke="${fill}" stroke-width="1.6" x="9" y="64.5" width="60" height="8" rx="1"/>`;
+      const starRiser = ({ fill }) =>
+        disc(fill, `<ellipse fill="none" stroke="${WHITE}" stroke-width="1.6" cx="38" cy="71.5" rx="31" ry="4.6"/>
+          <path fill="${WHITE}" transform="translate(0 50) scale(1 .3)" d="${starPath(38, 71, 14)}"/>`);
+      const spotlight = () => {
+        const id = `sp${(uid += 1)}`;
+        return `<defs><radialGradient id="${id}"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+          <ellipse fill="url(#${id})" cx="38" cy="71.5" rx="32" ry="5.5"/>`;
+      };
+      const hayBale = () =>
+        `<rect fill="${STRAW}" ${S(2)} x="4" y="60" width="70" height="14" rx="2.5"/>
+         <path stroke="${INK}" stroke-width="1.8" d="M 20 60 L 20 74 M 58 60 L 58 74"/>`;
+      const sawdust = () => disc(STRAW, `<ellipse fill="none" stroke="${INK}" stroke-width="1.4" cx="38" cy="71.5" rx="24" ry="3"/>`);
+      const litFloor = ({ fill }) => {
+        const tiles = [0, 1, 2, 3, 4, 5]
+          .map((i) => `<rect fill="${i % 2 ? WHITE : fill}" x="${8 + i * 10.3}" y="69" width="9.6" height="5.5" transform="skewX(-25)" transform-origin="38 71"/>`)
+          .join("");
+        return `<g class="disco-floor">${tiles}</g>`;
+      };
+      const neonEdge = ({ fill }) =>
+        `<path fill="none" stroke="${fill}" stroke-width="2" stroke-linejoin="round"
+          d="M 8 72 Q 11 66 13 72 Q 17 64 20 72 Q 24 67 27 72 L 50 72 Q 53 66 56 72 Q 60 64 63 72 Q 66 67 69 72"/>
+         <ellipse fill="none" stroke="${fill}" stroke-width="1.4" cx="38" cy="72" rx="31" ry="3" opacity=".7"/>`;
+      const nest = () =>
+        `<ellipse fill="${WHITE}" ${S(1.6)} cx="16" cy="67" rx="3.4" ry="4.4"/><ellipse fill="${WHITE}" ${S(1.6)} cx="62" cy="67.5" rx="3.4" ry="4.4"/>
+         ${disc(STRAW, `<path fill="none" stroke="${INK}" stroke-width="1.4" d="M 10 70 L 30 73.5 M 46 73.5 L 66 70 M 18 74.5 L 58 69.5"/>`)}`;
+
+      // ----------------------------------------------------------- the rails --
+      const item = (id, slot, name, draw, styles) => ({ id, slot, name, draw, styles });
+      const SHARED = [
+        item("bib", "top", "Wing-night bib", bib),
+        item("sash", "top", "Team sash", sash, ["ink", "white"]),
+        item("golden-egg", "prop", "Golden egg", goldenEgg, ["white", "gold"]),
+        item("drumstick", "prop", "Drumstick", drumstick),
+        item("nest", "stage", "Egg nest", nest),
+        item("chicken-dance", "move", "Chicken Dance")
+      ].map((i) => ({ ...i, shared: true }));
+
+      const TEAMS = {
+        metal: {
+          name: "Molten Metal", fill: PALETTE.teamD, sil: "spiky",
+          items: [
+            item("battle-vest", "top", "Battle vest", battleVest),
+            item("bandolier", "top", "Bullet belt", bandolier, ["team", "gold"]),
+            item("biker", "top", "Biker jacket", biker),
+            item("leather-sleeve", "sleeve", "Leather sleeve", wingFill(INK)),
+            item("flame-sleeve", "sleeve", "Flame sleeve", flameSleeve),
+            item("lava-tips", "tail", "Lava tips", lavaTips),
+            item("chain-loop", "tail", "Chain loop", chainLoop),
+            item("combat-boots", "boots", "Combat boots", combat, ["ink", "white"]),
+            item("spiked-boots", "boots", "Spiked boots", spiked),
+            item("flying-v", "prop", "Flying V", flyingV, ["white", "ink"]),
+            item("drumsticks", "prop", "Drumsticks", drumsticks),
+            item("lava-disc", "stage", "Lava crack", lavaDisc),
+            item("speaker-cab", "stage", "Speaker cab", cab),
+            item("horns", "move", "Horns pump"),
+            item("headbang", "move", "Double headbang")
+          ],
+          looks: {
+            Thrash: { top: "battle-vest", sleeve: "leather-sleeve", boots: "combat-boots", prop: "flying-v", stage: "lava-disc", move: "horns" },
+            Pyro: { top: "bandolier", sleeve: "flame-sleeve", tail: "lava-tips", stage: "lava-disc", move: "headbang" },
+            Drummer: { top: "biker", tail: "chain-loop", boots: "spiked-boots", prop: "drumsticks", stage: "speaker-cab", move: "headbang" }
+          }
+        },
+        pop: {
+          name: "Spice Girls", fill: PALETTE.teamH, sil: undefined,
+          items: [
+            item("crop-jacket", "top", "Crop jacket", cropJacket),
+            item("tracksuit", "top", "Tracksuit top", tracksuit),
+            item("lbd", "top", "Little black dress", lbd),
+            item("union-jack", "top", "Union Jack dress", unionJack),
+            item("stripe-sleeve", "sleeve", "Tracksuit stripes", stripeSleeve),
+            item("puff-sleeve", "sleeve", "Puff sleeve", puffSleeve),
+            item("bow", "tail", "Big bow", tailBow),
+            item("streamers", "tail", "Ribbon streamers", streamers),
+            item("platform-trainers", "boots", "Platform trainers", platforms, ["white", "ink"]),
+            item("gogo-boots", "boots", "Go-go boots", gogo),
+            item("star-mic", "prop", "Star mic", starMic),
+            item("pom-pom", "prop", "Pom-pom", pomPom),
+            item("star-riser", "stage", "LED star riser", starRiser),
+            item("spotlight", "stage", "Spotlight", spotlight),
+            item("heart-point", "move", "Heart-point"),
+            item("sporty-hop", "move", "Sporty hop")
+          ],
+          looks: {
+            Sporty: { top: "tracksuit", sleeve: "stripe-sleeve", boots: "platform-trainers", prop: "pom-pom", move: "sporty-hop" },
+            Ginger: { top: "union-jack", tail: "streamers", boots: "platform-trainers", stage: "star-riser", move: "heart-point" },
+            Posh: { top: "lbd", boots: "gogo-boots", prop: "star-mic", stage: "spotlight", move: "heart-point" },
+            Baby: { top: "crop-jacket", sleeve: "puff-sleeve", tail: "bow", stage: "spotlight", move: "sporty-hop" }
+          }
+        },
+        country: {
+          name: "Honky Tonk Heat", fill: PALETTE.teamE, sil: "broody", noBoots: true,
+          items: [
+            item("bandana", "top", "Bandana", bandana),
+            item("yoke", "top", "Western yoke", yoke),
+            item("buckle", "top", "Trophy buckle", buckle, ["white", "gold"]),
+            item("fringed-vest", "top", "Fringed vest", fringedVest),
+            item("fringe-sleeve", "sleeve", "Fringe", fringeSleeve),
+            item("suede-sleeve", "sleeve", "Suede sleeve", wingFill(INK)),
+            item("tail-bandana", "tail", "Tail bandana", tailBandana),
+            item("rope-coil", "tail", "Rope coil", ropeCoil),
+            item("lasso", "prop", "Lasso", lasso),
+            item("acoustic", "prop", "Acoustic guitar", acoustic),
+            item("corn-cob", "prop", "Corn cob", cornCob),
+            item("hay-bale", "stage", "Hay bale", hayBale),
+            item("sawdust", "stage", "Sawdust ring", sawdust),
+            item("belt-loops", "move", "Thumbs in belt"),
+            item("boot-scoot", "move", "Boot-scoot")
+          ],
+          looks: {
+            Rodeo: { top: "buckle", sleeve: "fringe-sleeve", prop: "lasso", stage: "hay-bale", move: "belt-loops" },
+            "Honky-tonk": { top: "yoke", sleeve: "suede-sleeve", prop: "acoustic", stage: "sawdust", move: "boot-scoot" },
+            Farmhand: { top: "bandana", tail: "rope-coil", prop: "corn-cob", stage: "hay-bale", move: "boot-scoot" }
+          }
+        },
+        disco: {
+          name: "Disco Inferno", fill: PALETTE.teamB, sil: "preener",
+          items: [
+            item("open-shirt", "top", "Open shirt", openShirt),
+            item("dagger-collar", "top", "Dagger collar", daggerCollar, ["ink", "white"]),
+            item("satin-jacket", "top", "Satin jacket", satinJacket),
+            item("flare-sleeve", "sleeve", "Flare sleeve", flareSleeve),
+            item("satin-sleeve", "sleeve", "Satin sleeve", wingFill(WHITE)),
+            item("tinsel", "tail", "Tinsel", tinsel),
+            item("boa", "tail", "Feather boa", boa),
+            item("platforms", "boots", "Platforms", platforms, ["white", "ink"]),
+            item("skates", "boots", "Roller skates", skates),
+            item("mirror-egg", "prop", "Mirror-ball egg", mirrorEgg),
+            item("fan", "prop", "Hand fan", fan),
+            item("vinyl", "prop", "Vinyl", vinyl),
+            item("lit-floor", "stage", "Lit floor", litFloor),
+            item("neon-edge", "stage", "Neon flames", neonEdge),
+            item("night-fever", "move", "Night Fever point"),
+            item("bump", "move", "The Bump")
+          ],
+          looks: {
+            Fever: { top: "open-shirt", sleeve: "flare-sleeve", boots: "platforms", stage: "lit-floor", move: "night-fever" },
+            "Studio 54": { top: "dagger-collar", tail: "tinsel", prop: "fan", stage: "neon-edge", move: "bump" },
+            Roller: { top: "satin-jacket", tail: "boa", boots: "skates", prop: "vinyl", stage: "lit-floor", move: "bump" }
+          }
+        }
+      };
+
+      const SLOTS = ["top", "sleeve", "tail", "boots", "prop", "stage", "move"];
+      const SLOT_NAMES = { top: "Top", sleeve: "Sleeve", tail: "Tail", boots: "Boots", prop: "Prop", stage: "Stage", move: "Move" };
+      const SHOWPIECE = new Set(["prop", "stage", "move"]);
+      // Each tile crops the bird to the slot's region (viewBox in bird units).
+      const CROP = { top: "34 26 36 36", sleeve: "12 26 42 42", tail: "-10 -6 46 56", boots: "18 48 40 28", prop: "-2 36 50 40", stage: "-4 44 88 34", move: "-6 -14 92 92" };
+
+      const railOf = (genre) => [...TEAMS[genre].items, ...SHARED];
+      const findItem = (genre, id) => railOf(genre).find((i) => i.id === id);
+
+      // ----------------------------------------------------------- one bird --
+      const ORDER = ["tail", "boots", "sleeve", "top", "prop"];
+      const birdSvg = (genre, outfit, heightPx, { head = MY_HEAD, viewBox = "-10 -14 100 92", showpieces = true } = {}) => {
+        const team = TEAMS[genre];
+        const anchors = head ? { cx: 58, shoulders: 37 } : { cx: 58, shoulders: 32 };
+        const ctx = (slot) => ({ head: anchors, fill: team.fill, sil: team.sil, style: outfit[slot]?.style ?? findItem(genre, outfit[slot]?.item)?.styles?.[0] });
+        const draw = (slot) => {
+          if (!outfit[slot] || (!showpieces && SHOWPIECE.has(slot))) return "";
+          const it = findItem(genre, outfit[slot].item);
+          return it?.draw ? `<g data-outfit-${slot}="${it.id}">${it.draw(ctx(slot))}</g>` : "";
+        };
+        const body = birdMarkup({
+          fill: team.fill, silhouette: team.sil, avatarSrc: head,
+          bodyApparel: () => ORDER.map(draw).join("")
+        });
+        const h = typeof heightPx === "number" ? `height="${heightPx}"` : `width="100%" height="100%"`;
+        return `<svg viewBox="${viewBox}" ${h} style="overflow:visible;display:block">${draw("stage")}${body}</svg>`;
+      };
+
+      // --------------------------------------------------------------- state --
+      const state = { genre: "metal", tab: "top", tv: false, voice: "", outfits: {} };
+      for (const g of Object.keys(TEAMS)) state.outfits[g] = lookToOutfit(g, Object.keys(TEAMS[g].looks)[0]);
+      function lookToOutfit(genre, name) {
+        const out = {};
+        for (const [slot, id] of Object.entries(TEAMS[genre].looks[name])) out[slot] = { item: id };
+        return out;
+      }
+      const outfit = () => state.outfits[state.genre];
+      const summary = (genre, o) => {
+        const names = SLOTS.filter((s) => o[s]).map((s) => findItem(genre, o[s].item)?.name).filter(Boolean);
+        if (!names.length) return "Bare. The silhouette's doing all the work.";
+        return names.length === 1 ? `${names[0]}.` : `${names.slice(0, -1).join(", ")} and ${names.at(-1).toLowerCase()}.`;
+      };
+      const shuffle = (genre) => {
+        const out = {};
+        for (const slot of SLOTS) {
+          if (slot === "boots" && TEAMS[genre].noBoots) continue;
+          if (Math.random() > 0.6) continue;
+          const options = railOf(genre).filter((i) => i.slot === slot);
+          const pick = options[Math.floor(Math.random() * options.length)];
+          if (pick) out[slot] = { item: pick.id };
+        }
+        return out;
+      };
+
+      // -------------------------------------------------------------- render --
+      const genresEl = document.getElementById("genres");
+      const phoneEl = document.getElementById("phone");
+      const checkEl = document.getElementById("check");
+
+      function renderGenres() {
+        genresEl.innerHTML = Object.entries(TEAMS)
+          .map(([g, t]) => `<button data-genre="${g}" class="${g === state.genre ? "on" : ""}">${t.name}</button>`)
+          .join("");
+      }
+
+      function renderPhone() {
+        const team = TEAMS[state.genre];
+        const o = outfit();
+        if (team.noBoots && state.tab === "boots") state.tab = "top";
+        const studio = state.tv
+          ? `<div class="studio tv" data-act="move"><button class="tvpill on" data-act="tv">TV size</button>
+               <div class="tvrow"><figure class="blur">${birdSvg(state.genre, o, 130)}<figcaption>130 · 3 m</figcaption></figure>
+               <figure>${birdSvg(state.genre, o, 76)}<figcaption>76 · in a game</figcaption></figure>
+               <figure>${birdSvg(state.genre, o, 76, { showpieces: false })}<figcaption>76 · kit only</figcaption></figure></div></div>`
+          : `<div class="studio" data-act="move"><span class="hint">Tap your bird to see its move</span>
+               <button class="tvpill" data-act="tv">TV size</button>
+               <div id="hero" style="height:230px;width:250px">${birdSvg(state.genre, o)}</div></div>`;
+        const looks = Object.keys(team.looks)
+          .map((n) => `<button class="look" data-look="${n}">${n}</button>`)
+          .join("");
+        const tabs = SLOTS.map((s) => {
+          const gone = s === "boots" && team.noBoots;
+          return `<button class="tab ${s === state.tab ? "on" : ""} ${o[s] ? "filled" : ""} ${gone ? "gone" : ""}" data-tab="${s}">${SLOT_NAMES[s]}</button>`;
+        }).join("");
+        const options = railOf(state.genre).filter((i) => i.slot === state.tab);
+        const tile = (it) => {
+          const on = it ? o[state.tab]?.item === it.id : !o[state.tab];
+          if (!it) return `<div class="tile ${on ? "on" : ""}" data-item=""><span class="none">None</span></div>`;
+          const trial = { ...o, [state.tab]: { item: it.id } };
+          const art = state.tab === "move"
+            ? `${birdSvg(state.genre, trial, undefined, { viewBox: CROP.move })}<span class="movename">${it.name}</span>`
+            : birdSvg(state.genre, trial, undefined, { viewBox: CROP[state.tab] });
+          return `<div class="tile ${on ? "on" : ""}" data-item="${it.id}" title="${it.name}">${art}${it.shared ? `<span class="shared">All teams</span>` : ""}</div>`;
+        };
+        const worn = o[state.tab] && findItem(state.genre, o[state.tab].item);
+        const swatches = worn?.styles && worn.styles.length > 1
+          ? `Style ${worn.styles
+              .map((st) => {
+                const color = st === "team" ? team.fill : STYLE_FILL[st];
+                const on = (o[state.tab].style ?? worn.styles[0]) === st;
+                return `<span class="swatch ${on ? "on" : ""}" data-style="${st}" title="${st}" style="background:${color}"></span>`;
+              })
+              .join("")}`
+          : "";
+        const tabNote = SHOWPIECE.has(state.tab)
+          ? `<p class="tabnote">Showpiece: worn in the lobby parade and the team lineup, not in the games.</p>`
+          : `<p class="tabnote">Kit: worn everywhere, in every game too.</p>`;
+        const mates = Object.keys(team.looks)
+          .map((n, i) => `<div>${birdSvg(state.genre, lookToOutfit(state.genre, n), 64, { head: MATE_HEADS[i], viewBox: "-6 -14 96 92" })}</div>`)
+          .join("");
+
+        phoneEl.innerHTML = `
+          <div class="top"><a class="back">← Your seat</a><span class="eyebrow">${team.name}</span></div>
+          <div><p class="eyebrow">Your bird</p><p class="title">Dress for the parade</p></div>
+          <div class="card">
+            ${studio}
+            <p class="voice" role="status">${state.voice || summary(state.genre, o)}</p>
+            <div class="looks"><button class="look dice" data-act="dice">🎲 Dress me</button>${looks}</div>
+          </div>
+          <div class="card">
+            <div class="tabs">${tabs}</div>
+            ${tabNote}
+            <div class="grid">${tile(null)}${options.map(tile).join("")}</div>
+            <div class="styles">${swatches}</div>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Your team, as the parade sees it</p>
+            <div class="team">${mates}</div>
+            <p class="fine">Live from your teammates' wardrobes. Changes reach the TV at Brad's last pull before the night.</p>
+          </div>`;
+      }
+
+      function renderCheck() {
+        const team = TEAMS[state.genre];
+        const o = outfit();
+        const looks = Object.keys(team.looks)
+          .map((n) => `<figure>${birdSvg(state.genre, lookToOutfit(state.genre, n), 76)}<figcaption>${n}</figcaption></figure>`)
+          .join("");
+        checkEl.innerHTML = `
+          <section class="cell"><h2>this bird, at the room's sizes</h2>
+            <p class="note">The density test from the doc (§2.1): a full kit plus a prop is four marks on a 130px bird.
+              The fallback, if this row turns to mush once the art is real, is a three-slot kit.</p>
+            <div class="stage"><div class="sizes">
+              <figure>${birdSvg(state.genre, {}, 130)}<figcaption>bare · 130</figcaption></figure>
+              <figure>${birdSvg(state.genre, o, 130)}<figcaption>dressed · 130 · lobby parade</figcaption></figure>
+              <figure class="blur">${birdSvg(state.genre, o, 130)}<figcaption>130 blurred · ≈3 m from a 55" set</figcaption></figure>
+              <figure>${birdSvg(state.genre, o, 76, { showpieces: false })}<figcaption>76 · kit only · in a game</figcaption></figure>
+            </div><span class="scale">1080p sizes</span></div>
+          </section>
+          <section class="cell"><h2>every look on ${team.name}, at 76px</h2>
+            <p class="note">The cut line. Showpieces on, as the parade and the intro lineup draw them.</p>
+            <div class="stage"><div class="sizes">${looks}</div><span class="scale">76px · actual size on a 1080p TV</span></div>
+          </section>
+          <section class="cell"><h2>what this page is not</h2>
+            <p class="note">The items are placement sketches, not the round's art. Moves only play a placeholder hop:
+              the real ones are cast poses (a wing thrust, a point, a heel-toe), drawn in <code>rig.html</code> in milestone 2b.
+              Gold (#d4a72c) appears only on the bandolier, the trophy buckle and the golden egg, as their second style,
+              because adopting it is open question 4. Hay and sawdust use <code>mutedWarm</code>, a house token.</p>
+          </section>`;
+      }
+
+      function render() { renderGenres(); renderPhone(); renderCheck(); }
+
+      document.addEventListener("click", (e) => {
+        const t = e.target.closest("[data-genre],[data-tab],[data-item],[data-look],[data-style],[data-act]");
+        if (!t) return;
+        const o = outfit();
+        if (t.dataset.genre) { state.genre = t.dataset.genre; state.voice = ""; }
+        else if (t.dataset.tab) state.tab = t.dataset.tab;
+        else if (t.dataset.item !== undefined) {
+          if (t.dataset.item) { o[state.tab] = { item: t.dataset.item }; state.voice = `${findItem(state.genre, t.dataset.item).name}.`; }
+          else { delete o[state.tab]; state.voice = `${SLOT_NAMES[state.tab]} off.`; }
+        } else if (t.dataset.look) { state.outfits[state.genre] = lookToOutfit(state.genre, t.dataset.look); state.voice = `${t.dataset.look}: ${summary(state.genre, outfit())}`; }
+        else if (t.dataset.style) { o[state.tab] = { ...o[state.tab], style: t.dataset.style }; }
+        else if (t.dataset.act === "dice") { state.outfits[state.genre] = shuffle(state.genre); state.voice = ""; }
+        else if (t.dataset.act === "tv") { state.tv = !state.tv; e.stopPropagation(); }
+        else if (t.dataset.act === "move") {
+          const hero = document.getElementById("hero");
+          const move = o.move && findItem(state.genre, o.move.item);
+          if (hero) { hero.classList.remove("hop"); void hero.offsetWidth; hero.classList.add("hop"); }
+          state.voice = move ? `${move.name}! (the real move is a cast pose)` : "No move yet. Pick one under Move.";
+          document.querySelector(".voice").textContent = state.voice;
+          return;
+        }
+        render();
+      });
+
+      render();
+      window.WARDROBE_PICKER = { TEAMS, SHARED, state };
+    </script>
+  </body>
+</html>

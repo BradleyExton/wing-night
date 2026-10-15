@@ -112,6 +112,11 @@ untouched.
 
 ## The wardrobe itself
 
+> **Proposed replacement (2026-10-14, pending Brad):** [research/bird-wardrobe.md](research/bird-wardrobe.md)
+> recommends seven slots (Top, Sleeve, Tail, Boots as kit; Prop, Stage, Move as showpieces), richer
+> per-team rails, Looks and Shuffle, and a `/me/wardrobe` editor. It replaces this section and
+> milestones 3–4 below once signed off.
+
 The item set is a design round, not a code task, and it comes before any cast code: every item
 is drawn in the existing apparel harness (`apps/client/public/mockups/cast/apparel-harness.js`)
 on its genre's silhouette, on a drawn head and on a costume head, and judged on the 76px row.
