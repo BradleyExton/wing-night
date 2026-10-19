@@ -10,6 +10,7 @@ import {
   type MountPile,
   type MountState
 } from "@wingnight/shared";
+import { createBeatLoop } from "@wingnight/minigames-core";
 
 import { MOUNT_BEAT_MS, STUCK_BEAT_MS } from "../beats/index.js";
 import { paintClimbClock } from "../climbClock/index.js";
@@ -44,8 +45,6 @@ type MirrorRun = {
   startedAtMs: number | null;
   rafHandle: number;
 };
-
-type MirrorBeat = { rafHandle: number; then: (() => void) | null };
 
 const BEAT_DURATION_MS: Record<MountOutcome, number> = { mounted: MOUNT_BEAT_MS, timeout: STUCK_BEAT_MS };
 
@@ -113,7 +112,7 @@ export const useMountMirror = ({
 }: MountMirrorInput): { pile: MountPile } => {
   const [shownPile, setShownPile] = useState(pile);
   const runRef = useRef<MirrorRun | null>(null);
-  const beatRef = useRef<MirrorBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   const pendingRef = useRef<(() => void) | null>(null);
   const inputRef = useRef({ pile, rules, onEvent });
   const [settledCount, markSettled] = useReducer((count: number) => count + 1, 0);
@@ -143,14 +142,6 @@ export const useMountMirror = ({
     }
   };
 
-  const stopBeat = (): void => {
-    if (beatRef.current !== null && beatRef.current.rafHandle !== 0) {
-      window.cancelAnimationFrame(beatRef.current.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
   const startState = (): MountState => {
     const input = inputRef.current;
 
@@ -160,7 +151,7 @@ export const useMountMirror = ({
   // The next climber stood at the start beside the pile as the view has it.
   const paintStill = (key: string): void => {
     stopLoop();
-    stopBeat();
+    beats.stop();
 
     const state = startState();
 
@@ -177,12 +168,11 @@ export const useMountMirror = ({
     sceneRef.current?.paintPile();
   };
 
+  // Once the beat is over the wall runs the switch queued behind it, or settles on the pile.
   const startBeat = (run: MirrorRun, outcome: MountOutcome): void => {
-    stopBeat();
+    inputRef.current.onEvent?.(outcome === "mounted" ? { kind: "mount" } : { kind: "time" });
 
-    const startedAtMs = performance.now();
-    const beat: MirrorBeat = { rafHandle: 0, then: null };
-    const paintBeat = (progress: number): void => {
+    const beat = beats.start(outcome, (progress) => {
       if (outcome === "mounted") {
         sceneRef.current?.paintMount(run.state, progress);
       } else {
@@ -190,36 +180,19 @@ export const useMountMirror = ({
       }
 
       paintClock(run.state);
-    };
-    const step = (now: number): void => {
-      const progress = (now - startedAtMs) / BEAT_DURATION_MS[outcome];
+    });
 
-      paintBeat(Math.min(1, progress));
+    beat.then = (): void => {
+      const pending = pendingRef.current;
 
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
+      pendingRef.current = null;
 
-        const pending = pendingRef.current;
-
-        pendingRef.current = null;
-
-        if (pending === null) {
-          paintSettledPile();
-        } else {
-          pending();
-        }
-
-        return;
+      if (pending === null) {
+        paintSettledPile();
+      } else {
+        pending();
       }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
     };
-
-    beatRef.current = beat;
-    inputRef.current.onEvent?.(outcome === "mounted" ? { kind: "mount" } : { kind: "time" });
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
   };
 
   useEffect(() => {
@@ -237,7 +210,7 @@ export const useMountMirror = ({
     if (current !== null && current.key !== key) {
       const isStillRunning = current.startedAtMs !== null && current.state.outcome === null;
 
-      if (isStillRunning || beatRef.current !== null) {
+      if (isStillRunning || beats.current() !== null) {
         pendingRef.current = (): void => {
           runRef.current = null;
           markSettled();
@@ -254,7 +227,7 @@ export const useMountMirror = ({
     }
 
     // A beat is already playing this climb out; nothing new to draw.
-    if (beatRef.current !== null && current?.key === key) {
+    if (beats.current() !== null && current?.key === key) {
       return;
     }
 
@@ -327,9 +300,9 @@ export const useMountMirror = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
-  }, []);
+  }, [beats]);
 
   return { pile: shownPile };
 };

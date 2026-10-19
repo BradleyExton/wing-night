@@ -648,12 +648,8 @@ back the beat so the caller can set its `then`. `useFappyRunner`, `useFappyMirro
 refs and painters; the loop is stopped only on purpose, never by an effect's cleanup. `paintBeat`
 is passed per `start` rather than once at creation, because every painter closes over its own
 beat's frame, ghost, punchline cues and bank count. The frame clock is injectable, so the loop has
-its own unit test; both sandbox specs pass under Playwright.
-
-Left open: BRAWL's `useBrawlRunner`/`useBrawlMirror` (shipped after the audit) carry a fifth and
-sixth copy of the same `startBeat`, and MOUNT's runner and mirror have a variant. Moving them onto
-`createBeatLoop` is the same mechanical change, scoped out of the 2026-10-19 pass to keep it to the
-four hooks the audit named.
+its own unit test; both sandbox specs pass under Playwright. BRAWL's and MOUNT's runners and
+mirrors, which shipped after the audit with their own copies, moved onto it the same day.
 
 ### The house component rules stop at the minigame packages
 `eslint.config.mjs` applies `max-lines`, `no-inline-style-prop`, `no-hardcoded-component-jsx-text`,

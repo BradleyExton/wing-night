@@ -1,6 +1,7 @@
-import { useEffect, useReducer, useRef, type RefObject } from "react";
+import { useEffect, useReducer, useRef, useState, type RefObject } from "react";
 import type { BrawlBlock, BrawlCourse, BrawlFrame, BrawlInput, BrawlMinigameBlock, BrawlOutcome } from "@wingnight/shared";
 import { BRAWL_WORLD, advanceBrawl, createBrawlRunStart, runBrawlRun } from "@wingnight/shared";
+import { createBeatLoop, type Beat } from "@wingnight/minigames-core";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
 import type { BrawlSceneHandle } from "../BrawlScene/index.js";
@@ -49,11 +50,6 @@ type MirrorBlock = {
   frame: BrawlFrame;
   startedAtMs: number | null;
   rafHandle: number;
-};
-
-type MirrorBeat = {
-  rafHandle: number;
-  then: (() => void) | null;
 };
 
 const BEAT_DURATION_MS: Record<BrawlOutcome, number> = {
@@ -127,7 +123,7 @@ export const useBrawlMirror = ({
   onEvent
 }: BrawlMirrorInput): void => {
   const mirrorRef = useRef<MirrorBlock | null>(null);
-  const beatRef = useRef<MirrorBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   // The listener and the tally's range are refs: the loop's closure must see the current ones
   // without the effect being torn down mid-block.
   const onEventRef = useRef(onEvent);
@@ -171,22 +167,10 @@ export const useBrawlMirror = ({
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
+  const startBeat = (frame: BrawlFrame, outcome: BrawlOutcome, shownBlock: BrawlBlock): Beat<BrawlOutcome> => {
+    onEventRef.current?.(BEAT_EVENT[outcome]);
 
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
-  const startBeat = (frame: BrawlFrame, outcome: BrawlOutcome, shownBlock: BrawlBlock): MirrorBeat => {
-    stopBeat();
-
-    const startedAtMs = performance.now();
-    const beat: MirrorBeat = { rafHandle: 0, then: null };
-    const paintBeat = (progress: number): void => {
+    return beats.start(outcome, (progress) => {
       const scene = sceneRef.current;
 
       if (outcome === "cleared") {
@@ -198,28 +182,7 @@ export const useBrawlMirror = ({
       }
 
       paintChrome(frame, shownBlock, outcome === "cleared" ? resolveHeartsCarried(frame.hearts, progress) : 0);
-    };
-    const step = (now: number): void => {
-      const progress = (now - startedAtMs) / BEAT_DURATION_MS[outcome];
-
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    onEventRef.current?.(BEAT_EVENT[outcome]);
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
-
-    return beat;
+    });
   };
 
   const settleBlock = (mirror: MirrorBlock, shownBlock: BrawlBlock): void => {
@@ -237,7 +200,7 @@ export const useBrawlMirror = ({
 
   const paintStill = (key: string, frame: BrawlFrame, shownBlock: BrawlBlock): void => {
     stopLoop();
-    stopBeat();
+    beats.stop();
     mirrorRef.current = { key, inputs: [], frame, startedAtMs: null, rafHandle: 0 };
     sceneRef.current?.paint(frame);
     paintChrome(frame, shownBlock);
@@ -260,7 +223,7 @@ export const useBrawlMirror = ({
     if (current !== null && current.key !== key && current.key !== "") {
       const isStillRunning = current.startedAtMs !== null && current.frame.outcome === null;
 
-      if (isStillRunning || beatRef.current !== null) {
+      if (isStillRunning || beats.current() !== null) {
         pendingRef.current = (): void => {
           mirrorRef.current = null;
           markSettled();
@@ -295,7 +258,7 @@ export const useBrawlMirror = ({
     }
 
     // A beat is already playing this block out; nothing new to draw.
-    if (beatRef.current !== null && current !== null && current.key === key) {
+    if (beats.current() !== null && current !== null && current.key === key) {
       return;
     }
 
@@ -374,7 +337,7 @@ export const useBrawlMirror = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
-  }, []);
+  }, [beats]);
 };

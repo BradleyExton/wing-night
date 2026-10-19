@@ -11,6 +11,7 @@ import {
   type MountState,
   type MountVec
 } from "@wingnight/shared";
+import { createBeatLoop } from "@wingnight/minigames-core";
 
 import { MOUNT_BEAT_MS, STUCK_BEAT_MS } from "../beats/index.js";
 import { paintClimbClock } from "../climbClock/index.js";
@@ -62,8 +63,6 @@ type LocalRun = {
   fingers: RunFingers;
 };
 
-type LocalBeat = { rafHandle: number; then: () => void };
-
 // DRAWING's rate: the wire carries fourteen batches a second, not sixty samples.
 export const LIMB_FLUSH_MS = 70;
 
@@ -108,7 +107,7 @@ export const useMountRunner = ({
   const inputRef = useRef({ pile, rules, activeTurnTeamId, playerId, canAct, viewClimb });
   const callbacksRef = useRef({ onLimb, onEndClimb, onEvent });
   const runRef = useRef<LocalRun | null>(null);
-  const beatRef = useRef<LocalBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
 
   inputRef.current = { pile, rules, activeTurnTeamId, playerId, canAct, viewClimb };
   callbacksRef.current = { onLimb, onEndClimb, onEvent };
@@ -151,14 +150,6 @@ export const useMountRunner = ({
     }
   };
 
-  const stopBeat = (): void => {
-    if (beatRef.current !== null && beatRef.current.rafHandle !== 0) {
-      window.cancelAnimationFrame(beatRef.current.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
   const flush = (local: LocalRun): void => {
     if (local.log.length > local.sent) {
       callbacksRef.current.onLimb(local.stamp, local.log.slice(local.sent));
@@ -185,12 +176,11 @@ export const useMountRunner = ({
     paintClock(runRef.current.state);
   };
 
+  // A beat with nothing queued behind it settles on the pile once it is over.
   const startBeat = (state: MountState, outcome: MountOutcome): void => {
-    stopBeat();
+    callbacksRef.current.onEvent?.(outcome === "mounted" ? { kind: "mount" } : { kind: "time" });
 
-    const startedAtMs = performance.now();
-    const beat: LocalBeat = { rafHandle: 0, then: settle };
-    const paintBeat = (progress: number): void => {
+    const beat = beats.start(outcome, (progress) => {
       if (outcome === "mounted") {
         sceneRef.current?.paintMount(state, progress);
       } else {
@@ -198,26 +188,9 @@ export const useMountRunner = ({
       }
 
       paintClock(state);
-    };
-    const step = (now: number): void => {
-      const progress = (now - startedAtMs) / BEAT_DURATION_MS[outcome];
+    });
 
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    callbacksRef.current.onEvent?.(outcome === "mounted" ? { kind: "mount" } : { kind: "time" });
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
+    beat.then = settle;
   };
 
   const endClimb = (local: LocalRun): void => {
@@ -278,14 +251,14 @@ export const useMountRunner = ({
   useEffect(() => {
     if (climbIndex === null || status === null) {
       stopRun(runRef.current);
-      stopBeat();
+      beats.stop();
       runRef.current = null;
       settle();
       return;
     }
 
     if (status === "ready") {
-      const beat = beatRef.current;
+      const beat = beats.current();
 
       if (beat !== null) {
         beat.then = (): void => restart(climbIndex);
@@ -313,10 +286,12 @@ export const useMountRunner = ({
       local.fingers.clear();
     }
 
-    if (beatRef.current === null) {
+    const beat = beats.current();
+
+    if (beat === null) {
       settle();
     } else {
-      beatRef.current.then = settle;
+      beat.then = settle;
     }
     // The dependencies are narrowed by hand: a fresh copy of the same view (every echo is one)
     // must never tear a climb down, only the climb, its status, the pile or the turn changing.
@@ -325,9 +300,9 @@ export const useMountRunner = ({
   useEffect(() => {
     return (): void => {
       stopRun(runRef.current);
-      stopBeat();
+      beats.stop();
     };
-  }, []);
+  }, [beats]);
 
   const isArmed = (local: LocalRun): boolean => {
     const input = inputRef.current;
@@ -338,7 +313,7 @@ export const useMountRunner = ({
       input.viewClimb.status !== "done" &&
       !local.hasEnded &&
       local.state.outcome === null &&
-      beatRef.current === null
+      beats.current() === null
     );
   };
 
