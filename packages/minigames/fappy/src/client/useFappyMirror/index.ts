@@ -285,5 +285,5 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
       stopLoop();
       beats.stop();
     };
-  }, []);
+  }, [beats]);
 };

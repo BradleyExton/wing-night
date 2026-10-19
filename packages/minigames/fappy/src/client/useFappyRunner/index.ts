@@ -244,7 +244,7 @@ export const useFappyRunner = ({
       stopLoop();
       beats.stop();
     };
-  }, []);
+  }, [beats]);
 
   const flap = (): void => {
     const run = runRef.current;

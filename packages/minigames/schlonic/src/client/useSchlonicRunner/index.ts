@@ -279,7 +279,7 @@ export const useSchlonicRunner = ({
       stopLoop();
       beats.stop();
     };
-  }, []);
+  }, [beats]);
 
   const isArmed = (): boolean => {
     const local = runRef.current;

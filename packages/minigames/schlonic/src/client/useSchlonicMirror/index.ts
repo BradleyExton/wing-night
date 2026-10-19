@@ -404,5 +404,5 @@ export const useSchlonicMirror = ({
       stopLoop();
       beats.stop();
     };
-  }, []);
+  }, [beats]);
 };
