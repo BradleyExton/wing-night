@@ -8,7 +8,7 @@ import type {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { emojiCharadesMinigameId, emojiCharadesRuntimePlugin } from "./index.js";
+import { emojiCharadesRuntimePlugin } from "./index.js";
 import { parseEmojiCharadesContentFile } from "./content/index.js";
 import {
   MAX_EMOJIS_PER_SUBJECT,
@@ -99,7 +99,6 @@ const displayView = (
 };
 
 test("registers under the EMOJI_CHARADES minigame id", () => {
-  assert.equal(emojiCharadesMinigameId, "EMOJI_CHARADES");
   assert.equal(emojiCharadesRuntimePlugin.id, "EMOJI_CHARADES");
 });
 

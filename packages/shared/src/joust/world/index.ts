@@ -162,7 +162,7 @@ export const JOUST_RACK_RIGHT = JOUST_WORLD.width - 4;
 export const JOUST_RACK_TOP = 22;
 
 /** How far a player's feet stay from the end of their own shelf. */
-export const JOUST_PERCH_MARGIN = JOUST_PIN_HEAD_RADIUS + 1;
+const JOUST_PERCH_MARGIN = JOUST_PIN_HEAD_RADIUS + 1;
 /**
  * The gap between neighbours in an uncrowded rack: a shade wider than a bird's head, so a full
  * lane is shoulder to shoulder without anyone standing inside anyone else.

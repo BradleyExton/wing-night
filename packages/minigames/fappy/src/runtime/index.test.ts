@@ -14,7 +14,7 @@ import {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { fappyMinigameId, fappyRuntimePlugin } from "./index.js";
+import { fappyRuntimePlugin } from "./index.js";
 import { isFappyRules, resolveFappyRules } from "./rules/index.js";
 import { DEFAULT_FAPPY_RULES } from "./types/index.js";
 
@@ -126,7 +126,6 @@ const clearCurrentLeg = (state: SerializableValue, atMs: number): SerializableVa
 };
 
 test("does register under the FAPPY minigame id", () => {
-  assert.equal(fappyMinigameId, "FAPPY");
   assert.equal(fappyRuntimePlugin.id, "FAPPY");
 });
 

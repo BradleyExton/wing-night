@@ -3,8 +3,7 @@ import type {
   JoustPerch,
   JoustShotResult,
   JoustShotRun,
-  JoustShotTrack,
-  MinigameType
+  JoustShotTrack
 } from "@wingnight/shared";
 import {
   JOUST_WORLD,
@@ -45,8 +44,6 @@ import {
   type JoustRuntimeState
 } from "./types/index.js";
 import { resolveCurrentArena, toJoustDisplayView, toJoustHostView } from "./views/index.js";
-
-export const joustMinigameId: MinigameType = "JOUST";
 
 // Each team's turn is fought on its own lane, chosen by the team's place in
 // the turn order so no two teams face the same cactus and a mid-turn reconnect

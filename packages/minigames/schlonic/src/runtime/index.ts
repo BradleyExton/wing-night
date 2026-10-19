@@ -1,4 +1,4 @@
-import type { MinigameType, Player, SchlonicBestTurn, SchlonicPlayerFigure, Team } from "@wingnight/shared";
+import type { Player, SchlonicBestTurn, SchlonicPlayerFigure, Team } from "@wingnight/shared";
 import { runSchlonicRun } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -10,8 +10,6 @@ import { isSchlonicRules, resolveSchlonicRules } from "./rules/index.js";
 import { resolveWingsBanked, resolveWingsPar, resolveSchlonicPoints } from "./scoring/index.js";
 import type { SchlonicRuntimeRules, SchlonicRuntimeRun, SchlonicRuntimeState } from "./types/index.js";
 import { cloneBestTurn, resolveSchlonicPhase, toSchlonicDisplayView, toSchlonicHostView } from "./views/index.js";
-
-export const schlonicMinigameId: MinigameType = "SCHLONIC";
 
 // The active team's seating, as the figures the surfaces name. Only players the roster still
 // lists count; an id with no player behind it is skipped.

@@ -17,7 +17,7 @@ import {
 
 import * as styles from "./styles.js";
 
-export type ArenaHenProps = {
+type ArenaHenProps = {
   figure: JoustPlayerFigure;
   foot: JoustVec2;
   head: JoustVec2;

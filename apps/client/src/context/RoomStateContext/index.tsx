@@ -21,7 +21,7 @@ export const RoomStateProvider = ({
   return <RoomStateContext.Provider value={value}>{children}</RoomStateContext.Provider>;
 };
 
-export const useRoomStateEnvelope = (): RoleScopedStateSnapshotEnvelope | null => {
+const useRoomStateEnvelope = (): RoleScopedStateSnapshotEnvelope | null => {
   return useContext(RoomStateContext);
 };
 

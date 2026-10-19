@@ -4,7 +4,7 @@ import { resolveSchlongPaths } from "@wingnight/cast";
 import { loadoutCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
-export type LoadoutProps = {
+type LoadoutProps = {
   shooters: readonly JoustShooterView[];
   selectedShooterId: string;
   // Whether a tap may change what is on the band: only while the team is aiming, and only

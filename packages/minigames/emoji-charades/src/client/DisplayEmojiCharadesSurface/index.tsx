@@ -1,14 +1,8 @@
 import { useRef } from "react";
 
-import {
-  resolveRevealDurationMs,
-  type MinigameDisplayRendererProps
-} from "@wingnight/minigames-core";
-import { NeonMarquee, useRevealWindow } from "@wingnight/surface";
-import type {
-  EmojiCharadesMinigameDisplayView,
-  EmojiCharadesSubjectReveal
-} from "@wingnight/shared";
+import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
+import { NeonMarquee, useIsRevealVisible } from "@wingnight/surface";
+import type { EmojiCharadesMinigameDisplayView } from "@wingnight/shared";
 
 import { MAX_EMOJIS_PER_SUBJECT } from "../../runtime/types/index.js";
 import { useEmojiCharadesSounds } from "../useEmojiCharadesSounds/index.js";
@@ -22,15 +16,6 @@ import {
 } from "./heldClue/index.js";
 import * as styles from "./styles.js";
 
-// The subject text is up for the server's window, timed from when THIS display
-// saw the reveal (see `useRevealWindow` for why arrival, not the server's stamp).
-const useIsRevealVisible = (reveal: EmojiCharadesSubjectReveal | null): boolean => {
-  return useRevealWindow(
-    resolveRevealKey(reveal),
-    reveal === null ? 0 : resolveRevealDurationMs(reveal)
-  );
-};
-
 export const DisplayEmojiCharadesSurface = ({
   minigameDisplayView,
   activeTeamName,
@@ -42,7 +27,7 @@ export const DisplayEmojiCharadesSurface = ({
   // The final verdict of a turn flips straight to `turn_complete`, so the reveal has to be read
   // from that status too — otherwise the turn's last answer never reaches the room.
   const reveal = displayView === null ? null : displayView.reveal;
-  const isRevealVisible = useIsRevealVisible(reveal);
+  const isRevealVisible = useIsRevealVisible(reveal, resolveRevealKey);
   const emojiSequence =
     displayView?.status === "playing" ? displayView.emojiSequence : [];
 

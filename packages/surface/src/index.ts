@@ -53,6 +53,7 @@ export {
 } from "./useGameSoundboard/index.js";
 // Whether a reveal's answer is up, timed from this surface's arrival. DRAWING
 // and EMOJI_CHARADES each kept a copy, and the two drifted a render apart.
+export { useIsRevealVisible } from "./useIsRevealVisible/index.js";
 export { useRevealWindow } from "./useRevealWindow/index.js";
 // A host surface's verdict buttons through one double-tap guard. Every game's
 // Correct / Skip / Next had the same hole: a double tap was two verdicts.

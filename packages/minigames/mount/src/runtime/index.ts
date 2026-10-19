@@ -1,4 +1,4 @@
-import type { MinigameType, MountPile, MountPlayerFigure, Player, Team } from "@wingnight/shared";
+import type { MountPile, MountPlayerFigure, Player, Team } from "@wingnight/shared";
 import { addMountHen, createMountPile, resolveMountClimbTicks, runMountClimb } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -16,8 +16,6 @@ import { isMountRules, resolveMountRules } from "./rules/index.js";
 import { resolveMountPoints, resolveShareBanked } from "./scoring/index.js";
 import type { MountRuntimeClimb, MountRuntimeState } from "./types/index.js";
 import { clonePile, resolveMountPhase, toMountDisplayView, toMountHostView } from "./views/index.js";
-
-export const mountMinigameId: MinigameType = "MOUNT";
 
 const toFigure = (player: Player, team: Team): MountPlayerFigure => {
   return {

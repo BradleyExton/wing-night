@@ -3,7 +3,7 @@ import { JOUST_PIN_FOOT_RADIUS } from "@wingnight/shared";
 
 import { joustPalette } from "../palette.js";
 
-export type GroundShadowProps = {
+type GroundShadowProps = {
   // The foot body's centre: the shadow lies on whatever that foot is standing on.
   foot: JoustVec2;
 };

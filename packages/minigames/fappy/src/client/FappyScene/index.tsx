@@ -37,7 +37,7 @@ export type FappySceneHandle = {
   paintCrash: (frame: FappyFrame, progress: number) => void;
 };
 
-export type FappySceneProps = {
+type FappySceneProps = {
   gates: readonly FappyGate[];
   gatesPerLeg: number;
   bird: LegBird;

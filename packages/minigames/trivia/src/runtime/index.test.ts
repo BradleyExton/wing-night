@@ -4,7 +4,7 @@ import test from "node:test";
 import type { TriviaContentFile } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { triviaMinigameId, triviaRuntimePlugin, type TriviaRuntimeState } from "./index.js";
+import { triviaRuntimePlugin, type TriviaRuntimeState } from "./index.js";
 import { parseTriviaContentFile } from "./content/index.js";
 import { isTriviaRules } from "./rules/index.js";
 
@@ -77,7 +77,7 @@ const recordAttempt = (
 test("init creates stable turn order with empty pending points", () => {
   const state = initializeState();
 
-  assert.equal(triviaMinigameId, "TRIVIA");
+  assert.equal(triviaRuntimePlugin.id, "TRIVIA");
   assert.deepEqual(state.runtimeState.turnOrderTeamIds, ["team-1", "team-2"]);
   assert.equal(state.runtimeState.activeTurnIndex, 0);
   assert.equal(state.runtimeState.promptCursor, 0);

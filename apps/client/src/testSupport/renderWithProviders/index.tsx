@@ -43,7 +43,7 @@ export const buildNoopHostHandlers = (
   };
 };
 
-export const withHostProviders = (
+const withHostProviders = (
   ui: ReactNode,
   { roomState = null, handlers = {} }: HostProviderOptions = {}
 ): JSX.Element => {
@@ -64,7 +64,7 @@ export const renderHostMarkup = (
   return renderToStaticMarkup(withHostProviders(ui, options));
 };
 
-export const withDisplayProviders = (
+const withDisplayProviders = (
   ui: ReactNode,
   { roomState = null }: DisplayProviderOptions = {}
 ): JSX.Element => {

@@ -4,7 +4,7 @@ import { ResultPlaque } from "@wingnight/surface";
 import { displayEmojiCharadesSurfaceCopy } from "../copy.js";
 import * as styles from "./styles.js";
 
-export type RevealOverlayProps = {
+type RevealOverlayProps = {
   reveal: EmojiCharadesSubjectReveal;
   teamName: string | null;
   pointsAwarded: number;

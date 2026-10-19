@@ -34,7 +34,7 @@ const PALETTE = {
  * becomes the dithered sprite that would fill it. `spriteSrc` on `leaders[]` in the PETMON design
  * doc is doc-only — PETMON is not built — so this prop follows the field that actually exists.
  */
-export type LikenessProps = {
+type LikenessProps = {
   avatarSrc?: string;
 };
 
@@ -60,7 +60,7 @@ const Likeness = ({ avatarSrc }: LikenessProps): JSX.Element => {
   );
 };
 
-export type ThrowerProps = LikenessProps & {
+type ThrowerProps = LikenessProps & {
   /** Mid-eat until the eat finishes; the arm drops on release. */
   chewing: boolean;
   holding: boolean;
@@ -85,7 +85,7 @@ export const Thrower = ({ avatarSrc, chewing, holding }: ThrowerProps): JSX.Elem
   );
 };
 
-export type ProjectileSpriteProps = {
+type ProjectileSpriteProps = {
   kind: ProjectileId;
   scale?: number;
 };
@@ -118,7 +118,7 @@ export const ProjectileSprite = ({ kind, scale = 1 }: ProjectileSpriteProps): JS
   );
 };
 
-export type RampProps = {
+type RampProps = {
   length: number;
   angleDeg: number;
 };
@@ -131,7 +131,7 @@ export const Ramp = ({ length, angleDeg }: RampProps): JSX.Element => {
   );
 };
 
-export type TrashCanProps = {
+type TrashCanProps = {
   scale?: number;
   /** Foregrounded cans get a rim highlight so they read as in front of the field, not part of it. */
   foregrounded?: boolean;
@@ -151,7 +151,7 @@ export const TrashCan = ({ scale = 1, foregrounded = false }: TrashCanProps): JS
   );
 };
 
-export type CleanerProps = {
+type CleanerProps = {
   /** Bent over the projectile, mid-pick-up. */
   stooping: boolean;
   /** Holding the projectile — she has it, so the floor is empty from here on. */
@@ -176,7 +176,7 @@ export const Cleaner = ({ stooping, carrying }: CleanerProps): JSX.Element => {
   );
 };
 
-export type EatingTimerProps = {
+type EatingTimerProps = {
   /** 0..1 through the eating beat. */
   progress: number;
   radius: number;

@@ -31,7 +31,7 @@ export type MountSceneHandle = {
   toWorld: (clientX: number, clientY: number) => MountVec | null;
 };
 
-export type MountSceneProps = {
+type MountSceneProps = {
   surface: "host" | "display";
   /** The pile the climb is climbing: the view's, or the one a replay started on. */
   pile: MountPile;

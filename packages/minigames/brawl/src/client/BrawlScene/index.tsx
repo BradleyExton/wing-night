@@ -31,7 +31,7 @@ export type BrawlSceneHandle = {
   shake: () => void;
 };
 
-export type BrawlSceneProps = {
+type BrawlSceneProps = {
   block: BrawlBlock;
   /** The block's player as the cast draws them (`resolveHenFigure`). */
   hen: HenFigure;

@@ -9,7 +9,7 @@ import type {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { songGuessMinigameId, songGuessRuntimePlugin } from "./index.js";
+import { songGuessRuntimePlugin } from "./index.js";
 import { parseSongGuessContentFile } from "./content/index.js";
 import { isSongGuessRules, resolveSongGuessRules } from "./rules/index.js";
 import {
@@ -145,7 +145,6 @@ const displayViewOf = (state: SerializableValue): SongGuessMinigameDisplayView =
 };
 
 test("registers under the SONG_GUESS minigame id", () => {
-  assert.equal(songGuessMinigameId, "SONG_GUESS");
   assert.equal(songGuessRuntimePlugin.id, "SONG_GUESS");
 });
 

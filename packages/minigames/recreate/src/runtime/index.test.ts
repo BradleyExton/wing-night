@@ -9,7 +9,6 @@ import type {
 import type { SerializableValue } from "@wingnight/minigames-core";
 
 import {
-  recreateMinigameId,
   recreateRuntimePlugin,
   resolveRecreateAttemptId
 } from "./index.js";
@@ -111,7 +110,7 @@ const submittedState = (overrides: InitializeOverrides = {}): RecreateRuntimeSta
 };
 
 test("initializes the active team in writing with its cursor seeded by turn order", () => {
-  assert.equal(recreateMinigameId, "RECREATE");
+  assert.equal(recreateRuntimePlugin.id, "RECREATE");
 
   const state = initializeState({ activeRoundTeamId: "team-2" });
 

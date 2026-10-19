@@ -2,7 +2,7 @@ import { MAX_EMOJIS_PER_SUBJECT } from "../../../runtime/types/index.js";
 import { hostEmojiCharadesSurfaceCopy } from "../copy.js";
 import * as styles from "./styles.js";
 
-export type SubjectCardProps = {
+type SubjectCardProps = {
   subjectId: string | null;
   subjectText: string | null;
   // Null on the intro beat, where there is no clue yet and the card hugs its

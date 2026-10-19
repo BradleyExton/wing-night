@@ -13,7 +13,7 @@ import type { JoustRuntimeState } from "../types/index.js";
 
 const JOUST_PHASES: readonly JoustPhase[] = ["aiming", "resolved", "done"];
 
-export const isJoustAim = (value: unknown): value is JoustAim => {
+const isJoustAim = (value: unknown): value is JoustAim => {
   return isRecord(value) && isFiniteNumber(value.x) && isFiniteNumber(value.y);
 };
 

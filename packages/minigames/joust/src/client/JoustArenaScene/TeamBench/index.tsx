@@ -7,7 +7,7 @@ import { useBenchWalk } from "../../useBenchWalk/index.js";
 import { ArenaHen } from "../ArenaHen/index.js";
 import { GroundShadow } from "../GroundShadow/index.js";
 
-export type TeamBenchProps = {
+type TeamBenchProps = {
   teammates: JoustPlayerFigure[];
   // Whose hand is on the band: they stand at the slingshot rather than in the line. Null once
   // the turn is over, when the last of them walks off like the others.

@@ -1,6 +1,7 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type { BrawlBlock, BrawlFrame, BrawlInput, BrawlMinigameBlock, BrawlOutcome } from "@wingnight/shared";
 import { BRAWL_WORLD, advanceBrawl, createBrawlRunStart } from "@wingnight/shared";
+import { createBeatLoop } from "@wingnight/minigames-core";
 import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, KO_BEAT_MS, TIMEOUT_BEAT_MS } from "../beats/index.js";
@@ -57,16 +58,9 @@ type LocalRun = {
   startHearts: number;
 };
 
-// A beat playing over the block's terminal frame, `progress` 0 → 1. `then` runs when it is over —
-// the next block the server has already moved to, held back until the room has seen this one end.
-type LocalBeat = {
-  outcome: BrawlOutcome;
-  frame: BrawlFrame;
-  startedAtMs: number;
-  rafHandle: number;
-  then: (() => void) | null;
-};
-
+// A beat playing over the block's terminal frame, one per outcome. Its `then` runs when it is
+// over — the next block the server has already moved to, held back until the room has seen this
+// one end.
 const BEAT_DURATION_MS: Record<BrawlOutcome, number> = {
   cleared: CLEARED_BEAT_MS,
   ko: KO_BEAT_MS,
@@ -113,7 +107,7 @@ export const useBrawlRunner = ({
   // The block and status the effect below last followed, so it can tell a heart bought on the
   // line from a new block or a reset.
   const followedRef = useRef<{ blockIndex: number | null; blockStatus: string | null }>({ blockIndex: null, blockStatus: null });
-  const beatRef = useRef<LocalBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   const callbacksRef = useRef({ onWalk, onPeck, onEndBlock, onEvent });
   const viewBlockRef = useRef(viewBlock);
   const canActRef = useRef(canAct);
@@ -138,16 +132,6 @@ export const useBrawlRunner = ({
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
-
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
   // The chrome the loop owns: the hearts left and the worth banked, off the frame it just drew.
   // `carried` is how many hearts have flown into the tally so far (the handoff beat only): each
   // leaves the row and lands in the number at its worth, so the two agree with the referee's
@@ -161,42 +145,20 @@ export const useBrawlRunner = ({
     );
   };
 
-  const paintBeat = (beat: LocalBeat, progress: number): void => {
-    const scene = sceneRef.current;
-
-    if (beat.outcome === "cleared") {
-      scene?.paintCleared(beat.frame, progress);
-    } else if (beat.outcome === "ko") {
-      scene?.paintKo(beat.frame, progress);
-    } else {
-      scene?.paintTimeout(beat.frame, progress);
-    }
-
-    paintChrome(beat.frame, beat.outcome === "cleared" ? resolveHeartsCarried(beat.frame.hearts, progress) : 0);
-  };
-
   const startBeat = (frame: BrawlFrame, outcome: BrawlOutcome): void => {
-    stopBeat();
+    beats.start(outcome, (progress) => {
+      const scene = sceneRef.current;
 
-    const beat: LocalBeat = { outcome, frame, startedAtMs: performance.now(), rafHandle: 0, then: null };
-    const step = (now: number): void => {
-      const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[outcome];
-
-      paintBeat(beat, Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
+      if (outcome === "cleared") {
+        scene?.paintCleared(frame, progress);
+      } else if (outcome === "ko") {
+        scene?.paintKo(frame, progress);
+      } else {
+        scene?.paintTimeout(frame, progress);
       }
 
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    paintBeat(beat, 0);
-    beat.rafHandle = window.requestAnimationFrame(step);
+      paintChrome(frame, outcome === "cleared" ? resolveHeartsCarried(frame.hearts, progress) : 0);
+    });
   };
 
   const step = (now: number): void => {
@@ -264,7 +226,7 @@ export const useBrawlRunner = ({
 
     if (blockIndex === null || blockStatus === null) {
       stopLoop();
-      stopBeat();
+      beats.stop();
       runRef.current = createLocalRun();
       return;
     }
@@ -287,8 +249,10 @@ export const useBrawlRunner = ({
         paintChrome(runRef.current.frame);
       };
 
-      if (beatRef.current !== null) {
-        beatRef.current.then = restart;
+      const beat = beats.current();
+
+      if (beat !== null) {
+        beat.then = restart;
         return;
       }
 
@@ -332,9 +296,9 @@ export const useBrawlRunner = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
-  }, []);
+  }, [beats]);
 
   const isArmed = (local: LocalRun): boolean => {
     return (
@@ -343,7 +307,7 @@ export const useBrawlRunner = ({
       viewBlockRef.current.status !== "done" &&
       !local.hasEnded &&
       local.frame.outcome === null &&
-      beatRef.current === null
+      beats.current() === null
     );
   };
 

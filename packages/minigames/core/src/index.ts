@@ -711,3 +711,6 @@ export type MinigameRevealWindow = {
 export const resolveRevealDurationMs = (reveal: MinigameRevealWindow): number => {
   return Math.max(0, reveal.expiresAtMs - reveal.revealedAtMs);
 };
+
+export { createBeatLoop } from "./beatLoop/index.js";
+export type { Beat, BeatFrameClock, BeatLoop } from "./beatLoop/index.js";
