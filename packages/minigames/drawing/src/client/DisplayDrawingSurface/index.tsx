@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
-import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
+import { NeonMarquee, ResultPlaque, useIsRevealVisible } from "@wingnight/surface";
 import type { DrawingPromptReveal, DrawingStroke } from "@wingnight/shared";
 
 import { StrokeReplayCanvas } from "./StrokeReplayCanvas/index.js";
@@ -9,7 +9,6 @@ import {
   resolveRevealKey,
   type HeldSketch
 } from "./heldSketch/index.js";
-import { useIsRevealVisible } from "../useIsRevealVisible/index.js";
 import { displayDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -49,7 +48,7 @@ export const DisplayDrawingSurface = ({
   const drawingDisplayView =
     minigameDisplayView?.minigame === "DRAWING" ? minigameDisplayView : null;
   const reveal = drawingDisplayView?.reveal ?? null;
-  const isRevealVisible = useIsRevealVisible(reveal);
+  const isRevealVisible = useIsRevealVisible(reveal, resolveRevealKey);
   const isPlayPhase = phase === "play";
   const strokes = drawingDisplayView?.strokes ?? [];
 

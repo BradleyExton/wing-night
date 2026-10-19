@@ -1,12 +1,12 @@
 import { useRef, useState } from "react";
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
+import { TakeoverStage, useIsRevealVisible, useVerdictDispatch } from "@wingnight/surface";
 
 import {
   DrawingCanvas,
   type DrawingCanvasHandle
 } from "./DrawingCanvas/index.js";
-import { useIsRevealVisible } from "../useIsRevealVisible/index.js";
+import { resolveRevealKey } from "../DisplayDrawingSurface/heldSketch/index.js";
 import { hostDrawingSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -57,7 +57,7 @@ export const HostDrawingSurface = ({
   const [selectedInkId, setSelectedInkId] = useState<string>(
     INK_PALETTE[0].id
   );
-  const isRevealVisible = useIsRevealVisible(drawingHostView?.reveal ?? null);
+  const isRevealVisible = useIsRevealVisible(drawingHostView?.reveal ?? null, resolveRevealKey);
   const { dispatchVerdict, isSettling: isVerdictSettling } =
     useVerdictDispatch(onDispatchAction);
 
