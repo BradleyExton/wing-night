@@ -640,19 +640,20 @@ collapsed into `packages/shared/src/seededRandom`, two orphaned `index.css` keyf
 the committed PR screenshots untracked. What follows is the half that wants a decision or a
 supervised pass, roughly in payoff order.
 
-### Four copies of the same rAF beat loop
-`useFappyRunner`, `useFappyMirror`, `useSchlonicRunner` and `useSchlonicMirror` are 1,120 lines that
-share one piece of machinery: a `BEAT_DURATION_MS` record, a `stopLoop()`, and a `step(now)` body
-that computes `progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind]`, calls
-`paintBeat(min(1, progress))`, then advances or stops. Only the painting differs.
+### ~~Four copies of the same rAF beat loop~~ — done 2026-10-19
+`createBeatLoop` in `packages/minigames/core/src/beatLoop` owns the beat: it takes the
+`BEAT_DURATION_MS` map, and `start(kind, paintBeat)` plays one beat (stopping any other) and hands
+back the beat so the caller can set its `then`. `useFappyRunner`, `useFappyMirror`,
+`useSchlonicRunner` and `useSchlonicMirror` each hold one for their lifetime and keep their scene
+refs and painters; the loop is stopped only on purpose, never by an effect's cleanup. `paintBeat`
+is passed per `start` rather than once at creation, because every painter closes over its own
+beat's frame, ghost, punchline cues and bank count. The frame clock is injectable, so the loop has
+its own unit test; both sandbox specs pass under Playwright.
 
-- Shape: a `createBeatLoop` in `packages/minigames/core` taking the duration map and a `paintBeat`
-  callback, returning `{ start, stop }`. The scene refs stay in each hook.
-- Do it before a third one-button game lands, not after. The invariants these four share are
-  exactly the ones that are easy to get wrong once and then copy: the loop must not be stopped by
-  effect cleanup, and a hidden browser pane throttles rAF to ~1fps, so any verification runs under
-  Playwright rather than a backgrounded preview pane.
-- No behaviour change. Both games have runtime tests plus `/dev/minigame/<slug>` sandboxes.
+Left open: BRAWL's `useBrawlRunner`/`useBrawlMirror` (shipped after the audit) carry a fifth and
+sixth copy of the same `startBeat`, and MOUNT's runner and mirror have a variant. Moving them onto
+`createBeatLoop` is the same mechanical change, scoped out of the 2026-10-19 pass to keep it to the
+four hooks the audit named.
 
 ### The house component rules stop at the minigame packages
 `eslint.config.mjs` applies `max-lines`, `no-inline-style-prop`, `no-hardcoded-component-jsx-text`,
@@ -675,42 +676,43 @@ The 13 SVG primitives are a real exception — a `<g>` of shapes has no `styles.
 carve them out by path rather than bending the rule. The other 15 are ordinary fixes. Land the
 carve-out and the fixes together with the config change, or the gate goes red.
 
-### 118 dead exports
-Three recognisable families, all safe to delete:
+### ~~118 dead exports~~ — done 2026-10-19
+Each re-checked with a whole-workspace grep before it went.
 
-- **18 `*Props` types** exported and never imported (`PerchProps`, `ShooterProps`,
-  `FappySceneProps`, `SchlonicSceneProps`, `ArenaHenProps`, …). The component's own file is the
-  only consumer.
-- **9 `<game>MinigameId` constants**, one per minigame package, used by nothing
-  (`schlonicMinigameId`) or only by their own test. The plugin's `id` field already carries this.
-- **Assorted orphans**: `cloneEmojiCharadesSubject`,
-  `cloneEmojiCharadesDeck`, `isEmojiToken`, `isJoustAim`, `createTriviaStateWithPendingPoints`,
-  `BARRIE_CENTER`, `BARRIE_ZOOM`, `JOUST_PERCH_MARGIN` (used only inside its own file),
-  `useRoomStateEnvelope`, `withHostProviders`, `withDisplayProviders`, `buildGeminiImageUrl`.
+- **24 `*Props` types** (the 18 the audit counted, plus the ContraptionUiLab scene and a few newer
+  scenes) are un-exported; each is still its own component's props.
+- **11 `<game>MinigameId` constants** are deleted. The tests that asserted one now assert the
+  plugin's `id`.
+- **Orphans** still unused outside their file are un-exported: `cloneEmojiCharadesDeck`,
+  `isJoustAim`, `createTriviaStateWithPendingPoints`, `BARRIE_CENTER`, `BARRIE_ZOOM`,
+  `JOUST_PERCH_MARGIN`, `useRoomStateEnvelope`, `withHostProviders`, `withDisplayProviders`. Three
+  the audit listed have real consumers now and stay exported: `buildGeminiImageUrl` (moved to
+  `packages/avatar-head`, used by the server, the Worker and `import:avatars`),
+  `cloneEmojiCharadesSubject` (the runtime's views) and `isEmojiToken` (the client's emoji search).
 
-A further 104 exports exist only for their colocated test. Most are legitimate
-(`testHarness.ts` files, pure resolvers); a handful — `resolveLegHold`, `resolveRunHold`,
-`toVolumePercent`/`fromVolumePercent` — are testing internals where a test at the hook boundary
-would do.
+Skipped on purpose: the test-only exports `resolveLegHold`, `resolveRunHold` and
+`toVolumePercent`/`fromVolumePercent`. The two holds are decided inside `useHeldLeg`/`useHeldRun`
+effects and cleared by a timer, and `fromVolumePercent` runs in the slider's `onChange`; the repo's
+hook tests render static markup, which runs no effects and fires no events. Testing at the hook
+boundary needs an effect-running renderer the repo does not have, so the pure resolvers keep their
+export and their tests.
 
-### `packages/shared/src/index.ts` hand-relists its own sub-barrels
-464 lines, roughly 144 of which repeat — symbol by symbol — the export lists already written in
-`joust/index.ts`, `fappy/index.ts`, `schlonic/index.ts` and `contraption/index.ts`. Adding a shared
-symbol means editing two files and nothing fails if you forget the second. No `export *` appears
-anywhere in the package, so decide whether the explicit listing is buying anything (it is not
-buying tree-shaking — every consumer is bundled from source) before keeping it.
+### ~~`packages/shared/src/index.ts` hand-relists its own sub-barrels~~ — done 2026-10-19
+The relisted blocks for `contraption/`, `joust/`, `fappy/` and `schlonic/` — and `brawl/` and
+`mount/`, which landed since with the same duplication — are each one `export * from` the
+sub-barrel. Nothing is buying tree-shaking (every consumer bundles from source), and the public
+surface is unchanged: the module's export list, read through the TypeScript checker before and
+after, is the same 663 symbols with the same value/type kinds and declaring files. 789 lines down
+to 557. The other sub-modules (`roomState`, `guestPortal`, …) are still listed by hand; whether
+those want the same treatment was not looked at.
 
-### `useIsRevealVisible` is still two copies in two packages
-The audit found this hook pasted into three surfaces. "Time the reveal on one clock" then merged
-DRAWING's two into `drawing/src/client/useIsRevealVisible/` and fixed the clock-skew bug all three
-carried — but EMOJI CHARADES kept its own at
-`DisplayEmojiCharadesSurface/index.tsx:35`, and the two bodies are now character-for-character
-identical apart from the reveal type.
-
-The home has moved with the fix: `resolveRevealDurationMs` already lives in
-`packages/minigames/core`, so the hook belongs beside it, generic over a reveal and a
-`resolveRevealKey`. Leaving one copy behind in another package is exactly how the first bug got
-written twice, and the comment in the DRAWING hook says so.
+### ~~`useIsRevealVisible` is still two copies in two packages~~ — done 2026-10-19
+One generic `useIsRevealVisible(reveal, resolveRevealKey)` in `packages/surface`, beside the
+`useRevealWindow` it wraps; DRAWING (both surfaces) and EMOJI CHARADES pass their own
+`resolveRevealKey`. It went to surface rather than to `packages/minigames/core` beside
+`resolveRevealDurationMs`, because core is a single barrel the server imports: a hook there would
+have to import `useRevealWindow` and pull the UI kit into the server's graph. Surface depends on
+core instead — every package that uses surface already did.
 
 ### Two documented conventions the code no longer follows
 Docs-only unless the first one gets acted on.
@@ -741,10 +743,10 @@ every one of them a hand-narrowed dependency array on a loop or a hold rather th
 
 - `fappy/src/client/FappyScene/index.tsx:261` — deps are `[sceneId, waitingBird === null]`, an
   expression the rule cannot follow at all
-- `fappy/src/client/HostFappySurface/index.tsx:130`, `useFappyMirror/index.ts:289`,
-  `useFappyRunner/index.ts:242`, `useHeldLeg/index.ts:63`
+- `fappy/src/client/HostFappySurface/index.tsx:130`, `useFappyMirror/index.ts:281`,
+  `useFappyRunner/index.ts:219`, `useHeldLeg/index.ts:63`
 - `schlonic/src/client/SchlonicScene/index.tsx:239`, `useHeldRun/index.ts:79`,
-  `useSchlonicMirror/index.ts:257`, `useSchlonicRunner/index.ts:202`
+  `useSchlonicMirror/index.ts:400`, `useSchlonicRunner/index.ts:255`
 
 Widening any of them re-runs an effect that starts a `requestAnimationFrame` loop, so the honest
 fix is a ref/`useCallback` restructure per site, verified under Playwright because a hidden browser
