@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type {
   SchlonicBestLeg,
   SchlonicFrame,
@@ -7,6 +7,7 @@ import type {
   SchlonicZone
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart } from "@wingnight/shared";
+import { createBeatLoop } from "@wingnight/minigames-core";
 import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
@@ -52,19 +53,11 @@ type LocalRun = {
 };
 
 // A beat playing over the run's terminal frame, `progress` 0 → 1: the post crossed, or the run
-// that ended where it went wrong. `then` runs when it is over — the next run the server has
+// that ended where it went wrong. Its `then` runs when it is over — the next run the server has
 // already moved to, held back until the room has seen how this one went.
-type LocalBeat = {
-  kind: "cleared" | "wipeout";
-  frame: SchlonicFrame;
-  /** Where the ghost stood when the run ended; it holds there through the beat. */
-  ghostFrame: SchlonicFrame | null;
-  startedAtMs: number;
-  rafHandle: number;
-  then: (() => void) | null;
-};
+type BeatKind = "cleared" | "wipeout";
 
-const BEAT_DURATION_MS: Record<LocalBeat["kind"], number> = {
+const BEAT_DURATION_MS: Record<BeatKind, number> = {
   cleared: CLEARED_BEAT_MS,
   wipeout: WIPEOUT_BEAT_MS
 };
@@ -112,7 +105,7 @@ export const useSchlonicRunner = ({
     };
   };
   const runRef = useRef<LocalRun | null>(null);
-  const beatRef = useRef<LocalBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   const zoneRef = useRef(zone);
   const onPressRef = useRef(onPress);
   const onReleaseRef = useRef(onRelease);
@@ -142,39 +135,20 @@ export const useSchlonicRunner = ({
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
-
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
+  // `ghostFrame` is where the ghost stood when the run ended; it holds there through the beat.
   const startBeat = (
-    kind: LocalBeat["kind"],
+    kind: BeatKind,
     frame: SchlonicFrame,
     ghostFrame: SchlonicFrame | null,
     inputs: readonly SchlonicInput[]
   ): void => {
-    stopBeat();
-
     // A hole takes the handful with it, and the punchline shows what it took.
     const wingsLost = resolveHandfulLost(zoneRef.current, inputs, frame);
     const punchlineCues =
       frame.outcome === "fell" || frame.outcome === "wiped" ? resolvePunchlineCues(frame.outcome, wingsLost) : [];
     let soundedToMs = -1;
 
-    const beat: LocalBeat = {
-      kind,
-      frame,
-      ghostFrame,
-      startedAtMs: performance.now(),
-      rafHandle: 0,
-      then: null
-    };
-    const paintBeat = (progress: number): void => {
+    beats.start(kind, (progress) => {
       if (kind === "cleared") {
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
       } else {
@@ -190,25 +164,7 @@ export const useSchlonicRunner = ({
       }
 
       paintWingTally(tallyRef?.current ?? null, frame.wings);
-    };
-    const step = (now: number): void => {
-      const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
-
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
+    });
   };
 
   const step = (now: number): void => {
@@ -275,7 +231,7 @@ export const useSchlonicRunner = ({
   useEffect(() => {
     if (runIndex === null || runStatus === null) {
       stopLoop();
-      stopBeat();
+      beats.stop();
       runRef.current = createLocalRun();
       return;
     }
@@ -287,7 +243,7 @@ export const useSchlonicRunner = ({
         sceneRef.current?.paint(runRef.current.frame);
         paintWingTally(tallyRef?.current ?? null, 0);
       };
-      const beat = beatRef.current;
+      const beat = beats.current();
 
       if (beat !== null) {
         beat.then = restart;
@@ -321,7 +277,7 @@ export const useSchlonicRunner = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
   }, []);
 
@@ -335,7 +291,7 @@ export const useSchlonicRunner = ({
       localRunRef.current.status !== "done" &&
       !local.hasEnded &&
       local.frame.outcome === null &&
-      beatRef.current === null
+      beats.current() === null
     );
   };
 

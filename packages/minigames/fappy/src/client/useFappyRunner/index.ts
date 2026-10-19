@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { FappyFrame, FappyMinigameLeg } from "@wingnight/shared";
 import {
   FAPPY_WORLD,
@@ -8,6 +8,7 @@ import {
   resolveFappyGates,
   runFappyLeg
 } from "@wingnight/shared";
+import { createBeatLoop } from "@wingnight/minigames-core";
 import { shouldSettleMountedRun } from "@wingnight/surface";
 
 import { CRASH_BEAT_MS, HANDOFF_BEAT_MS } from "../beats/index.js";
@@ -38,18 +39,12 @@ type LocalRun = {
 };
 
 // A beat playing over the run's terminal frame: the crash before a respawn,
-// or the landing that hands the tablet on. `then` runs when it is over —
+// or the landing that hands the tablet on. Its `then` runs when it is over —
 // the respawn the server has already sent, held back until the crash has
 // been seen.
-type LocalBeat = {
-  kind: "crash" | "handoff";
-  frame: FappyFrame;
-  startedAtMs: number;
-  rafHandle: number;
-  then: (() => void) | null;
-};
+type BeatKind = "crash" | "handoff";
 
-const BEAT_DURATION_MS: Record<LocalBeat["kind"], number> = {
+const BEAT_DURATION_MS: Record<BeatKind, number> = {
   crash: CRASH_BEAT_MS,
   handoff: HANDOFF_BEAT_MS
 };
@@ -93,7 +88,7 @@ export const useFappyRunner = ({
     };
   };
   const runRef = useRef<LocalRun | null>(null);
-  const beatRef = useRef<LocalBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   const onFlapRef = useRef(onFlap);
   const onEndLegRef = useRef(onEndLeg);
   const onEventRef = useRef(onEvent);
@@ -119,45 +114,14 @@ export const useFappyRunner = ({
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
-
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
-  const startBeat = (kind: LocalBeat["kind"], frame: FappyFrame): void => {
-    stopBeat();
-
-    const beat: LocalBeat = { kind, frame, startedAtMs: performance.now(), rafHandle: 0, then: null };
-    const paintBeat = (progress: number): void => {
+  const startBeat = (kind: BeatKind, frame: FappyFrame): void => {
+    beats.start(kind, (progress) => {
       if (kind === "crash") {
         sceneRef.current?.paintCrash(frame, progress);
       } else {
         sceneRef.current?.paintHandoff(frame, progress);
       }
-    };
-    const step = (now: number): void => {
-      const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
-
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
+    });
   };
 
   const step = (now: number): void => {
@@ -208,7 +172,7 @@ export const useFappyRunner = ({
 
     if (currentLeg === null || legStatus === null) {
       stopLoop();
-      stopBeat();
+      beats.stop();
       runRef.current = createRun();
       return undefined;
     }
@@ -219,12 +183,12 @@ export const useFappyRunner = ({
         runRef.current = createRun();
         sceneRef.current?.paint(runRef.current.frame);
       };
-      const beat = beatRef.current;
+      const beat = beats.current();
 
       if (beat !== null && beat.kind === "crash" && currentLeg.attempt > 0) {
         beat.then = restart;
       } else {
-        stopBeat();
+        beats.stop();
         restart();
       }
 
@@ -234,7 +198,7 @@ export const useFappyRunner = ({
     if (legStatus === "cleared") {
       stopLoop();
 
-      if (beatRef.current?.kind === "handoff") {
+      if (beats.current()?.kind === "handoff") {
         return undefined;
       }
 
@@ -278,7 +242,7 @@ export const useFappyRunner = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
   }, []);
 
@@ -293,7 +257,7 @@ export const useFappyRunner = ({
       currentLeg.status === "cleared" ||
       run.hasEnded ||
       run.frame.outcome !== null ||
-      beatRef.current !== null
+      beats.current() !== null
     ) {
       return;
     }

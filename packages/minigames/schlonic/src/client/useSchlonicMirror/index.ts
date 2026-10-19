@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, type RefObject } from "react";
+import { useEffect, useReducer, useRef, useState, type RefObject } from "react";
 import type {
   SchlonicBestLeg,
   SchlonicFrame,
@@ -8,6 +8,7 @@ import type {
 } from "@wingnight/shared";
 import { SCHLONIC_WORLD, advanceSchlonic, createSchlonicRunStart, runSchlonicRun } from "@wingnight/shared";
 import type { SchlonicZoneCourse } from "@wingnight/shared";
+import { createBeatLoop, type Beat } from "@wingnight/minigames-core";
 
 import { BANK_COUNT_MS, CLEARED_BEAT_MS, HIT_PAUSE_MS, WIPEOUT_BEAT_MS } from "../beats/index.js";
 import { resolveAirPeak, resolveMirrorEvents, type SchlonicMirrorEventHandler } from "../mirrorEvents/index.js";
@@ -59,16 +60,9 @@ type MirrorRun = {
   rafHandle: number;
 };
 
-type MirrorBeat = {
-  kind: "cleared" | "wipeout";
-  /** Where the ghost stood when the run ended; it holds there through the beat. */
-  ghostFrame: SchlonicFrame | null;
-  startedAtMs: number;
-  rafHandle: number;
-  then: (() => void) | null;
-};
+type BeatKind = "cleared" | "wipeout";
 
-const BEAT_DURATION_MS: Record<MirrorBeat["kind"], number> = {
+const BEAT_DURATION_MS: Record<BeatKind, number> = {
   cleared: CLEARED_BEAT_MS,
   wipeout: WIPEOUT_BEAT_MS
 };
@@ -126,7 +120,7 @@ export const useSchlonicMirror = ({
   const paintBank = (banked: number): void => {
     paintWingTally(bankRef?.current ?? null, Math.max(0, banked));
   };
-  const beatRef = useRef<MirrorBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   // Set once the run in hand has ended with the tablet already elsewhere: the effect below runs
   // again against whatever the tablet is on by then.
   const pendingRef = useRef<(() => void) | null>(null);
@@ -179,31 +173,13 @@ export const useSchlonicMirror = ({
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
-
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
+  // `ghostFrame` is where the ghost stood when the run ended; it holds there through the beat.
   const startBeat = (
-    kind: MirrorBeat["kind"],
+    kind: BeatKind,
     frame: SchlonicFrame,
     ghostFrame: SchlonicFrame | null,
     inputs: readonly SchlonicInput[]
-  ): MirrorBeat => {
-    stopBeat();
-
-    const beat: MirrorBeat = {
-      kind,
-      ghostFrame,
-      startedAtMs: performance.now(),
-      rafHandle: 0,
-      then: null
-    };
+  ): Beat<BeatKind> => {
     // The post's count-up: the handful leaves the bird and lands in the bank one wing at a
     // time, a tick each. `wingsBankedRef` already includes this run — the server refereed it
     // before the wall got here — so the bank starts from what it held before.
@@ -215,7 +191,8 @@ export const useSchlonicMirror = ({
     const punchlineCues =
       frame.outcome === "fell" || frame.outcome === "wiped" ? resolvePunchlineCues(frame.outcome, wingsLost) : [];
     let soundedToMs = -1;
-    const paintBeat = (progress: number): void => {
+
+    return beats.start(kind, (progress) => {
       if (kind === "cleared") {
         sceneRef.current?.paintCleared(frame, progress, ghostFrame);
 
@@ -243,27 +220,7 @@ export const useSchlonicMirror = ({
       }
 
       soundedToMs = elapsedMs;
-    };
-    const step = (now: number): void => {
-      const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
-
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
-
-    return beat;
+    });
   };
 
   const settleRun = (mirror: MirrorRun): void => {
@@ -289,7 +246,7 @@ export const useSchlonicMirror = ({
   // race nobody.
   const paintStill = (key: string, frame: SchlonicFrame): void => {
     stopLoop();
-    stopBeat();
+    beats.stop();
     runRef.current = { ...createMirrorRun(key, []), frame };
     sceneRef.current?.paint(frame);
     paintChrome(frame);
@@ -311,7 +268,7 @@ export const useSchlonicMirror = ({
     if (current !== null && current.key !== key && current.key !== "") {
       const isStillRunning = current.startedAtMs !== null && current.frame.outcome === null;
 
-      if (isStillRunning || beatRef.current !== null) {
+      if (isStillRunning || beats.current() !== null) {
         pendingRef.current = (): void => {
           runRef.current = null;
           markSettled();
@@ -362,7 +319,7 @@ export const useSchlonicMirror = ({
     }
 
     // A beat is already playing this run out; nothing new to draw.
-    if (beatRef.current !== null && current !== null && current.key === key) {
+    if (beats.current() !== null && current !== null && current.key === key) {
       return;
     }
 
@@ -445,7 +402,7 @@ export const useSchlonicMirror = ({
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
   }, []);
 };

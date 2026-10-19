@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type RefObject } from "react";
 import type { FappyFrame, FappyGate, FappyMinigameLeg } from "@wingnight/shared";
 import {
   FAPPY_WORLD,
@@ -8,6 +8,7 @@ import {
   resolveFappyGates,
   runFappyLeg
 } from "@wingnight/shared";
+import { createBeatLoop, type Beat } from "@wingnight/minigames-core";
 
 import { CRASH_BEAT_MS, HANDOFF_BEAT_MS } from "../beats/index.js";
 import type { FappySceneHandle } from "../FappyScene/index.js";
@@ -42,14 +43,9 @@ type MirrorRun = {
   rafHandle: number;
 };
 
-type MirrorBeat = {
-  kind: "crash" | "handoff";
-  startedAtMs: number;
-  rafHandle: number;
-  then: (() => void) | null;
-};
+type BeatKind = "crash" | "handoff";
 
-const BEAT_DURATION_MS: Record<MirrorBeat["kind"], number> = {
+const BEAT_DURATION_MS: Record<BeatKind, number> = {
   crash: CRASH_BEAT_MS,
   handoff: HANDOFF_BEAT_MS
 };
@@ -73,7 +69,7 @@ const resolveRunKey = (leg: FappyMinigameLeg): string => `${leg.legIndex}:${leg.
 // then draws what the tablet is on.
 export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMirrorInput): void => {
   const runRef = useRef<MirrorRun | null>(null);
-  const beatRef = useRef<MirrorBeat | null>(null);
+  const [beats] = useState(() => createBeatLoop(BEAT_DURATION_MS));
   // Set once the flight in hand has ended with the tablet already elsewhere:
   // the effect below runs again against whatever the tablet is on by then.
   const pendingRef = useRef<(() => void) | null>(null);
@@ -106,47 +102,14 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
     }
   };
 
-  const stopBeat = (): void => {
-    const beat = beatRef.current;
-
-    if (beat !== null && beat.rafHandle !== 0) {
-      window.cancelAnimationFrame(beat.rafHandle);
-    }
-
-    beatRef.current = null;
-  };
-
-  const startBeat = (kind: MirrorBeat["kind"], frame: FappyFrame): MirrorBeat => {
-    stopBeat();
-
-    const beat: MirrorBeat = { kind, startedAtMs: performance.now(), rafHandle: 0, then: null };
-    const paintBeat = (progress: number): void => {
+  const startBeat = (kind: BeatKind, frame: FappyFrame): Beat<BeatKind> => {
+    return beats.start(kind, (progress) => {
       if (kind === "crash") {
         sceneRef.current?.paintCrash(frame, progress);
       } else {
         sceneRef.current?.paintHandoff(frame, progress);
       }
-    };
-    const step = (now: number): void => {
-      const progress = (now - beat.startedAtMs) / BEAT_DURATION_MS[kind];
-
-      paintBeat(Math.min(1, progress));
-
-      if (progress >= 1) {
-        beat.rafHandle = 0;
-        beatRef.current = null;
-        beat.then?.();
-        return;
-      }
-
-      beat.rafHandle = window.requestAnimationFrame(step);
-    };
-
-    beatRef.current = beat;
-    paintBeat(0);
-    beat.rafHandle = window.requestAnimationFrame(step);
-
-    return beat;
+    });
   };
 
   // Report what the step just drawn changed, for whoever is listening. Pure diffing lives in
@@ -182,7 +145,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
 
   const paintStill = (key: string, frame: FappyFrame): void => {
     stopLoop();
-    stopBeat();
+    beats.stop();
     runRef.current = { key, gates, gatesPerLeg, flapTicks: [], frame, startedAtMs: null, rafHandle: 0 };
     sceneRef.current?.paint(frame);
   };
@@ -203,7 +166,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
     // playing that out, queue the switch behind the beat.
     if (current !== null && current.key !== key && current.key !== "") {
       const isStillFlying = current.startedAtMs !== null && current.frame.outcome === null;
-      const isPlayingOut = beatRef.current !== null;
+      const isPlayingOut = beats.current() !== null;
 
       if (isStillFlying || isPlayingOut) {
         pendingRef.current = (): void => {
@@ -247,7 +210,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
     }
 
     // A beat is already playing this attempt out; nothing new to draw.
-    if (beatRef.current !== null && current !== null && current.key === key && current.frame.outcome !== null) {
+    if (beats.current() !== null && current !== null && current.key === key && current.frame.outcome !== null) {
       return;
     }
 
@@ -320,7 +283,7 @@ export const useFappyMirror = ({ leg, gatesPerLeg, sceneRef, onEvent }: FappyMir
   useEffect(() => {
     return (): void => {
       stopLoop();
-      stopBeat();
+      beats.stop();
     };
   }, []);
 };
