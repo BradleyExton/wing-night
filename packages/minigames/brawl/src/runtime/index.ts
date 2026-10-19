@@ -1,4 +1,4 @@
-import type { BrawlBestTurn, BrawlInput, BrawlPlayerFigure, MinigameType, Player, Team } from "@wingnight/shared";
+import type { BrawlBestTurn, BrawlInput, BrawlPlayerFigure, Player, Team } from "@wingnight/shared";
 import { resolveBrawlStartHearts, runBrawlRun } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -18,8 +18,6 @@ import { isBrawlRules, resolveBrawlRules } from "./rules/index.js";
 import { resolveBrawlPoints, resolveGoonsDown, resolveGoonsTotal } from "./scoring/index.js";
 import type { BrawlRuntimeBlock, BrawlRuntimeRules, BrawlRuntimeState } from "./types/index.js";
 import { cloneBestTurn, resolveBrawlPhase, toBrawlDisplayView, toBrawlHostView } from "./views/index.js";
-
-export const brawlMinigameId: MinigameType = "BRAWL";
 
 // The active team's seating, as the figures the surfaces name. Only players the roster still
 // lists count; an id with no player behind it is skipped.

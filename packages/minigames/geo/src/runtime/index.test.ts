@@ -4,7 +4,7 @@ import test from "node:test";
 import { type GeoContentFile } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { geoMinigameId, geoRuntimePlugin } from "./index.js";
+import { geoRuntimePlugin } from "./index.js";
 import { parseGeoContentFile } from "./content/index.js";
 import { isGeoRules, resolveGeoRules } from "./rules/index.js";
 import { haversineDistanceKm, resolvePointsForDistance } from "./scoring/index.js";
@@ -86,7 +86,6 @@ const reduce = (
 };
 
 test("geo runtime plugin declares its id, content file, and rules guard", () => {
-  assert.equal(geoMinigameId, "GEO");
   assert.equal(geoRuntimePlugin.id, "GEO");
   assert.equal(geoRuntimePlugin.content?.fileName, "minigames/geo.json");
   assert.equal(isGeoRules({ promptsPerTurn: 3 }), true);

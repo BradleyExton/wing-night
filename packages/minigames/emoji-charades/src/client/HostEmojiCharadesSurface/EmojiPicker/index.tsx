@@ -13,7 +13,7 @@ import {
 import { hostEmojiCharadesSurfaceCopy } from "../copy.js";
 import * as styles from "./styles.js";
 
-export type EmojiPickerProps = {
+type EmojiPickerProps = {
   isDisabled: boolean;
   // Set by a subject whose clue is an authored running joke: the search, the
   // tabs and the catalog all go away, and the picker offers exactly this list.

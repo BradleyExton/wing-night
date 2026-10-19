@@ -1,4 +1,4 @@
-import type { MinigameType, RecreateAttempt } from "@wingnight/shared";
+import type { RecreateAttempt } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
@@ -24,8 +24,6 @@ import {
   toRecreateDisplayView,
   toRecreateHostView
 } from "./views/index.js";
-
-export const recreateMinigameId: MinigameType = "RECREATE";
 
 // Deterministic on purpose: a display refresh or an undo must land on the
 // same id the generator is already working on, so its result still matches.

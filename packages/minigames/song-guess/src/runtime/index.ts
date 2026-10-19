@@ -1,4 +1,4 @@
-import type { MinigameType, SongGuessTeamScore } from "@wingnight/shared";
+import type { SongGuessTeamScore } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
@@ -21,8 +21,6 @@ import {
   toSongGuessDisplayView,
   toSongGuessHostView
 } from "./views/index.js";
-
-export const songGuessMinigameId: MinigameType = "SONG_GUESS";
 
 // Each team's turn gets its own slice of the pack, offset by the team's place
 // in the turn order, so no two teams are asked the same song and a mid-turn

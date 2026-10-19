@@ -7,7 +7,7 @@ import {
 } from "../stageWindow/index.js";
 import * as styles from "./styles.js";
 
-export type ClueStageProps = {
+type ClueStageProps = {
   emojiSequence: string[];
   isDimmed: boolean;
 };

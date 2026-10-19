@@ -23,7 +23,7 @@ import { PointsTag } from "./PointsTag/index.js";
 import { Rubble } from "./Rubble/index.js";
 import { plankPath } from "./plankPath/index.js";
 
-export type PerchProps = {
+type PerchProps = {
   perch: JoustPerch;
   // This perch's legs as the frame has them: two while it stands or folds, none once it is rubble
   // or if it never had any (a slab hung so low it sits on the sand).

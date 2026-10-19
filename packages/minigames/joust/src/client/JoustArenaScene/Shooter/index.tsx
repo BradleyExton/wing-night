@@ -9,7 +9,7 @@ import { resolveSchlongFace, resolveSchlongPaths } from "@wingnight/cast";
 
 import { joustPalette } from "../palette.js";
 
-export type ShooterProps = {
+type ShooterProps = {
   frame: JoustFrame;
   // Which way it is going, for the eyes; null at rest, when it eyes the rack.
   velocity: JoustVec2 | null;

@@ -1,4 +1,4 @@
-import type { MinigameType, TriviaChoiceReveal } from "@wingnight/shared";
+import type { TriviaChoiceReveal } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionInput,
@@ -31,8 +31,6 @@ import {
   toTriviaPlayerView
 } from "./views/index.js";
 
-export const triviaMinigameId: MinigameType = "TRIVIA";
-
 export {
   TRIVIA_CHOOSE_ANSWER_ACTION,
   TRIVIA_LOCK_CHOICES_ACTION,
@@ -46,7 +44,7 @@ const clonePendingPoints = (
   return { ...pendingPointsByTeamId };
 };
 
-export const createTriviaStateWithPendingPoints = (
+const createTriviaStateWithPendingPoints = (
   state: TriviaMinigameState,
   pendingPointsByTeamId: Record<string, number>
 ): TriviaMinigameState => {

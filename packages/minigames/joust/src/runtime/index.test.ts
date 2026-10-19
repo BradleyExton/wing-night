@@ -11,7 +11,7 @@ import type {
 import { JOUST_STANDARD_SHOOTER_PROFILE } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { joustMinigameId, joustRuntimePlugin } from "./index.js";
+import { joustRuntimePlugin } from "./index.js";
 import { parseJoustContentFile } from "./content/index.js";
 import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
@@ -140,7 +140,6 @@ const displayView = (state: SerializableValue): JoustMinigameDisplayView => {
 
 test("registers under the JOUST id", () => {
   assert.equal(joustRuntimePlugin.id, "JOUST");
-  assert.equal(joustMinigameId, "JOUST");
 });
 
 test("starts the active team aiming on the lane its turn order slot picks", () => {

@@ -9,7 +9,7 @@ import type {
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { drawingMinigameId, drawingRuntimePlugin } from "./index.js";
+import { drawingRuntimePlugin } from "./index.js";
 import { parseDrawingContentFile } from "./content/index.js";
 import { isDrawingRules, resolveDrawingRules } from "./guards/index.js";
 import {
@@ -101,7 +101,6 @@ const beginStroke = (
 };
 
 test("drawing runtime plugin declares its minigame id", () => {
-  assert.equal(drawingMinigameId, "DRAWING");
   assert.equal(drawingRuntimePlugin.id, "DRAWING");
 });
 

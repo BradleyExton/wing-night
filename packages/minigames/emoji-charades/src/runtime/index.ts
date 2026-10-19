@@ -1,6 +1,5 @@
 import type {
-  EmojiCharadesSubjectOutcome,
-  MinigameType
+  EmojiCharadesSubjectOutcome
 } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -31,8 +30,6 @@ import {
   toEmojiCharadesDisplayView,
   toEmojiCharadesHostView
 } from "./views/index.js";
-
-export const emojiCharadesMinigameId: MinigameType = "EMOJI_CHARADES";
 
 const shuffleSubjectIds = (subjectIds: string[]): string[] => {
   const shuffled = [...subjectIds];

@@ -3,7 +3,7 @@ import { JOUST_WORLD } from "@wingnight/shared";
 
 import { joustPalette } from "../palette.js";
 
-export type ShotGhostProps = {
+type ShotGhostProps = {
   ghost: JoustShotGhost;
   // The light ink of the kind that flew it, so a teammate reading the ghost can tell a Log's
   // arc from a Pencil's. Null draws it in the Standard's.

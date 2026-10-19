@@ -31,7 +31,7 @@ import { TeamBench } from "./TeamBench/index.js";
 import { joustPalette } from "./palette.js";
 import * as styles from "./styles.js";
 
-export type JoustArenaSceneProps = {
+type JoustArenaSceneProps = {
   arena: JoustMinigameArena;
   // Every body's centre, flat, in resolveJoustBodies order — a rest pose or a track frame.
   frame: JoustFrame;

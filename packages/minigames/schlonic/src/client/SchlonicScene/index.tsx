@@ -35,7 +35,7 @@ export type SchlonicSceneHandle = {
   shake: () => void;
 };
 
-export type SchlonicSceneProps = {
+type SchlonicSceneProps = {
   zone: SchlonicZone;
   runner: RunnerFigure;
   sceneId: string;

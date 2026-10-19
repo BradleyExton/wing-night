@@ -1,4 +1,4 @@
-import type { GeoPromptResult, MinigameType } from "@wingnight/shared";
+import type { GeoPromptResult } from "@wingnight/shared";
 import type { MinigameRuntimePlugin } from "@wingnight/minigames-core";
 import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
@@ -13,8 +13,6 @@ import {
   toGeoHostView,
   toGeoPlayerView
 } from "./views/index.js";
-
-export const geoMinigameId: MinigameType = "GEO";
 
 // A playing-team phone dropping (or moving) its own pin on the photo in hand.
 export const GEO_PLACE_PIN_ACTION = "placePin";

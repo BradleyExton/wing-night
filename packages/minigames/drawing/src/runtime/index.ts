@@ -1,7 +1,6 @@
 import type {
   DrawingPromptOutcome,
-  DrawingStroke,
-  MinigameType
+  DrawingStroke
 } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -32,8 +31,6 @@ import {
   toDrawingDisplayView,
   toDrawingHostView
 } from "./views/index.js";
-
-export const drawingMinigameId: MinigameType = "DRAWING";
 
 const shufflePromptIds = (promptIds: string[]): string[] => {
   const shuffled = [...promptIds];

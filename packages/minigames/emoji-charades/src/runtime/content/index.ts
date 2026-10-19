@@ -24,7 +24,7 @@ export const cloneEmojiCharadesSubject = (
   };
 };
 
-export const cloneEmojiCharadesDeck = (
+const cloneEmojiCharadesDeck = (
   deck: EmojiCharadesDeck
 ): EmojiCharadesDeck => {
   return {

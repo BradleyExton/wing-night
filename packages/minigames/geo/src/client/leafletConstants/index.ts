@@ -36,9 +36,9 @@ export type GeoMapView = {
   zoom: number;
 };
 
-export const BARRIE_CENTER: [number, number] = [44.3894, -79.6903];
+const BARRIE_CENTER: [number, number] = [44.3894, -79.6903];
 
-export const BARRIE_ZOOM = 11;
+const BARRIE_ZOOM = 11;
 
 export const GEO_MAP_VIEWS: GeoMapView[] = [
   { id: "world", label: "World", center: WORLD_CENTER, zoom: WORLD_ZOOM },

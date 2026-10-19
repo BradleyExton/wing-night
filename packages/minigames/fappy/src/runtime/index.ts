@@ -1,4 +1,4 @@
-import type { FappyPlayerFigure, MinigameType, Player, Team } from "@wingnight/shared";
+import type { FappyPlayerFigure, Player, Team } from "@wingnight/shared";
 import { runFappyLeg } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
@@ -16,8 +16,6 @@ import {
   toFappyDisplayView,
   toFappyHostView
 } from "./views/index.js";
-
-export const fappyMinigameId: MinigameType = "FAPPY";
 
 // One course for every team: no relay is easier than another, the way SCHLONIC's
 // street is a rule. The legs still differ because `resolveFappyGates` mixes the

@@ -19,7 +19,7 @@ import * as styles from "./styles.js";
 // second copy of the head is exactly the drift the cast package exists to stop.
 // It draws in the 80×72 box like every other part; whoever holds it decides
 // where that box is.
-export type CharacterHeadProps = {
+type CharacterHeadProps = {
   appearance: CharacterAppearance;
   apparel: CharacterApparel | undefined;
   // The comb `resolveCharacterShapes` chose, null for a bare head.
