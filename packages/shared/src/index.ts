@@ -34,6 +34,36 @@ export * from "./fappy/index.js";
 export * from "./schlonic/index.js";
 export * from "./brawl/index.js";
 export * from "./mount/index.js";
+export {
+  findOutfitItem,
+  isOutfitItemOnRail,
+  OUTFIT_GENRES,
+  OUTFIT_ITEMS,
+  OUTFIT_KIT_SLOTS,
+  OUTFIT_LOOKS,
+  OUTFIT_SHOWPIECE_SLOTS,
+  OUTFIT_SLOTS,
+  OUTFIT_STYLES,
+  parseOutfit,
+  resolveOutfitRail,
+  resolveOutfitSlots,
+  resolveWornOutfit,
+  validateOutfit,
+  validateOutfitsByGenre
+} from "./outfit/index.js";
+export type {
+  Outfit,
+  OutfitChoice,
+  OutfitGenre,
+  OutfitItem,
+  OutfitKitSlot,
+  OutfitLook,
+  OutfitRail,
+  OutfitShowpieceSlot,
+  OutfitSlot,
+  OutfitsByGenre,
+  OutfitStyle
+} from "./outfit/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
