@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { OUTFIT_ITEMS, findOutfitItem, type Outfit } from "@wingnight/shared";
+import { OUTFIT_GENRES, OUTFIT_ITEMS, findOutfitItem, type Outfit } from "@wingnight/shared";
 
 import { Character, CharacterStage, CharacterWing } from "../index.js";
-import { CHARACTER_PIVOTS } from "../geometry/index.js";
+import { CHARACTER_PIVOTS, COSTUME_HEAD_ANCHORS, DRAWN_HEAD_ANCHORS } from "../geometry/index.js";
+import { resolveCharacterShapes } from "../shapes/index.js";
+import { resolveTeamSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { resolveCharacterRagdollRest } from "../ragdoll/index.js";
 import { CharacterRagdollFigure } from "../CharacterRagdollFigure/index.js";
 import { OUTFIT_DRAWINGS } from "./index.js";
+import { resolveSweepPoints } from "./propSweep/index.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as const;
 
@@ -118,9 +121,11 @@ test("does start the vest at the photo's shoulders under a costume head and the 
 });
 
 test("does skip an item the cast has no drawing for and keep the rest", () => {
+  // Every catalogue item is drawn, so the undrawn one is an id a hand-edited
+  // pack made up (the tolerant reader drops those first; the layer still holds).
   const html = renderToStaticMarkup(
     <Character
-      appearance={{ ...drawn, outfit: { top: { item: "battle-vest-b" }, tail: { item: "chain-loop-b" } } }}
+      appearance={{ ...drawn, outfit: { top: { item: "battle-vest-z" }, tail: { item: "chain-loop-b" } } }}
       silhouette="spiky"
     />
   );
@@ -163,12 +168,16 @@ test("does draw every catalogue item", { todo: "run 3 ports the other kept items
 // The Prop sweep (docs/research/bird-wardrobe.md §2.1): a prop turns with the
 // wing about the shoulder, so at rest and the walk tuck no point of it may
 // enter the head box or drop through the floor, and at the dance extremes it
-// may pass behind the head but dip at most four units under the floor. Read
-// off the drawing's own outline vertices, padded by the 2 units of ink.
+// may pass behind the head but dip at most four units under the floor.
+//
+// Measured as the harness measured it for Gate 1: points along the outline
+// that SHOWS (`resolveSweepPoints`), on every body the prop is worn on, in
+// every style, under both heads. The outline is the shape's own edge, not the
+// outside of its ink, because that is the line every kept prop was drawn to.
+// The Moves' own wing extremes are run 5's face-crossing sweep.
 const HEAD_BOX = { x0: 36, x1: 80, y0: -12, y1: 37 };
 const FLOOR_Y = 72.75;
 const SOFT_DIP = 4;
-const INK = 2;
 const SWEEP = [
   { angle: 0, strict: true },
   { angle: -8, strict: true },
@@ -186,33 +195,49 @@ const turnAboutShoulder = ([x, y]: [number, number], degrees: number): [number, 
   ];
 };
 
-test("does keep every ported prop out of the face and above the floor through the sweep", () => {
-  for (const [id, drawing] of Object.entries(OUTFIT_DRAWINGS)) {
-    if (drawing?.slot !== "prop") {
+test("does keep every prop out of the face and above the floor through the sweep", () => {
+  const props = OUTFIT_ITEMS.filter((item) => item.slot === "prop");
+
+  assert.ok(props.length > 0);
+
+  for (const item of props) {
+    const drawing = OUTFIT_DRAWINGS[item.id];
+
+    // An undrawn prop is the test above's failure, not this one's.
+    if (drawing === undefined) {
       continue;
     }
 
-    const html = renderToStaticMarkup(
-      <svg>
-        <drawing.Drawing context={{ shapes: { body: "", belly: "", tail: "", wing: "", comb: null, neck: "", mitered: false }, silhouette: undefined, head: { cx: 58, top: 8, eyeY: 18, chin: 32, shoulders: 32 }, style: findOutfitItem(id)?.styles[0] }} />
-      </svg>
-    );
-    const vertices = [...html.matchAll(/ d="([^"]+)"/g)].flatMap((match) =>
-      [...(match[1] ?? "").matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((pair): [number, number] => [Number(pair[1]), Number(pair[2])])
-    );
+    for (const genre of item.genre === "shared" ? OUTFIT_GENRES : [item.genre]) {
+      const silhouette = resolveTeamSilhouette({ genre });
+      const shapes = resolveCharacterShapes({ body: "round", comb: "crest", tail: "fan", silhouette });
 
-    assert.ok(vertices.length > 0, id);
+      for (const style of item.styles) {
+        for (const head of [DRAWN_HEAD_ANCHORS, COSTUME_HEAD_ANCHORS]) {
+          const label = `${item.id} (${genre}, ${style}, ${head === DRAWN_HEAD_ANCHORS ? "drawn" : "costume"} head)`;
+          const points = resolveSweepPoints(
+            renderToStaticMarkup(
+              <svg>
+                <drawing.Drawing context={{ shapes, silhouette, head, style }} />
+              </svg>
+            )
+          );
 
-    for (const { angle, strict } of SWEEP) {
-      for (const vertex of vertices) {
-        const [x, y] = turnAboutShoulder(vertex, angle);
+          assert.ok(points.length > 0, label);
 
-        assert.ok(y + INK <= FLOOR_Y + (strict ? 0 : SOFT_DIP), `${id} at ${angle}° dips to ${y.toFixed(1)}`);
+          for (const { angle, strict } of SWEEP) {
+            for (const point of points) {
+              const [x, y] = turnAboutShoulder(point, angle);
 
-        if (strict) {
-          const inHead = x + INK > HEAD_BOX.x0 && x - INK < HEAD_BOX.x1 && y - INK < HEAD_BOX.y1 && y + INK > HEAD_BOX.y0;
+              assert.ok(y <= FLOOR_Y + (strict ? 0 : SOFT_DIP), `${label} at ${angle}° dips to ${y.toFixed(1)}`);
 
-          assert.ok(!inHead, `${id} at ${angle}° reaches the head at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+              if (strict) {
+                const inHead = x > HEAD_BOX.x0 && x < HEAD_BOX.x1 && y < HEAD_BOX.y1 && y > HEAD_BOX.y0;
+
+                assert.ok(!inHead, `${label} at ${angle}° reaches the head at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+              }
+            }
+          }
         }
       }
     }
