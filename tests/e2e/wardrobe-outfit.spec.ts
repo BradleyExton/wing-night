@@ -4,7 +4,8 @@ import { ensureSetupPhase } from "./hostShell";
 
 // The wardrobe's spine, end to end: a bird dressed by hand in players.json is
 // dressed on the TV. The sample pack (which the e2e root is seeded from) dresses
-// Alex of Molten Metal in one item per slot, and these specs read the cast's
+// Alex of Molten Metal in one item per slot (found by that outfit, since the
+// config wizard spec renames him earlier in the run), and these specs read the cast's
 // `data-outfit-*` markers rather than its drawing, so restyling an item never
 // moves them.
 const ALEX_KIT = {
@@ -59,7 +60,11 @@ test("does dress the same bird in a game with the kit and never a showpiece", as
 
   await expect(page.getByText("Seeded from the live content pack.")).toBeVisible();
 
-  const alex = page.locator('[data-joust-hen="Alex"]').first();
+  // Found by what it wears, not its name: the config wizard spec renames the
+  // sample roster's first player earlier in the run (and keeps the outfit).
+  const alex = page.locator("[data-joust-scene] [data-joust-hen]", {
+    has: page.locator('[data-outfit-item="battle-vest-a"]')
+  }).first();
 
   await expect(alex).toBeVisible();
 
