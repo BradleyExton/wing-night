@@ -1,6 +1,7 @@
 import type { OutfitSlot, OutfitStyle } from "@wingnight/shared";
 
 import type { HeadAnchors } from "../../geometry/index.js";
+import type { CharacterSilhouette } from "../../../resolveTeamSilhouette/index.js";
 import type { CharacterShapes } from "../../shapes/index.js";
 
 // Everything an item's drawing may read, which is what the harness handed its
@@ -11,6 +12,10 @@ export type OutfitItemContext = {
   // The bird the item is worn on: the genre's body, wing and tail paths, so a
   // Top can clip itself to the chest and a Sleeve can redraw the wing.
   shapes: CharacterShapes;
+  // Which genre body that is, undefined for the stock bird: a shared item
+  // places itself per body (the harness's `ctx.silhouette`), where the paths
+  // alone would leave it comparing strings.
+  silhouette: CharacterSilhouette | undefined;
   // Where the head is. A Top starts at `head.shoulders`, which is lower under
   // a photographed head than under the drawn one.
   head: HeadAnchors;

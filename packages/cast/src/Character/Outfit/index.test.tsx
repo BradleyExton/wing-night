@@ -194,7 +194,7 @@ test("does keep every ported prop out of the face and above the floor through th
 
     const html = renderToStaticMarkup(
       <svg>
-        <drawing.Drawing context={{ shapes: { body: "", belly: "", tail: "", wing: "", comb: null, neck: "", mitered: false }, head: { cx: 58, top: 8, eyeY: 18, chin: 32, shoulders: 32 }, style: findOutfitItem(id)?.styles[0] }} />
+        <drawing.Drawing context={{ shapes: { body: "", belly: "", tail: "", wing: "", comb: null, neck: "", mitered: false }, silhouette: undefined, head: { cx: 58, top: 8, eyeY: 18, chin: 32, shoulders: 32 }, style: findOutfitItem(id)?.styles[0] }} />
       </svg>
     );
     const vertices = [...html.matchAll(/ d="([^"]+)"/g)].flatMap((match) =>

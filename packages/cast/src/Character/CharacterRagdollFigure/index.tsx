@@ -89,6 +89,7 @@ export const CharacterRagdollFigure = ({
   const { outfit } = appearance;
   const outfitContext = {
     shapes,
+    silhouette,
     head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS
   };
 

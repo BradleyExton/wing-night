@@ -169,7 +169,7 @@ export const CharacterStageFigure = ({
     <OutfitLayer
       slot="stage"
       outfit={appearance.outfit}
-      context={{ shapes, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
+      context={{ shapes, silhouette, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
     />
   );
 };
@@ -202,7 +202,7 @@ export const CharacterWingFigure = ({
       <OutfitLayer
         slot="sleeve"
         outfit={appearance.outfit}
-        context={{ shapes, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
+        context={{ shapes, silhouette, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
       />
     </g>
   );
@@ -224,6 +224,7 @@ export const CharacterFigure = ({
   const { outfit } = appearance;
   const outfitContext = {
     shapes,
+    silhouette,
     head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS
   };
   // Spikes need a mitered join: the house 2-unit ROUND join blunts every point
