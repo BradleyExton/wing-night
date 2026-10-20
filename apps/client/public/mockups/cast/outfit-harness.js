@@ -385,6 +385,38 @@ const measureSvg = () => {
 const SHAPE_SELECTOR = "path,circle,rect,ellipse,line,polygon,polyline";
 const isWhite = (c) => /^rgba?\(\s*255,\s*255,\s*255(\s*,\s*(1|0?\.[5-9]\d*))?\s*\)$/.test(c);
 
+// Chromium's getPointAtLength re-walks the path from its start on every call,
+// so sampling is quadratic in the path's length, and the sweeps sample the same
+// shapes once per style, head and pose. Cache the local points per geometry:
+// a shape's own transform is applied after, through its matrix.
+const localPointsCache = new Map();
+const geometryKey = (el) =>
+  `${el.tagName}|${[...el.attributes]
+    .filter((a) => a.name !== "transform")
+    .map((a) => `${a.name}=${a.value}`)
+    .sort()
+    .join("|")}`;
+const localPoints = (el) => {
+  const key = geometryKey(el);
+  let points = localPointsCache.get(key);
+  if (!points) {
+    let length = 0;
+    try {
+      length = el.getTotalLength();
+    } catch {
+      return [];
+    }
+    const steps = Math.max(32, Math.ceil(length * 3));
+    points = [];
+    for (let i = 0; i <= steps; i += 1) {
+      const p = el.getPointAtLength((length * i) / steps);
+      points.push(new DOMPoint(p.x, p.y));
+    }
+    localPointsCache.set(key, points);
+  }
+  return points;
+};
+
 /**
  * Every point along every shape of the given groups, in bird units. A clipped
  * shape is measured by what shows: its own outline where it lies inside the
@@ -394,21 +426,8 @@ const isWhite = (c) => /^rgba?\(\s*255,\s*255,\s*255(\s*,\s*(1|0?\.[5-9]\d*))?\s
 const samplePoints = (svg, groups) => {
   const toUser = svg.getScreenCTM().inverse();
   const points = [];
-  const alongPath = (el, matrix) => {
-    let length = 0;
-    try {
-      length = el.getTotalLength();
-    } catch {
-      return [];
-    }
-    const steps = Math.max(32, Math.ceil(length * 3));
-    const out = [];
-    for (let i = 0; i <= steps; i += 1) {
-      const p = el.getPointAtLength((length * i) / steps);
-      out.push({ local: p, user: new DOMPoint(p.x, p.y).matrixTransform(matrix) });
-    }
-    return out;
-  };
+  const alongPath = (el, matrix) =>
+    localPoints(el).map((p) => ({ local: p, user: p.matrixTransform(matrix) }));
   groups.forEach((group) => {
     group.querySelectorAll(SHAPE_SELECTOR).forEach((el) => {
       if (el.closest("clipPath,mask,defs,pattern,marker,symbol")) return;

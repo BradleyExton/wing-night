@@ -2,6 +2,21 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "wing-night-mockups",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8793",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "apps/client/public"
+      ],
+      "port": 8793,
+      "url": "http://127.0.0.1:8793"
+    },
+    {
       "name": "wing-night-server",
       "runtimeExecutable": "env",
       "runtimeArgs": [

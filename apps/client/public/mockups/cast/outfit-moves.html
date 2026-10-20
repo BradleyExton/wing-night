@@ -442,15 +442,21 @@
       // Every shape's outline in the bird's own units (the [data-bird] group's
       // frame, so a mirrored partner measures the same as the lead).
       // Each path is sampled once in its own units; per frame only its CTM is read.
-      const pathSamples = new WeakMap();
+      // Keyed by geometry, not element: every scene draws its own copy of the rig.
+      const pathSamples = new Map();
       const samplesOf = (el) => {
-        let pts = pathSamples.get(el);
+        const key = [...el.attributes]
+          .filter((a) => a.name !== "transform")
+          .map((a) => `${a.name}=${a.value}`)
+          .sort()
+          .join("|");
+        let pts = pathSamples.get(key);
         if (!pts) {
           const len = el.getTotalLength();
           const steps = Math.max(48, Math.ceil(len * 4));
           pts = [];
           for (let i = 0; i <= steps; i += 1) pts.push(el.getPointAtLength((len * i) / steps));
-          pathSamples.set(el, pts);
+          pathSamples.set(key, pts);
         }
         return pts;
       };
