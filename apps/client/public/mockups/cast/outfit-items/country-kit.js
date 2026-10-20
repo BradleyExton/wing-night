@@ -342,14 +342,19 @@ const tailBandanaHanky = (ctx) => {
 };
 
 const tailBandanaSling = (ctx) => {
-  // A big kerchief slung UNDER the tail: tied round the lower plume's bend
-  // with a knot block on the plume, the cloth hanging below it as one wide
-  // triangle swung back, point at (2,63). It sits under the plumes, so both
-  // tips stay in the silhouette; the cloth adds a new outline below them.
-  const cloth = "M 3.4 51.6 Q 9 55.4 15 53.4 L 2.2 63.2 Z";
-  const knot = rect(8.6, 50.4, 12.6, 55.6);
-  return `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${cloth}"/>
-    <path fill="${detailOn(ctx)}" ${ctx.inkStroke(1.2)} d="${knot}"/>`;
+  // A kerchief tied round the lower plume's bend and hanging under it: the
+  // cloth wraps the plume from (2.2,45) to the body edge, so the plume runs
+  // into it and its tip pokes out behind, and drops to one point at
+  // (6.8,62.4), 9 under the plume (Gate 1: the old point at (2.2,63.2) was
+  // 10.9 out, past the Tail region's 10). It is knotted at the back with a
+  // square knot and ONE broad tie end flying back to (-6.8,52): point down
+  // and tied on, never the lone up-left arrowhead that read as a cursor.
+  const cloth = "M 2.2 45.2 Q 8.6 48.8 15 46 L 15 52 Q 11.8 57.8 6.8 62.4 Q 3.4 55.2 2.2 45.2 Z";
+  const knot = "M -0.4 42.8 L 4 42.6 L 4.6 47.6 L 0 47.8 Z";
+  const end = "M 1 45.8 Q -3.6 46.6 -6.8 51.8 Q -1.8 53.2 2.2 49.2 Z";
+  return `<path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${end}"/>
+    <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${cloth}"/>
+    <path fill="${ctx.styleFill}" ${ctx.inkStroke(2)} d="${knot}"/>`;
 };
 
 // Rope is ONE rope, never bands round a plume (stripes): an ink core on a
@@ -537,7 +542,7 @@ export const ITEMS = [
     variants: [
       {
         key: "a",
-        note: "Slung under the tail: knotted round the lower plume's bend, one wide cloth triangle hanging below it, swung back. It adds an outline under the plumes and covers neither tip.",
+        note: "Slung under the tail: a kerchief wrapped round the lower plume's bend and hanging below it to one point 9 under the plume, knotted at the back with one broad tie end flying back. Gate 1 pulled it inside the Tail region (it reached 10.9) and wrapped it on the plume, so it is a cloth tied on, not a loose triangle; the upper plume and the lower tip stay in the silhouette.",
         styles: ["white", "ink"],
         whitePoints: 0,
         darkCentre: false,

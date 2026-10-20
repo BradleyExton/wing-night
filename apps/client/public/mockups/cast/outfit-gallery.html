@@ -45,6 +45,7 @@
       .chip.gold { color: var(--gold); border-color: rgba(212,167,44,.55); }
       .chip.mod { text-transform: none; letter-spacing: .03em; opacity: .7; }
       .chip.polish { color: #121212; background: var(--fix); border-color: var(--fix); font-weight: 700; }
+      .chip.landed { color: var(--keep); border-color: rgba(134,239,172,.55); }
       .tile .stage { margin: 0; }
       .figs { display: flex; flex-wrap: wrap; gap: 1.4rem .7rem; align-items: flex-end; justify-content: center; padding: 1.3rem .5rem .45rem; }
       .figs figure { margin: 0; text-align: center; }
@@ -106,8 +107,8 @@
 
       /* Filters. */
       body[data-filter="keep"] .tile:not([data-verdict="keep"]),
-      body[data-filter="fix"] .tile:not([data-verdict="fix"]),
-      body[data-filter="cut"] .tile:not([data-verdict="cut"]),
+      body[data-filter="fixed"] .tile:not([data-gate="fixed"]),
+      body[data-filter="by-eye"] .tile:not([data-gate="by-eye"]),
       body[data-filter="changed"] .tile:not(.changed),
       body[data-filter="mykeeps"] .tile.is-cut { display: none; }
 
@@ -136,8 +137,15 @@
   </head>
   <body>
     <main>
-      <h1>Wardrobe · Gate 1 cut sheet</h1>
+      <h1>Wardrobe · cut sheet, Gate 1 applied</h1>
       <p class="lede">
+        <strong>Gate 1 is done</strong> (2026-10-20, docs/bird-wardrobe-gate-1.md): Brad kept 132 tiles and cut 15. The cuts are gone
+        from the modules and from this sheet, so every tile here ships. The 39 kept tiles the critic sent back as a fix now carry the fix,
+        drawn as the critic asked and marked <span class="chip landed">fix made</span>; "why" keeps the critic's reasoning, the fix it asked
+        for and what was drawn. The eight country-kit drawings no critic re-judged are marked <span class="chip">kept by eye</span>. Gold stays
+        an optional style, never the default, except on the bandolier, the pom-pom, the mirror-ball egg and every country item, where it
+        failed. The rest of this note is how the sheet worked at the gate.
+        <br /><br />
         <strong>What this is.</strong> Every item of the seven-slot bird wardrobe that runs 1 and 1b drew (docs/bird-wardrobe-build-plan.md,
         docs/research/bird-wardrobe.md §2), one tile per variant, with the critics' last verdict on it. You keep or cut each one;
         <strong>Copy my cuts</strong> at the foot copies the whole list as plain text for you to paste back into the chat. Your
@@ -153,9 +161,8 @@
         and the sweep), measured on the drawn geometry of <em>every</em> style; a fail that only some styles have names them. Props are swept only at the
         angles they are drawn at (rest, walk tuck, the dance extremes and the Moves), never a game pose.
         <br /><br />
-        <strong>The open gold question.</strong> Gold (#d4a72c) is not a house token. A few items offer it as an optional style, never the
-        default; those tiles are marked <span class="chip gold">gold · open question</span> and show the gold style. The run notes below
-        say what the critics found.
+        <strong>Gold.</strong> Gold (#d4a72c) is not a house token. Gate 1 kept it as an optional style wherever it reads, never the
+        default; those tiles are marked <span class="chip gold">gold · optional</span> and show the gold style.
         <br /><br />
         Below the items: the <a href="#looks" style="color:var(--primary)">Looks</a> (every slot of a kit worn at once, the density test),
         then the <a href="#moves" style="color:var(--primary)">Moves</a>, looping live at 130px from
@@ -176,9 +183,8 @@
         <span class="toast" id="toast" role="status"></span>
         <div class="filters" id="filters" role="group" aria-label="Show">
           <button type="button" data-f="all" aria-pressed="true">All</button>
-          <button type="button" data-f="keep">Critic keep</button>
-          <button type="button" data-f="fix">Critic fix</button>
-          <button type="button" data-f="cut">Critic cut</button>
+          <button type="button" data-f="fixed">Gate 1 fix made</button>
+          <button type="button" data-f="by-eye">Kept by eye</button>
           <button type="button" data-f="changed">Changed by me</button>
           <button type="button" data-f="mykeeps">My keeps</button>
         </div>
@@ -246,8 +252,9 @@
       // ------------------------------------------------------------ tiles --
       const verdictHtml = (v) => {
         if (!v) return `<div class="verdict"><span class="badge none">no verdict</span><span class="dim">The critics did not judge this variant.</span></div>`;
-        return `<div class="verdict"><span class="badge ${v.verdict}">${v.verdict}</span><span>${esc(v.line)}</span></div>
-          <details class="why"><summary>why</summary><p>${esc(v.reason)}</p>${v.fix ? `<p><b>Fix asked for:</b> ${esc(v.fix)}</p>` : ""}</details>`;
+        const critic = v.critic ? `<p><b>Run 1b critic:</b> ${esc(v.critic)}.</p>` : "";
+        return `<div class="verdict"${v.gate ? ` data-gate="${v.gate}"` : ""}><span class="badge ${v.verdict}">${v.verdict}</span><span>${esc(v.line)}</span></div>
+          <details class="why"><summary>why</summary>${critic}<p>${esc(v.reason)}</p>${v.fix ? `<p><b>Fix asked for:</b> ${esc(v.fix)}</p>` : ""}${v.landed ? `<p><b>Fix made (Gate 1):</b> ${esc(v.landed)}</p>` : ""}</details>`;
       };
 
       const measuredHtml = (entries) => {
@@ -291,6 +298,10 @@
         // A fix is a keep that needs polish; only a critic cut starts on cut.
         const def = critic === "keep" || critic === "fix";
         if (critic === "fix" && !$(".chip.polish", tile)) $(".tile-head", tile)?.insertAdjacentHTML("beforeend", `<span class="chip polish">needs polish</span>`);
+        const gate = $(".verdict", tile)?.dataset.gate;
+        if (gate) tile.dataset.gate = gate;
+        if (gate === "fixed") $(".tile-head", tile)?.insertAdjacentHTML("beforeend", `<span class="chip landed">fix made</span>`);
+        if (gate === "by-eye") $(".tile-head", tile)?.insertAdjacentHTML("beforeend", `<span class="chip">kept by eye</span>`);
         input.checked = typeof saved[id] === "boolean" ? saved[id] : def;
         tile.dataset.verdict = critic ?? "none";
         tile.dataset.id = id;
@@ -331,7 +342,7 @@
         groups.slice(1).forEach((g, i) => {
           const style = styles?.[i + 1] ?? $(".judge-style", g)?.textContent ?? "";
           const photo = g.querySelectorAll(".judge-figs > figure")[1];
-          if (photo) figs.append(relabel(photo, `76 · ${style}${style === "gold" ? " · open question" : ""}`, `alt${style === "gold" ? " gold" : ""}`));
+          if (photo) figs.append(relabel(photo, `76 · ${style}${style === "gold" ? " · optional" : ""}`, `alt${style === "gold" ? " gold" : ""}`));
         });
         return figs;
       };
@@ -345,7 +356,7 @@
 
       const headHtml = (name, key, { slot, module, gold }) => `
         <div class="tile-head"><span class="tile-name">${esc(name)} <span class="vk">${esc(key)}</span></span>
-          ${slot ? `<span class="chip">${esc(slot)}</span>` : ""}${gold ? `<span class="chip gold">gold · open question</span>` : ""}
+          ${slot ? `<span class="chip">${esc(slot)}</span>` : ""}${gold ? `<span class="chip gold">gold · optional</span>` : ""}
           ${module ? `<span class="chip mod">${esc(module)}</span>` : ""}</div>`;
       const idChip = (id, module) => (id && module ? `${id} · ${module}` : module);
 

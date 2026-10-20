@@ -102,18 +102,6 @@ const placeEgg = (cx, cy, rx, ry, rot) => {
 // so the leg never seems to start from it. 14 × 17.8 units: run 1's egg grown
 // by a fifth, now the sweep no longer pins it under the belly.
 const LOW = placeEgg(24.6, 56.4, 7, 8.9, -12);
-// The swung egg (b) is a ball on a chain swung out from the wing tip, back
-// and up: the chain runs from the tip along the swing, and the egg hangs on
-// from its end like a pendulum, its narrow top to the chain and its wide end
-// out, so its back half rides the lower tail sickle (cyan), where its ink rim
-// reads, instead of the dark pocket where a sits. (With the egg upright the
-// chain ran along its rim and vanished into the outline.)
-const CHAIN_FROM = [26.5, 50];
-const SWING = { len: 7, deg: 226 }; // 226 = up and back, 46 degrees above straight back
-// Nearly round, so the gridded egg on the end of a line reads as a ball on a
-// chain and not as a racket head or a microphone.
-const SWUNG_RY = 7.8;
-const SWUNG = placeEgg(...at(CHAIN_FROM[0], CHAIN_FROM[1], SWING.len + SWUNG_RY, SWING.deg), 7, SWUNG_RY, SWING.deg - 90);
 // The aloft egg (c) floats as a balloon over the upper tail sickle, in the dark
 // pocket between it and the head, the ball-overhead pose at rest.
 const HIGH = placeEgg(20.2, 17.6, 7.2, 8.6, -6);
@@ -141,36 +129,6 @@ const facetGrid = (egg, k, backInk = true) => {
   return `${cells}<path fill="none" stroke="${COLORS.ink}" stroke-width="${r2(0.75 * Math.min(k, 1.2))}" d="${rules}"/>`;
 };
 
-/**
- * The cut-glass lattice: fine ink lines at 45 degrees, perpendicular offsets
- * −6, −2, 2, 6 (× k) from the centre each way, so a facet is a diamond 4k
- * units on a side, with three mutedWarm diamonds down the back (no ink one:
- * the back of the swung egg lies on the dark backdrop, and ink facets there
- * ate its rim).
- * The lattice is laid in `frameRot` (default the egg's own tilt), so an egg
- * swung upside down still shows diamonds and not a square grid.
- */
-const latticeFacets = (egg, k, frameRot = egg.rot) => {
-  const frame = (pts) => pts.map(([x, y]) => turn(egg.cx + x, egg.cy + y, egg.cx, egg.cy, frameRot));
-  const K = Math.SQRT2;
-  const offs = [-6, -2, 2, 6].map((o) => o * k * K);
-  const L = 14;
-  const wires = [
-    ...offs.map((o) => line(frame([[o / 2 - L, o / 2 + L], [o / 2 + L, o / 2 - L]]))),
-    ...offs.map((o) => line(frame([[o / 2 - L, -o / 2 - L], [o / 2 + L, -o / 2 + L]])))
-  ].join(" ");
-  // The diamond facet between offsets a..a+4 (u = x + y) and b..b+4 (v = x − y).
-  const diamond = (a, b) => {
-    const uv = [[a, b], [a + 4, b], [a + 4, b + 4], [a, b + 4]].map(([u, v]) => [u * k * K, v * k * K]);
-    return poly(frame(uv.map(([u, v]) => [(u + v) / 2, (u - v) / 2])));
-  };
-  return [
-    `<path fill="${COLORS.mutedWarm}" d="${diamond(-6, -6)}"/>`,
-    `<path fill="${COLORS.mutedWarm}" d="${diamond(-2, -6)}"/>`,
-    `<path fill="${COLORS.mutedWarm}" d="${diamond(-2, 2)}"/>`,
-    `<path fill="none" stroke="${COLORS.ink}" stroke-width="0.7" d="${wires}"/>`
-  ].join("");
-};
 
 /** A faceted egg: fill, clipped facets, then the 2u outline over them. */
 const facetedEgg = (egg, fill, facets) => {
@@ -196,33 +154,9 @@ const mirrorBallEgg = {
       draw: ({ styleFill }) => `${facetedEgg(LOW, styleFill, facetGrid(LOW, 1.2))}${glint(14.2, 51.6, 3.6)}`
     },
     {
-      key: "b",
-      note: "Cut glass on a chain, swung back and up: a white egg ruled into a 45-degree diamond lattice of fine ink glass lines, with three mutedWarm diamonds shading its back (no ink facet, so its rim holds against the dark backdrop), nearly round, hung pendulum-wise by an ink hanger cap on a short 2-unit ink chain (sagging, with two link beads) from the wing tip and swung up and back, its narrow end to the chain and its wide end out, so it rides up by the tail sickles at mid height: a sits low in the pocket under the wing, c floats overhead, b swings between them, so the three never read as one egg. Two white glints stand off its sides. The chain sags because a straight one made the gridded ball a tennis racket. White only: the gold lattice read as a pineapple.",
-      styles: ["white"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ styleFill }) => {
-        const top = at(CHAIN_FROM[0], CHAIN_FROM[1], SWING.len, SWING.deg);
-        const [fx, fy] = CHAIN_FROM;
-        // The chain sags into a curve under the swing (dead straight, a gridded
-        // ball on a stick is a tennis racket), with two link beads on it.
-        const [mx, my] = [(fx + top[0]) / 2 + 1.4, (fy + top[1]) / 2 + 2.2];
-        const onChain = (t) => [(1 - t) ** 2 * fx + 2 * t * (1 - t) * mx + t * t * top[0], (1 - t) ** 2 * fy + 2 * t * (1 - t) * my + t * t * top[1]];
-        const bead = (t) => circle(...onChain(t), 1.5);
-        // Glints off its sides, near the chain end: one off the far end would
-        // sit over 41 units from the wing pivot, and the night-fever point
-        // would swing it through the floor.
-        const [g1x, g1y] = SWUNG.at(-8.6, -3.6);
-        const [g2x, g2y] = SWUNG.at(8.8, -1.4);
-        return `<path fill="none" stroke="${COLORS.ink}" stroke-width="2" stroke-linecap="round" d="M ${fx} ${fy} Q ${r2(mx)} ${r2(my)} ${r2(top[0])} ${r2(top[1])}"/>
-          <path fill="${COLORS.ink}" d="${bead(0.3)} ${bead(0.62)} ${poly(SWUNG.local([[-2, 0.8 - SWUNG.ry], [2, 0.8 - SWUNG.ry], [1.3, -1.6 - SWUNG.ry], [-1.3, -1.6 - SWUNG.ry]]))}"/>
-          ${facetedEgg(SWUNG, styleFill, latticeFacets(SWUNG, 1.1, 18))}${glint(g1x, g1y, 3.2)}${glint(g2x, g2y, 2.6)}`;
-      }
-    },
-    {
       key: "c",
       note: "Held aloft: a mirror-ball foil balloon, the same white value-faceted egg (14.4 × 17.2) floating up in the dark pocket between the upper tail sickle and the head on a 2-unit ink string tied at the wing tip, with a knot under it and one big glint off its back-top. It is the ball-overhead pose at rest; on the dance extremes it swings up behind the head, which is allowed (it paints under the head). Its back facets are mutedWarm, not ink, so its rim never merges into the dark backdrop into a half-moon. No rigid handle: on a cane the gridded egg read as a tennis racket.",
-      styles: ["white", "gold"],
+      styles: ["white"],
       whitePoints: 0,
       darkCentre: false,
       draw: ({ styleFill }) => {
@@ -239,132 +173,62 @@ const mirrorBallEgg = {
 
 // -------------------------------------------------------------- hand fan --
 
-// Fluttered open behind the hip: the rivet sits at the wing tip and the fan
-// opens straight back from it, from back-and-down round to back-and-up, so
-// it lies in the dark pocket under the lower tail sickle (x 4..18, y 44..62)
-// rather than spreading up over the tail. Everything stays behind x 27 (clear
-// of the near leg at 32) and under the chin line, and the far rim stays within
-// 41 units of the wing pivot so the flap never swings it through the floor.
-// Angles: 90 is straight down, 180 straight back, 270 straight up.
+// Held up and fluttered across the back: the rivet sits at the wing tip and the
+// leaf opens 140 degrees from back-and-up round to up-and-forward, so it lies
+// on the cyan wing and back, where an ink leaf reads (7.72:1). It stays out of
+// the head box: the rivet sits at (26.5, 49.5), 1.5 below Gate 1's (26.5, 48),
+// because the scallops standing 1.5 past r 14 put ten rim points in the head
+// box at rest. Its far rim stays within 41 units of the wing pivot so the flap
+// never swings it through the floor. Angles: 90 is straight down, 180 straight
+// back, 270 straight up.
 //
-// A fan is a LEAF ON STICKS: the leaf is only the outer band (an annulus from
-// `inner` to `r`) and bare ink sticks run from the rivet out to it, with the
-// backdrop showing between them. A leaf drawn solid down to the rivet is a
-// pie wedge, and on a bird a pie wedge at the rump reads as its own tail plume.
-const FAN_A = { x: 26.5, y: 50, r: 13.5, from: 112, to: 240, tip: 1.6, inner: 6.5 };
-// b is held up and fluttered across the back instead: the same rivet at the
-// wing tip, the leaf opening from straight back round to up-and-forward, so it
-// lies on the cyan wing and back, where its ink frame and sticks read (in the
-// dark pocket a thin white leaf on black sticks read as half a cog). It stays
-// under the chin line and out of the head box (its front tip is x 37, y 42).
-const FAN_B = { ...FAN_A, from: 196, to: 324, inner: 6 };
+// The leaf is SOLID from r 3 to the rim, with no bare-stick band: Gate 1's
+// hollow band on bare sticks read as an eggshell with a toothed edge. White
+// pleat lines (ink on a light leaf) and a rounded, scalloped rim say fan.
+const FAN = { x: 26.5, y: 49.5, ri: 3, r: 14, from: 200, to: 340, scallops: 7, bulge: 1.5 };
 
-/** The fan's outline: thinner than the bird's, and mitered so the pleat points stay points. */
-const fanOutline = `stroke="${COLORS.ink}" stroke-width="1.6" stroke-linejoin="miter" stroke-miterlimit="6"`;
-
-/**
- * The fan's pointed edge at radius rad0, n pleats: corner, a point `tip` out
- * on the pleat's mid angle, next corner, so the edge zigzags like an accordion
- * fan instead of scalloping like a shell. Returns one path fragment per pleat.
- */
-const fanEdge = (f, rad0, n, weights = null) => {
-  const { x, y, from, to, tip } = f;
-  const w = weights ?? Array.from({ length: n }, () => 1);
-  const total = w.reduce((sum, v) => sum + v, 0);
-  const segs = [];
-  let a0 = from;
-  for (let i = 0; i < n; i += 1) {
-    const a1 = a0 + ((to - from) * w[i]) / total;
-    const [px, py] = at(x, y, rad0 + tip, (a0 + a1) / 2);
-    const [ex, ey] = at(x, y, rad0, a1);
-    segs.push({ a0, a1, start: at(x, y, rad0, a0), d: `L ${r2(px)} ${r2(py)} L ${r2(ex)} ${r2(ey)}` });
-    a0 = a1;
+/** The leaf: a solid band from ri to r, its outer edge `scallops` round bulges standing `bulge` proud of r. */
+const fanLeaf = (f) => {
+  const step = (f.to - f.from) / f.scallops;
+  // Each scallop is a circular arc between two rim points whose peak is `bulge` past r.
+  const half = f.r * Math.sin(rad(step / 2));
+  const sag = f.r + f.bulge - f.r * Math.cos(rad(step / 2));
+  const R = r2((half * half + sag * sag) / (2 * sag));
+  let d = `M ${at(f.x, f.y, f.ri, f.from).map(r2).join(" ")} L ${at(f.x, f.y, f.r, f.from).map(r2).join(" ")}`;
+  for (let i = 1; i <= f.scallops; i += 1) {
+    d += ` A ${R} ${R} 0 0 1 ${at(f.x, f.y, f.r, f.from + i * step).map(r2).join(" ")}`;
   }
-  return segs;
+  const [ix, iy] = at(f.x, f.y, f.ri, f.from);
+  return `${d} L ${at(f.x, f.y, f.ri, f.to).map(r2).join(" ")} A ${f.ri} ${f.ri} 0 0 0 ${r2(ix)} ${r2(iy)} Z`;
 };
 
-/** A band of leaf from radius ri to the zigzag edge at ro, between angles a0 and a1 (one pleat's span or the whole leaf). */
-const leafBand = (f, ri, ro, n, a0 = f.from, a1 = f.to, weights = null) => {
-  const sub = { ...f, from: a0, to: a1 };
-  const segs = fanEdge(sub, ro, n, weights);
-  const [sx, sy] = at(f.x, f.y, ri, a0);
-  const [ex, ey] = at(f.x, f.y, ri, a1);
-  const [ox, oy] = segs[0].start;
-  return `M ${r2(sx)} ${r2(sy)} L ${r2(ox)} ${r2(oy)} ${segs.map((sg) => sg.d).join(" ")} L ${r2(ex)} ${r2(ey)} A ${ri} ${ri} 0 0 0 ${r2(sx)} ${r2(sy)} Z`;
+/** One radial line per scallop valley, r 5 to 12: the pleats. */
+const fanPleats = (f) => {
+  const step = (f.to - f.from) / f.scallops;
+  return Array.from({ length: f.scallops - 1 }, (_, i) =>
+    line([at(f.x, f.y, 5, f.from + (i + 1) * step), at(f.x, f.y, 12, f.from + (i + 1) * step)])
+  ).join(" ");
 };
-
-/**
- * The frame: `count` bare ink sticks spread evenly between the guards, from
- * the rivet out to (just under) the leaf, then the two guard sticks along the
- * leaf's ends, 2 units wide, running 1 unit past its outer edge.
- */
-const fanSticks = (f, count, w) => {
-  let sticks = "";
-  for (let i = 1; i <= count; i += 1) {
-    const a = f.from + (i * (f.to - f.from)) / (count + 1);
-    const [ix, iy] = at(f.x, f.y, 1.5, a);
-    const [ox, oy] = at(f.x, f.y, f.inner + 0.6, a);
-    sticks += `M ${r2(ix)} ${r2(iy)} L ${r2(ox)} ${r2(oy)} `;
-  }
-  return `<path fill="none" stroke="${COLORS.ink}" stroke-width="${w}" stroke-linecap="round" d="${sticks}"/>`;
-};
-const fanGuards = (f) => {
-  const ends = [f.from, f.to].map((a) => line([[f.x, f.y], at(f.x, f.y, f.r + 1, a)])).join(" ");
-  return `<path fill="none" stroke="${COLORS.ink}" stroke-width="2" stroke-linecap="butt" d="${ends}"/>`;
-};
-const rivet = (f) => `<path fill="${COLORS.ink}" d="${circle(f.x, f.y, 2)}"/>`;
 
 const handFan = {
   id: "hand-fan",
   slot: "prop",
   name: "Hand fan",
-  note: "An open folding fan riveted at the wing tip, held out like a performer's: opened straight back into the dark pocket under the tail (a) or fluttered up across the back (b). It is a leaf on sticks (the leaf only an outer band, bare ink sticks from the rivet out to it with the backdrop between), because a leaf drawn solid to the rivet is a pie wedge and read as the bird's own tail plume. It never points forward at the face.",
+  note: "An open folding fan riveted at the wing tip, held up and fluttered across the back like a performer's, never pointed forward at the face. The leaf is solid with pleat lines and a scalloped rim: a hollow leaf on bare sticks read as an eggshell, and a solid wedge low at the rump would read as the bird's own tail plume, so it is held up on the back.",
   variants: [
     {
-      key: "a",
-      note: "The zebra folding fan, half open (128 degrees): a pleated leaf band from radius 6.5 to 13.5 whose pleats alternate and each end in a point, so the edge zigzags like an accordion. White (the default) is four white pleats with three narrower ink folds, so each fold is a stripe and the leaf stays one white shape against the dark pocket; ink folds into white, eight even pleats; gold folds into white. Inside the leaf, five bare 1.2-unit ink sticks and two 2-unit guard sticks run from the rivet, with the backdrop showing between them: the folding-fan icon, which cannot be a tail.",
-      styles: ["white", "ink", "gold"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ styleFill }) => {
-        const f = FAN_A;
-        const white = styleFill === COLORS.white;
-        const alt = white ? COLORS.ink : COLORS.white;
-        // White: four white pleats with three narrower ink folds between, so
-        // the leaf stays one white shape against the dark pocket instead of
-        // three loose white petals. Ink and gold: eight even pleats.
-        const weights = white ? [1.7, 1, 1.7, 1, 1.7, 1, 1.7] : null;
-        const n = white ? 7 : 8;
-        const segs = fanEdge(f, f.r, n, weights);
-        const pleats = segs
-          .map((sg, i) => `<path fill="${i % 2 ? alt : styleFill}" d="${leafBand(f, f.inner, f.r, 1, sg.a0, sg.a1)}"/>`)
-          .join("");
-        const edge = leafBand(f, f.inner, f.r, n, f.from, f.to, weights);
-        return `${fanSticks(f, 5, 1.2)}${pleats}
-          <path fill="none" ${fanOutline} d="${edge}"/>
-          ${fanGuards(f)}${rivet(f)}`;
-      }
-    },
-    {
       key: "b",
-      note: "The black-lacquer fan, held up and fluttered across the back (a different hold from a's, which hangs in the pocket): one clean painted leaf band from radius 6 to 13.5, opened 128 degrees from straight back to up-and-forward over the cyan wing, solid white (or gold) with no ribs, a thin ink rim on its pointed accordion edge (a bold band ate the leaf and read as a cog) and a 1-unit ink inner edge, carried on a black frame: five 1.4-unit ink sticks and two 2-unit guards from the rivet, the cyan wing showing between them. One plain leaf on a lacquer frame where a is stripes. In the dark pocket the thin white leaf on black sticks read as half a cog; up on the cyan it is the fan icon.",
-      styles: ["white", "gold"],
+      note: "The black-lacquer fan, held up and fluttered across the back: a solid ink leaf from radius 3 to 14 riveted at (26.5, 49.5) and opened 140 degrees (back tip about (13.3, 44.7), top (26.5, 35.5), front tip (39.7, 44.7)) on the cyan wing and back, where it reads at 7.72:1, with six 2-unit white pleat lines from r 5 to 12, a rim of seven rounded scallops standing 1.5 proud, and two 2.5-unit ink guard sticks along its edges running 1 unit past the rim. Gate 1 made ink the default, filled the leaf solid (the hollow band on bare sticks read as an eggshell with a toothed edge), rounded the points into scallops, dropped the light rivet, and set the rivet 1.5 lower than the critic's (26.5, 48) so the scallops clear the head box at rest. The white and gold leaves carry ink pleats.",
+      styles: ["ink", "white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill }) => {
-        const f = FAN_B;
-        const n = 6;
-        // A thin ink rim (the outline's inner 0.8, 0.6 of band, the face's own
-        // 0.4 edge): a heavier band ate the 6.5-unit leaf and read as a cog.
-        const band = 0.8 + 0.6 + 0.4;
-        const leaf = leafBand(f, f.inner, f.r, n);
-        const face = leafBand(f, f.inner + 0.5, f.r - band, n);
-        const c = clip(leaf);
-        return `${c.def}${fanSticks(f, 5, 1.4)}
-          <path fill="${COLORS.ink}" d="${leaf}"/>
-          <path fill="${styleFill}" stroke="${COLORS.ink}" stroke-width="0.8" stroke-linejoin="miter" clip-path="${c.url}" d="${face}"/>
-          <path fill="none" ${fanOutline} d="${leaf}"/>
-          ${fanGuards(f)}${rivet(f)}`;
+      draw: ({ style, styleFill }) => {
+        const f = FAN;
+        const pleat = style === "ink" ? COLORS.white : COLORS.ink;
+        const guards = [f.from, f.to].map((a) => line([[f.x, f.y], at(f.x, f.y, f.r + 1, a)])).join(" ");
+        return `<path fill="${styleFill}" stroke="${COLORS.ink}" stroke-width="1.6" stroke-linejoin="round" d="${fanLeaf(f)}"/>
+          <path fill="none" stroke="${pleat}" stroke-width="2" stroke-linecap="round" d="${fanPleats(f)}"/>
+          <path fill="none" stroke="${COLORS.ink}" stroke-width="2.5" stroke-linecap="butt" d="${guards}"/>`;
       }
     }
   ]
@@ -378,21 +242,6 @@ const vinyl = {
   name: "Vinyl",
   note: "A twelve-inch, held up behind (a) or leaving its sleeve (b). The label is never a plain light disc (a white label is an eye) and never a plain team disc over the team body (it reads as a hole), and it has no spindle hole: a light dot with a dark centre is exactly the eye the rules ban.",
   variants: [
-    {
-      key: "a",
-      note: "Held up like a DJ: a bare black record, face on and 20 units across, raised behind the wing over the tail sickles, so it reads as a black disc against the cyan. Its label is a small team (or gold) five-point star (r 4.4), leaving a ring of black at least 5 units wide round it so the disc reads before the star: a round team label over the team body read as a hole straight through, and a white one as an eye; a star is neither, and it is disco. Two long white rim catches (1.6-unit arcs near the edge, at opposite corners) make it shiny vinyl. Never pair it with an ink top: black on black, only the star shows.",
-      styles: ["team", "gold"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ styleFill, starPath }) => {
-        const cx = 19.4;
-        const cy = 28.4;
-        const R = 10.2;
-        return `<path fill="${COLORS.ink}" ${outlined} d="${circle(cx, cy, R)}"/>
-          <path fill="none" stroke="${COLORS.white}" stroke-width="1.6" stroke-linecap="round" d="${arc(cx, cy, R - 1.8, 200, 280)} ${arc(cx, cy, R - 1.8, 20, 100)}"/>
-          <path fill="${styleFill}" d="${starPath(cx, cy, 4.4)}"/>`;
-      }
-    },
     {
       key: "b",
       note: "The LP leaving its sleeve, held up behind: a white 12.5-unit square jacket at a slight tilt, held up on the back where the wing meets the tail (x 15..27, y 33..45, nowhere near the legs), with a team-colour diagonal band as its cover art, and the black record slid up and back out of its top-back corner, most of a solid disc against the cyan tail sickles, with one white sheen along its top-back rim. The team (or gold) colour is the cover art; the record carries no label, because a team label on the team body reads as a hole and the half-disc becomes a mug handle. No ring or label shows, so nothing reads as an eye.",

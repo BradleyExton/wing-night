@@ -61,9 +61,11 @@ export const RUN_NOTES =
   "The prop sweep was relaxed (docs/research/bird-wardrobe.md §2.1): props are drawn only in the parade, the intro lineup and the portal, never in a game, so the ride (+75) and hurt (+95) angles are gone. " +
   "At rest and the walk tuck a prop still stays out of the head box and above y 72.75; at the dance and Move extremes it may pass behind the head and dip 4 units under the foot line, so props are now held up and back like a performer's. " +
   "The country-kit critic failed this run, so country Tops, Sleeves and Tails carry run 1's verdicts, and the drawings run 1b changed are marked not re-judged. " +
-  "Gold (#d4a72c) is still an open question at this gate, never a default: the critics found it reads as well as white on the Flying V, the axe and the disco lamé (dagger collar, flare sleeve), adds nothing over ember on the bandolier, turns the pom-pom into a sunflower and the mirror ball into a waffle, and is 1.30:1 on country's orange.";
+  "Gold (#d4a72c) was settled at Gate 1: an optional style where it reads, never the default. The critics found it reads as well as white on the Flying V, the axe and the disco lamé (dagger collar, flare sleeve); it adds nothing over ember on the bandolier, turns the pom-pom into a sunflower and the mirror ball into a waffle, and is 1.30:1 on country's orange, so those items lost it. " +
+  "Gate 1 (2026-10-20): Brad kept 132 tiles and cut 15; the cuts are gone from the modules, and the 39 kept fixes are drawn (the tiles marked fix made; 'why' says what was drawn and where the critic's numbers had to move to pass a measured rule). The fixes were judged by the art pass at 76 and 130 blurred, not by a fresh critic.";
 
-export const VERDICTS = [
+/** Run 1b as the critics left it; Gate 1 is laid over it below as VERDICTS. */
+const RUN_1B = [
   // ---------------------------------------------------------- metal-kit --
   v("metal-kit", "battle-vest", "a", "keep",
     "Black front panel with a fat chrome bolt; holds at 130 blurred. Core of Thrash, the best Look.",
@@ -580,6 +582,214 @@ export const VERDICTS = [
     "Give the flap-up a per-silhouette tail override for the preener (tail around −95, the low swoosh from Night Fever and the Bump) so the wing stands alone. If shared keyframes are a hard rule, use a tail value that clears the preener and still looks fine on the others. Redo the clap so the wing folds flat against the chest with the notch turned down or back, not sticking out under the chin: try −110…−120 with wingY +3, or the mirrored wing used for the point fix. Widen the wiggle with the hips: x ±4 and the lean alternating ±6, not just the tail.")
 ];
 
+// ------------------------------------------------------------- Gate 1 --
+// Brad's keep-or-cut pass over this sheet, 2026-10-20
+// (docs/bird-wardrobe-gate-1.md), laid over run 1b. A cut variant is gone
+// from its module and from the sheet. A kept "fix" ships only with the
+// critic's fix made: GATE_1_FIXED says what was drawn, and the tile becomes a
+// keep that carries `critic: "fix"` and `landed`. The eight country-kit
+// drawings no critic re-judged were kept by Brad's eye at 76px.
+
+const GATE_1_CUT = new Set([
+  "metal-kit:bandolier:a",
+  "metal-kit:chain-loop:a",
+  "metal-kit:spiked-cuff:a",
+  "metal-kit:spiked-boots:b",
+  "metal-show:drumsticks:b",
+  "metal-show:drumsticks:c",
+  "country-show:hay-bale:a",
+  "disco-kit:open-shirt:a",
+  "disco-kit:dagger-collar:c",
+  "disco-kit:satin-jacket:b",
+  "disco-kit:tinsel:b",
+  "disco-kit:platforms:b",
+  "disco-show:mirror-ball-egg:b",
+  "disco-show:hand-fan:a",
+  "disco-show:vinyl:a"
+]);
+
+const GATE_1_KEPT_BY_EYE = new Set([
+  "country-kit:western-yoke:a",
+  "country-kit:trophy-buckle:b",
+  "country-kit:fringed-vest:b",
+  "country-kit:fringe-sleeve:a",
+  "country-kit:suede-sleeve:b",
+  "country-kit:tail-bandana:b",
+  "country-kit:rope-coil:a",
+  "country-kit:rope-coil:b"
+]);
+
+/** The fix as drawn: [the tile's one line, what was changed]. Keyed "unit:item:variant". */
+const GATE_1_FIXED = {
+  "metal-kit:battle-vest:b": [
+    "Fix made: the flame patch has three sharp tongues with V notches the black vest shows through, so it reads as a flame, not an egg.",
+    "VEST_FLAME is the critic's path exactly: three tips joined with straight lines, notches 4 to 6 deep, solid ember with the 1.5 ink edge. At 130 blurred it is still a flame."
+  ],
+  "metal-kit:chain-loop:b": [
+    "Fix made: six big spikes on the flail ball instead of eight studs, so it reads as a mace on a chain.",
+    "spikeBall({x:5.4,y:40.8}, 4.6, 4.2, fill, 6, 20°) with a 1.5 mitred edge, and the lowest link nudged to (5.2,35.6) to meet the ball. Exactly as asked; the tail rule passes."
+  ],
+  "metal-kit:combat-boots:c": [
+    "Fix made: no heel plate, one big angular steel toe cap, so it is a steel-toe boot, not a two-tone sneaker.",
+    "The heel plate is gone and the toe cap is the critic's 9.2 × 6.8 path wrapped over the instep, chrome with a 1.5 mitred edge. The boot is unchanged."
+  ],
+  "metal-kit:spiked-boots:a": [
+    "Fix made: the horn is a fat 7-unit cone, so it reads as a spike, not a stripe or a skate blade.",
+    "The spike is the critic's cone, 13 long and 7 at the base (ax−3 61.8 → ax+10 65 → ax−3 68.8), stroked 1.5 mitred. Both styles pass. It is still a modest shape on the whole bird."
+  ],
+  "metal-show:flying-v:a": [
+    "Fix made: the ink style is gone; white is the default and gold stays optional.",
+    "styles [\"white\", \"gold\"], as b already was. The ink-only detail colour code went with it. Geometry unchanged."
+  ],
+  "metal-show:flying-v:c": [
+    "Fix made: the ink style is gone; white is the default and gold stays optional.",
+    "styles [\"white\", \"gold\"]. Geometry unchanged (J [25.5,37], deg 74, n 23)."
+  ],
+  "metal-show:drumsticks:a": [
+    "Fix made: the crossbones are raised and the meats splayed out past the legs, so the orange legs stand clear.",
+    "Stick 1 runs k [31,42.5] to t [64,55], stick 2 k [49,42.5] to t [14,55], r 3.7, meat 0.33, exactly as asked; the head box passes without the 1-unit fallback. In Drummer the raised meats lined up with biker-jacket b's ember hem into one orange bar, so Drummer now wears biker-jacket a."
+  ],
+  "pop-kit:crop-jacket:a": [
+    "Fix made: the white stops 5 units short of the front outline, so pink shows down an open front, and the hem is raised to y 50.",
+    "A 2u ink front edge follows the outline's curve with a 5u pink strip in front of it, the ink rib at y 50–54 stops at the opening, and the V notch is gone. The critic's x values sat about 10u right of the real chest (front edge x 61–64), so the shapes are moved onto it at the critic's spacing. The optional lapel line is skipped (it cut the white into scraps). Still a fairly blocky white panel at 76."
+  ],
+  "pop-kit:tracksuit-top:a": [
+    "Fix made: two straight parallel white bars plus a zip line, so nothing curves and there is no rib-cage read.",
+    "Bars at the critic's 6:17 slant and 4.5u spacing, moved 10u left onto the real chest: (51,39)→(57.7,58) and (55.5,39)→(62.2,58), squared off by the hem at y 56, with a 2u white zip (48,38)→(52.4,58). The zip reads mostly as a third, thinner stripe. Ink bars on the white style stay straight, so white is kept."
+  ],
+  "pop-kit:little-black-dress:a": [
+    "Fix made: a straight neckline at y 44 on two straps, a 9-unit hourglass pinch and an A-line skirt, so the chest is pink above a black dress.",
+    "Straps (54.6,37.4)→(56,44.5) and (59.4,39.6)→(60.4,44.5); the skirt flares in a straight A-line to the body's front-bottom corner (61.2,55.8). NOT as asked: the critic's 3u flare past the outline can't be drawn, because the Top region rule allows 1u and bird-wardrobe §1.3 keeps kit inside the body (the game colliders are the body), so the flare is inside the outline. The lower skirt still reads as a dark band under the wing."
+  ],
+  "pop-kit:union-jack-dress:a": [
+    "Fix made: the jack is a bodice over a separate ink skirt with a white hem band, so a is the flag dress and b the straight tube. Team style dropped.",
+    "Jack bodice y 40–52 with a pink waist seam, an ink skirt hemmed (44,60)→(61.2,55.8) with a 3u white band along it; styles [\"ink\"]. NOT as asked: the 3u flare past the outline, for the same reason as little-black-dress a (region rule and §1.3), so at the front the skirt is only about 4u tall."
+  ],
+  "pop-kit:puff-sleeve:a": [
+    "Fix made: three big overlapping lobes hang from a team-pink cuff band, so it is one frill, not teeth.",
+    "Three 9 × 6 lobes centred at x 29, 36 and 43, overlapping about 2u and inked round the outside only, under a 3u team-pink cuff band. They span x 24.5–47.5 (past 48 a lobe showed on the chest) and sit 0.6u higher than asked to keep the sleeve fringe under 7u. A row of white scallops under a dark line can still faintly suggest teeth at 76."
+  ],
+  "pop-kit:ribbon-streamers:a": [
+    "Fix made: two wide 20-unit ribbons tied at one knot on the middle tail tip, splayed 35 degrees. Team style dropped.",
+    "Ribbons 5u tapering to 4u, one S-wave of amplitude 4, 5u swallowtails, tied at a 6u knot with a short loop at (2,20); styles [\"white\", \"ink\"], the ink style alternating an ink and a white ribbon. Tail reach 8.0."
+  ],
+  "pop-kit:ribbon-streamers:b": [
+    "Fix made: the gymnast's baton, a 10-unit stick up and back from the top tail tip, with the ribbon cascading off its end. Team style dropped.",
+    "A 10u baton along (−6,−8) from (11.4,11), the 5u ribbon in its S from the baton's end; styles [\"white\", \"ink\"]. NOT as asked: the baton is white with an ink edge, because a plain ink stick vanished on the dark room. Tail reach 9.6."
+  ],
+  "pop-kit:go-go-boots:a": [
+    "Fix made: a wider flared white boot with a long pointed toe; white is now the default.",
+    "Shank 8u flaring to a 10u mouth at y 56, heel 3u behind a 3u notch, styles [\"white\", \"ink\"] with a 3u shine on the ink. The toe stops at x+10, not x+11 (x+11 breaks the 9-unit boots band), and the arch notch is filled with ink because open it showed the orange toes."
+  ],
+  "pop-show:star-mic:b": [
+    "Fix made: the mic tilts up toward the beak, about 33 degrees, so it is a star mic held under the chin, not a sheriff's badge.",
+    "Handle half-width 2.4 to 3, star r 8.6 tip up, inner 0.5, as asked, but 2.4u lower than the critic's spot: handle (49,57.4)→(58.6,51), star centre (63.2,48.2). At the critic's spot the star crossed the face line and the walk tuck lifted its tip into the head box."
+  ],
+  "pop-show:corded-mic:a": [
+    "Fix made: the mic is raised to the chin at about 43 degrees, so it is a sung mic, not an ice cream at crotch height.",
+    "Cone 14 long tapering 3.2 to 1.8 with the 1.6 outline and 2.4 collar, egg centre (61.5,46.3): 2.3u lower than asked, which crossed the face line and the head box at the tuck. The critic's butt and U points sat on the belly's bottom edge, where the cable merged with the outline, so the 2.4 cable loops back up onto the pink under the wing. The cable is weak at 76: it looks like another wing scallop."
+  ],
+  "pop-show:pom-pom:c": [
+    "Fix made: the pom is lifted clear of the back on a visible stick, so it is held up, not a cottontail.",
+    "The stick is a 4.4 ink line with a 2.4 mutedWarm core (#b3a89a) from (36,45) to (19.5,25); same pom size, white only. NOT at the critic's centre: (19.5,17.5) and the fallback (21,19) both break reach (14.2 and 13.4, limit 10), and the back is at y 28.5 there, not 31. Centre (15.5,20), over the upper tail feathers, is the highest that passes."
+  ],
+  "pop-show:union-jack-flag:a": [
+    "Fix made: a waving flag flown forward off the breast on its pole, so it is a flag, not a patch on the belly.",
+    "wavyJack from the pole top along (1,0.12), 17 long and 9 deep, one wave growing to 1.8, ink with the white inset hem. The pole sits 8u further back than asked, (53,58)→(54.5,40.6): at the critic's spot the fly end was 17u past the breast (limit 10). The fly half waves on the dark page about 8u out. Ginger keeps flag c."
+  ],
+  "country-kit:tail-bandana:a": [
+    "Fix made: redrawn inside the Tail region as a kerchief knotted round the lower plume, so it reads as cloth tied on the tail, not a speck or a cursor.",
+    "A full redraw (moving the old point inside the region still read as a cursor): the kerchief wraps the lower plume's bend from (2.2,45.2) to the body edge and hangs to one point at (6.8,62.4), about 9u under the plume, with a square knot behind and one broad tie end flying back to (−6.8,52). The knot is in the style colour (an ink knot on white read as a blob). Both styles pass the region rule; the ink style is weaker, a dark rag tied on. Not judged by a critic, only by the drawing session."
+  ],
+  "country-show:corn-cob:a": [
+    "Fix made: blunt bullet cobs with gentle lumps and two lengthwise kernel rows, each between two hugging white husk leaves: the corn emoji, twice.",
+    "Bumps 0.9 every 3.4, dims w0 8 / wMax 10.5 / wTip 7, kernel rows stroke 2 at ±width/5 from t 0.2 to 0.85, droopingHusk deleted, hugLeaf(±1, 0.62, 4, 1.8) at stroke 2, as asked. The V is narrower than asked (about 46 against 52 degrees): the up cob's leaf crossed the chin rule at (28,22), so it leans back to (21.8,23) and the back cob drops to (7.8,36). Corn at 130 blurred, but busy at 76, where the four white leaves fan a little like feathers."
+  ],
+  "country-show:corn-cob:c": [
+    "Fix made: one fat blunt cob with kernel rows between two flaring white husk leaves: the corn emoji, no torch, no flower.",
+    "Bumps 0.9 every 3.4, dims 9.4 / 13.5 / 9, kernel rows, droopingHusk deleted, hugLeaf(±1, 0.6, 4.2, 1.8) at stroke 2, as asked. p1 is (19.4,23.6): the asked (23.4,21.8) and the fallback (21,23) both crossed the chin rule. The leaves' right edge is at x 34.3, about 9u clear of either white bandana."
+  ],
+  "country-show:acoustic-guitar:b": [
+    "Fix made: white only. The ink style (the black frying pan) is gone.",
+    "styles [\"white\"], and the ink-only drawing paths shared with a are deleted, since no guitar uses ink now. Geometry unchanged."
+  ],
+  "country-show:hay-bale:b": [
+    "Fix made: a bigger, softer bale with rounded corners, a bowed top, long wisps, shaggy ends and thicker twine, so it is straw, not a crate or cheese.",
+    "Twine 2.2 at x 67 and 80, top 59, bottom 71.6, corners r 2.6, top bowed up 1u, five wisps leaning 30 to 42 degrees, four tufts per end splayed 2.4 to 3u. The right end is x 85, not 88 (with the tufts, 88 passed the stage's x 88 limit), and the wisps are 2.8 to 3.8 tall, not 3.5 to 4.5 (taller ones crossed y 55 on the bowed top)."
+  ],
+  "disco-kit:satin-jacket:a": [
+    "Fix made: a cased white zip down the front, a 7-unit team rib collar and a 15-unit star patch, so it is a zipped jacket, not the open shirt.",
+    "Zip 2.6 white cased 1.2 ink from (57,40.5) to (55.5,58) (ink in the white style), the rib widened to 7 with its lower edge 46 40.1 to 62.5 47.8 and no piping, star r 7.5 at (40,49.5) in the team colour, as asked. The zip and the star are also clipped to the body (the preener's belly is about y 54.5, so the star's bottom tips lose about 2u), and the rib is cut at y 37 for the hair rule; the neck already covered that part. The team rib sits close in value to the cyan neck."
+  ],
+  "disco-kit:flare-sleeve:b": [
+    "Fix made: the team style has c's ink cuff band, so the cyan sleeve has a dark seam into the white bell.",
+    "An ink stroke 3.4 wide with round caps along BELL_CUFF, drawn after the bell, in the team style only. The ink style is unchanged."
+  ],
+  "disco-kit:tinsel:a": [
+    "Fix made: crinkled foil ribbons that droop in one gentle curve, each ending in a fat sparkle at a different height. No S, no stink lines.",
+    "crinkleC with n 12 and 7, amp 1.6, cased stroke core 3.4 and edge 1.2, mitred; sparkles r 6, k 0.5, as asked. The long strand ends at (6,37), not (3,37), with its second control at (3,28): at the asked numbers it reached 12.5u from the tail (limit 10). The short strand is a little lightning-bolt-like."
+  ],
+  "disco-kit:feather-boa:a": [
+    "Fix made: a sagging swag that drops in one long end, with fat scalloped fluff, not a hard white L.",
+    "The critic's path exactly (M 33.5 31 C 26 34 15 31 10 16 C 4 20 1 30 3.5 42), core 7 with a 4.4 inner, fluff 12.5 with a 9.6 inner, period 5.5."
+  ],
+  "disco-kit:feather-boa:b": [
+    "Fix made: the boa starts hidden at the high sickle tip, so one fluffy end streams off it: no arch, no bag handle.",
+    "The critic's path exactly, from M 17 1.5, with fluff 12.5 / 9.6 inner, period 5.5. The core stays at 6.6 with a 3.8 inner; the fix gave only the fluff."
+  ],
+  "disco-kit:platforms:a": [
+    "Fix made: each sole is a shoe, a tall heel and a lower toe over an arch notch, so the two shoes no longer merge into one brick.",
+    "The critic's sole path, a white sole under an ink upper (a gold upper in gold), the shoe narrowed to x−5..x+8 with the upper's back edge at x−4. The near heel runs back to x−8, because at x−5 the back toe showed as an orange nub; the two shoes still only kiss. The ink style is dropped (styles [\"white\", \"gold\"]): the fix's white style is the old ink shoe."
+  ],
+  "disco-show:hand-fan:b": [
+    "Fix made: a solid ink leaf opened 140 degrees with white pleats, rounded scallops and two guard sticks; ink is the default. A fan, not an eggshell.",
+    "styles [\"ink\", \"white\", \"gold\"]; the leaf solid from r 3 to 14 between 200 and 340 degrees, 7 round scallops 1.5 proud, 6 pleat strokes 2u from r 5 to 12 (white on ink, ink on white and gold), two 2.5 ink guards to r 15, no rivet dot. The rivet is at (26.5,49.5), not (26.5,48): higher, the scallops at 300 to 315 degrees entered the head box at rest."
+  ],
+  "shared:team-sash:b": [
+    "Fix made: the knot slides down to the back hip and the tails swing back over the rump as 8-unit forked ribbons, so nothing hangs between the legs.",
+    "Knot 9 × 13, k 1 on every body; tails 8u wide with 3.5u V notches, painted over the band and under the knot; ink style keeps the team rim and two 13u cinch lines. Per body, because the body under the band is shallower than the fix assumed: broody as asked (t 0.68, two tails at 138 and 115 degrees); stock (t 0.64) and spiky (t 0.62) take the fix's own one-tail fallback at 125 degrees; the preener's chest is about 4u deep under the band, so by \"never draw a 4u nub\" it wears the knot only. Every tail point stays left of x 29.5 below y 55, so both legs stay orange."
+  ],
+  "shared:golden-egg:a": [
+    "Fix made: the egg moves off the sash band, so at least 3 units of team colour separate it from a white sash.",
+    "Team colours already wears team-sash a in ink. The egg also moved, further than the asked +3/+2 (which left only 0.25 to 1.6u): stock [36,63.5], spiky [34,64], broody [37,63], preener [32,64], 3.0 to 3.4u from the band, with the sweep re-run. It now sits lower and further forward by the near leg, less tucked under the wing."
+  ],
+  "shared:drumstick:a": [
+    "Fix made in part: a bigger meat hanging behind the legs off the rump, so both legs are fully orange. It cannot hang as low as asked.",
+    "Meat r 5.5, meat 0.55, as asked. The asked placement (and its +3u fallback) dips 3 to 8u under the soft floor in the chicken-dance flap and the horns-pump stamp, and fails the walk tuck and reach, so it hangs as low as the sweep allows: stock k [26,46] t [19,59.5], spiky k [26,46] t [18.5,59], broody and preener k [25,46] t [20.5,60.5]. Against the room on three bodies; on the broody it lies on the body, ember on orange held apart by its ink outline."
+  ],
+  "shared:egg-nest:b": [
+    "Fix made: ember straw, a lumpy round rim and underside, no prow or stern strands, and a bigger front egg: a golden nest, not a gravy boat.",
+    "Rim three round bumps 9.8 × 2.5 topping at y 64.5, underside three bumps 9.2 × 2 down to y 74.5, one back curl rooted 8u wide tapering to (−7.8,56), front egg 14 × 17 with 9u above the rim, the ink pad kept. The wall's back end is x −7.5, not −9 (the stage limit is −8). The underside bumps lean a little toward a row of buns."
+  ],
+  "moves:horns-pump:a": [
+    "Fix made: the fist goes above the head, a separate spike behind the hair, and the beat-2 thrust is the tallest frame.",
+    "Up +82 degrees, wingX −24, wingY −20 (tip y −14.2); the thrust +84, wingY −22 with a 4u hop (tip y −20.4); down a low spread wing at +20, wingX −18, wingY −4, so each pump swings 62 degrees. wingY is −20 not −12..−16 (at −14 the tip only reached y −8.8), and the lean on up beats is −3..−4 not −7. The raised wing's root floats a little off the back; a tail spike joins it in silhouette."
+  ],
+  "moves:heart-point:a": [
+    "Fix made: the pointing wing is mirrored, so its leading edge is one clean taper with the notches underneath. No pincer.",
+    "A new rig field, wingFlip, mirrors the wing about its shoulder (no angle alone turns the notch down). Point −26 mirrored at wingX 11; YOU −42 mirrored at wingX 15, wingY 6, lean 7, the longest and highest, tip at chin height; fold-back +45 mirrored between jabs. wingX 15, not 18..20: further out the mirrored wing's root leaves the chest. It still ends in the stock wing's broad mitten. Porting needs wingFlip on CharacterFigure's wing."
+  ],
+  "moves:boot-scoot:a": [
+    "Fix made: a visible knee lift and a big stomp, with both heel-toes on the near (bright) leg and a deeper lean into each heel.",
+    "Lean −17 into each heel; on 3a a 3u hop, lean −12, legNearLift 8, legNearX 27, legNear −75; the beat-4 stomp drops 4.5 with a +28 tail flick. The lift is steeper than the asked −40 / +14..18, which left the foot inside the belly outline."
+  ],
+  "moves:chicken-dance:a": [
+    "Fix made: the flap's tail clears the preener's wing, the clap folds the wing flat down the chest, and the wiggle swings the hips.",
+    "Flap-up tail −65 on every silhouette (the page has no per-silhouette keyframes; −95 turned the spiky tail into a kickstand). Clap: the mirrored wing (wingFlip) flat down the chest at +60, notches back, opening to +10 between claps; the asked −110..−120 still stuck out under the chin. Wiggle x ±4 with the lean alternating ±6."
+  ]
+};
+
+const gate1 = (v) => {
+  const key = `${v.unit}:${v.item}:${v.variant}`;
+  const fixed = GATE_1_FIXED[key];
+  if (fixed) return { ...v, critic: v.verdict, verdict: "keep", gate: "fixed", line: fixed[0], landed: fixed[1] };
+  if (GATE_1_KEPT_BY_EYE.has(key))
+    return { ...v, critic: v.verdict, verdict: "keep", gate: "by-eye", line: "Kept by Brad's eye at 76px at Gate 1. No critic has re-judged this drawing (the run 1b country-kit critic failed).", fix: undefined };
+  return v;
+};
+
+export const VERDICTS = RUN_1B.filter((v) => !GATE_1_CUT.has(`${v.unit}:${v.item}:${v.variant}`)).map(gate1);
+
 /**
  * What the Looks critic said about each Look at 76px: does the full kit hold?
  * holds: "yes" | "partly" | "no". Keyed by genre, then Look name (the names
@@ -590,27 +800,27 @@ export const LOOK_NOTES = {
   metal: {
     Thrash: { holds: "yes", note: "battle-vest a, leather-sleeve a ink, combat-boots a ink, flying-v b white. The vest and sleeve merge into leather on purpose and the white V is the brightest shape (18.7:1 against the sleeve). The strongest Look on the page." },
     Pyro: { holds: "yes", note: "flame-sleeve b ink, lava-tips b, lava-disc c: fire on the wing, the tail and the floor, the chrome chest left clear. The bandolier was dropped (it turned the back half into an orange tangle in six tries) and now sits in Full kit." },
-    Drummer: { holds: "yes", note: "biker-jacket b (an ink body with one ember band), drumsticks c white raised in a V behind the back so they never cover the jacket, and bolt-disc a in place of the speaker cab, which was never drawn. The ember bolts frame the bird." },
-    "Full kit": { holds: "yes", note: "bandolier b, flame-sleeve a, chain-loop a, combat-boots b (spiked-boots has no keep), battle-axe a white, lava-disc a. Busy but legible; the axe is the brightest shape." }
+    Drummer: { holds: "yes", note: "Gate 1: biker-jacket a (the whole body in black leather), drumsticks a white (the splayed crossbones; c was cut) and bolt-disc a in place of the speaker cab, which was never drawn. With jacket b the raised meats lined up with its ember hem into one orange bar, so Drummer wears a: white bones and ember meats on black. Judged by the art pass, not a critic." },
+    "Full kit": { holds: "yes", note: "bandolier b, flame-sleeve a, chain-loop b (Gate 1 cut a: the morning-star flail now), combat-boots b, battle-axe a white, lava-disc a. Busy but legible; the axe is the brightest shape." },
   },
   pop: {
     Sporty: { holds: "yes", note: "tracksuit-top b (shell suit), stripe-sleeve b team (the three stripes), platform-trainers a white, pom-pom a white. Pom against the sleeve 3.53:1." },
     Ginger: { holds: "yes", note: "union-jack-dress b ink, union-jack-flag c ink waved high behind the back, led-star-riser a. The two jacks never touch: the amber top/prop 1.00 is apart in space, and the flag's white hem draws its outline." },
     Posh: { holds: "yes", note: "little-black-dress b (strapless, pink bow), go-go-boots b ink (white cuff), star-mic a white held out over the tail. Star-mic c, raised behind the head, crowded the photo head. The dress still reads mostly as a dark lower body." },
     Baby: { holds: "yes", note: "crop-jacket b ink star bomber, big-bow b white (ponytail bow), spotlight b white. No sleeve: puff-sleeve's only keep (b) is the same star and must not be worn with crop-jacket b. Puff-sleeve b with no top also holds and is an alternative." },
-    "Full kit": { holds: "yes", note: "tracksuit-top b, stripe-sleeve a team, big-bow a white (ribbon-streamers has no keep), platform-trainers b, corded-mic b white, led-star-riser b. Dense but holds." }
+    "Full kit": { holds: "yes", note: "tracksuit-top b, stripe-sleeve a team, big-bow a white, platform-trainers b, corded-mic b white, led-star-riser b. Dense but holds." }
   },
   country: {
-    Rodeo: { holds: "yes", note: "trophy-buckle a (star), fringe-sleeve b ink, lasso b white twirled behind the tail (18.7:1 against the sleeve), sawdust-ring a (barrel) since no hay bale is kept. Fringe-sleeve b was a run 1 fix (its team style, now dropped), the one exception to kept-only art. Amber: the white buckle and white lasso share a value but sit apart." },
+    Rodeo: { holds: "yes", note: "trophy-buckle a (star), fringe-sleeve b ink, lasso b white twirled behind the tail (18.7:1 against the sleeve), sawdust-ring a (barrel). Fringe-sleeve b was a run 1 fix (its team style, now dropped), the one exception to kept-only art. Amber: the white buckle and white lasso share a value but sit apart." },
     "Honky-tonk": { holds: "yes", note: "western-yoke b (ink, white bolo), suede-sleeve a ink, acoustic-guitar a white, sawdust-ring b (saguaro). The white guitar fixes run 1's one-black-chest merge." },
-    Farmhand: { holds: "yes", note: "bandana b white, lasso c ink (the wind-up) in place of corn-cob, which has no keep, and egg-nest a as a farm stage. The rope coil Tail is dropped: no keep. The weakest country Look; the bandana and rope carry it." },
-    "Full kit": { holds: "yes", note: "fringed-vest a, fringe-sleeve b ink, lasso b white, sawdust-ring a. No Tail: no country Tail item has a keep." }
+    Farmhand: { holds: "yes", note: "bandana b white, lasso c ink (the wind-up) and egg-nest a as a farm stage. (Written before Gate 1 kept corn-cob and rope-coil; the Look was not re-dressed.) The weakest country Look; the bandana and rope carry it." },
+    "Full kit": { holds: "partly", note: "Gate 1: fringed-vest a, fringe-sleeve b ink, tail-bandana b white (country's first kept Tail, kept by eye), lasso b white, sawdust-ring a. The white bandana sits under the white lasso twirl and is mostly lost in it at 76; the rest holds. Judged by the art pass, not a critic." }
   },
   disco: {
-    Fever: { holds: "yes", note: "open-shirt b (ink, medallion), flare-sleeve c white (the bell cuff breaks the outline: Travolta's white suit over a black shirt), lit-floor a. No platforms: none kept. Reads a little magpie in black and white; the lit floor makes it disco." },
-    "Studio 54": { holds: "yes", note: "dagger-collar b white, mirror-ball-egg c white raised overhead in place of the hand fan (no keep), neon-flames b. No tinsel: none kept. The amber top/prop pair (white collar, white ball) sits apart in space." },
-    Roller: { holds: "yes", note: "open-shirt c (ink with sparkles) in place of the satin jacket (no keep), roller-skates a white, vinyl b. The skates carry it; the vinyl is small and weak at 76. The satin-sleeve version failed rule 8 at 2.43:1." },
-    "Full kit": { holds: "no", note: "open-shirt c, satin-sleeve b white, roller-skates b, vinyl b, neon-flames a; no Tail kept. Fails rule 8 (prop/sleeve 2.43:1) on purpose: no kept disco Sleeve is dark and no kept disco Prop is ink, so no disco Look can wear a Sleeve and a Prop together yet." }
+    Fever: { holds: "yes", note: "open-shirt b (ink, medallion), flare-sleeve c white (the bell cuff breaks the outline: Travolta's white suit over a black shirt), lit-floor a. No platforms. Reads a little magpie in black and white; the lit floor makes it disco." },
+    "Studio 54": { holds: "yes", note: "dagger-collar b white, mirror-ball-egg c white raised overhead, neon-flames b. The amber top/prop pair (white collar, white ball) sits apart in space." },
+    Roller: { holds: "yes", note: "open-shirt c (ink with sparkles), roller-skates a white, vinyl b. The skates carry it; the vinyl is small and weak at 76. The satin-sleeve version failed rule 8 at 2.43:1." },
+    "Full kit": { holds: "yes", note: "Gate 1: open-shirt c, satin-sleeve b white, tinsel a white, roller-skates b, hand-fan b ink, neon-flames a. The fixed hand fan is disco's first ink Prop, so the white Sleeve and the Prop pass rule 8 (18.7:1) where vinyl failed at 2.43:1. Very busy: the tinsel is the loudest shape. Judged by the art pass, not a critic." }
   },
   shared: {
     "Wing night": { holds: "yes", note: "wing-night-bib a ink, drumstick b white (raised and bitten), egg-nest c (one giant egg). Holds on all four genres." },
@@ -618,12 +828,12 @@ export const LOOK_NOTES = {
   }
 };
 
-/** What is still missing after run 1b: items with fewer than two keeps, Moves not kept, and Look gaps. */
+/** What is still open after Gate 1 (2026-10-20): every kept tile ships, so these are the reads to watch, not gaps. */
 export const GAPS = {
-  metal: "Under two keeps: battle-vest (b fix), bandolier (a fix), chain-loop (b fix), spiked-cuff (a cut: the third failed cuff; try an axe-head blade), flying-v (a and c fix, only the ink style fails). spiked-boots has no keep (a fix, b cut): if nothing reads, fold it into combat-boots. combat-boots c is a fix but the item already has two keeps.",
-  pop: "Under two keeps: crop-jacket, tracksuit-top, little-black-dress, union-jack-dress, puff-sleeve and go-go-boots each keep only b (every a is a fix); corded-mic keeps only b. ribbon-streamers has no keep (both fix). star-mic b and pom-pom c are fixes on items that already have two keeps.",
-  country: "country-kit was not re-judged this run (its critic failed): it carries run 1's keeps (bandana a and b, western-yoke b, trophy-buckle a, fringed-vest a, fringe-sleeve b, suede-sleeve a), and the ten redrawn or new variants are unjudged. That leaves the Tail slot with no keep at all (tail-bandana a also fails the measured region rule). In country-show, corn-cob (a and c fix) and hay-bale (a cut, b fix) have no keep, and acoustic-guitar keeps only a (b fix: its ink style).",
-  disco: "No keep: satin-jacket (a fix, b cut), tinsel (a fix, b cut), feather-boa (both fix), platforms (a fix, b cut), hand-fan (a cut, b fix). One keep: dagger-collar (b; c cut), flare-sleeve (c; b fix), vinyl (b; a cut). So disco has no kept Tail and only roller-skates for Boots. Every kept disco Sleeve is white and every kept Prop is white or team, so no disco Look can pair a Sleeve and a Prop yet (rule 8, 2.43:1).",
-  shared: "One keep each: team-sash (b fix: thin tails between the legs), golden-egg (a fix: fuses with the white sash), drumstick (a fix: the meat reads as a club foot).",
-  moves: "Kept: double-headbang, sporty-hop, yeehaw-buck (new: Bronco buck, replacing thumbs-in-belt and lasso-twirl), night-fever, the-bump. Not kept yet (fix): horns-pump, heart-point, boot-scoot, chicken-dance; heart-point and chicken-dance share the pincer problem, which a mirrored wing for forward poses would fix. For run 3: sporty-hop needs about 30 units of headroom and yeehaw-buck about 24; at the 53.3-unit parade spacing the front preener's upright tail already covers the face of the bird behind at rest."
+  metal: "Gate 1 cut the crossed bandolier (b is the slung belt only), chain-loop a, spiked-cuff a, spiked-boots b and drumsticks b and c. spiked-cuff and spiked-boots keep one variant each. The bandolier has no gold. All seven metal fixes are made.",
+  pop: "All twelve pop fixes are made. Two could not be drawn as asked: the dresses' skirts (little-black-dress a, union-jack-dress a) cannot flare 3u past the outline, because the Top region rule and §1.3 keep kit inside the body. Weakest after the fixes: corded-mic a's cable reads as another wing scallop; crop-jacket a is still a blocky white panel. The pom-pom has no gold.",
+  country: "Gate 1 cut hay-bale a and took gold off every country item (1.30:1 on the orange). All five fixes are made and tail-bandana a now passes the region rule, so country has three kept Tails. The eight drawings no critic re-judged were kept by Brad's eye. Weakest after the fixes: corn-cob a is busy at 76 (four white leaves fan like feathers).",
+  disco: "Gate 1 cut open-shirt a, dagger-collar c, satin-jacket b, tinsel b, platforms b, mirror-ball-egg b, hand-fan a and vinyl a; the mirror ball has no gold. All seven disco fixes are made. hand-fan b is now ink by default, disco's first ink Prop, so the Full kit passes rule 8. platforms a dropped its ink style (the fix made it the same shoe as white).",
+  shared: "All four shared fixes are made. drumstick a cannot hang as low as asked (the chicken-dance flap and the horns-pump stamp sweep it 3–8u under the floor), so it hangs off the rump as low as the sweep allows. team-sash b wears two tails only on the broody, one on stock and spiky, and the knot alone on the preener.",
+  moves: "All four Move fixes are made. heart-point and chicken-dance mirror the wing (a new wingFlip rig field), which CharacterFigure needs before run 3 can port them. The fist pump's raised wing floats a little off the back. For run 3: sporty-hop needs about 30 units of headroom and yeehaw-buck about 24; at the 53.3-unit parade spacing the front preener's upright tail already covers the face of the bird behind at rest."
 };

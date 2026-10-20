@@ -79,6 +79,16 @@ const silhouette = (ctx, d, fill, edge = 2.4, attrs = "") =>
   `<path fill="${fill}" stroke="${ctx.colors.ink}" stroke-width="${edge * 2}" stroke-linejoin="round" ${attrs} d="${d}"/>
    <path fill="${fill}" ${attrs} d="${d}"/>`;
 
+/**
+ * `silhouette` for several overlapping pieces, each [d, fill], kept as their
+ * own paths (overlapping subpaths of opposite winding in one path punch holes
+ * in each other): every ink edge first, then every fill, so only the outside
+ * of the group is inked.
+ */
+const silhouettes = (ctx, pieces, edge) =>
+  pieces.map(([d]) => `<path fill="none" stroke="${ctx.colors.ink}" stroke-width="${edge * 2}" stroke-linejoin="round" d="${d}"/>`).join("") +
+  pieces.map(([d, fill]) => `<path fill="${fill}" d="${d}"/>`).join("");
+
 // ------------------------------------------------------------------ tops --
 
 // The crop jacket's body: over the front third of the wing (a jacket is worn
@@ -93,17 +103,19 @@ const cropJacket = {
   variants: [
     {
       key: "a",
-      note: "The V-neck: the bomber's white body and ink rib hem, opened at the throat in one short pink V that closes inside the chest (apex y 44), so the white either side of it joins below as one piece. White only: in ink the rib was ink on ink and the crop line vanished, and an ink bomber is b's job.",
+      note: "Open front: the bomber's white body stops 5u short of the body's front edge all the way down, its 2u-inked front edge following the outline's curve, so a strip of the bird's pink about 5u wide shows down the whole front between the jacket and the outline: an open jacket over the bird. Cropped high, the ink rib at y 50-54 also stops at the opening, so the pink strip runs on into the belly below it. White only: in ink the rib was ink on ink and the crop line vanished, and an ink bomber is b's job. (Round 2's closed white front with a V notch read as a bib or a napkin.)",
       styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
-        const hem = 53;
-        const notch = `M 54 ${TOP_Y} L 58 44 L 62 ${TOP_Y}`;
+        // the open front: an edge 5u inside the outline, following its curve,
+        // from the neck down to the hem (a lapel turned out to the outline
+        // above y 41 was only a white sliver beside the neck, a stray)
+        const panel = `M 44 ${TOP_Y} L 57.6 ${TOP_Y} C 59.4 40.5 59.6 47 56.6 54 L 43.6 53.6 C 41 47 41.5 41 44 ${TOP_Y} Z`;
         // the rib in the colour that reads on the body, so it is always a hem
-        const band = `<path fill="${c.on}" d="M 38 ${hem - 4.5} L 74 ${hem - 3} L 74 ${hem + 4} L 38 ${hem + 4} Z"/>`;
-        return garment(ctx, JACKET(hem), c.base, { inBody: `${band}<path fill="${c.team}" ${ctx.inkStroke(2)} d="${notch}"/>` });
+        const band = `<path fill="${c.on}" d="M 38 50 L 74 50 L 74 58 L 38 58 Z"/>`;
+        return garment(ctx, panel, c.base, { inBody: band });
       }
     },
     {
@@ -128,27 +140,23 @@ const tracksuitTop = {
   id: "tracksuit-top",
   slot: "top",
   name: "Tracksuit top",
-  note: "Sporty: an ink track top with two white stripes that echo the body's own edge.",
+  note: "Sporty: an ink track top with white stripes.",
   variants: [
     {
       key: "a",
-      note: "Full-length track top: chest and front in ink, back under the wing, hemmed level at y 56 by a plain band with one 2u ink hem line on its top edge. The two white stripes run down the front (zip) edge only, from the neck to the hem, and end square there: they are clipped to the front (x ≥ 49, y ≤ 56), so no white curves under the belly or the wing (that wrap read as ribs, and in Sporty it ran parallel to the sleeve's arcs).",
+      note: "Full-length track top: chest and front in ink, back under the wing, hemmed level at y 56 by a plain band with one 2u ink hem line on its top edge. Two straight 2.6u white bars run down the chest on one forward slant (6u across for every 17u down, 4.5u apart), parallel to each other and to nothing on the bird, and end square at the hem; a 2u white zip line runs behind them on a steeper slant. Nothing curves, so there is no rib read, and in Sporty the straight bars stand apart from the sleeve's arcs. (Round 2's stripes followed the body's edge and read as a rib cage.)",
       styles: ["ink", "white"],
       whitePoints: 1,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
         const panel = `M 46.5 ${TOP_Y} C 50 40 51.5 46 46.5 52 L 38 54.6 L 30 57 L 30 60.5 L 64 58.5 L 72 58.5 L 72 ${TOP_Y} Z`;
-        // inside the edge: base 0–1.5, stripe 1.5–4, base 4–6.5, stripe 6.5–9
-        const bands = edgeBands(ctx, [
-          [c.on, 18],
-          [c.base, 13],
-          [c.on, 8],
-          [c.base, 3]
-        ]);
+        const line = (d, w) => `<path fill="none" stroke="${c.on}" stroke-width="${w}" d="${d}"/>`;
+        // run on below the hem; the hem band squares them off at y 56
+        const lines = line("M 48 38 L 52.4 58", 2) + line("M 51 39 L 57.7 58", 2.6) + line("M 55.5 39 L 62.2 58", 2.6);
         const hemBand = `<path fill="${c.base}" d="M 28 56 L 74 56 L 74 61 L 28 61 Z"/>
           <path fill="none" ${ctx.inkStroke(2)} d="M 28 56 L 74 56"/>`;
-        return garment(ctx, panel, c.base, { onEdge: bands, onEdgeWithin: "M 49 30 L 80 30 L 80 56 L 49 56 Z", inBody: hemBand });
+        return garment(ctx, panel, c.base, { inBody: lines + hemBand });
       }
     },
     {
@@ -191,15 +199,17 @@ const littleBlackDress = {
   variants: [
     {
       key: "a",
-      note: "Front hourglass: the dress fills the whole chest between the wing and the front, with a neckline straight across at y 39 from the wing's front edge. The hourglass is cut into the FRONT edge, where it shows against the room: the dress leaves the body's edge at y 42, slopes in to a pointed waist at (56.5,49) so a wedge of the bird's own pink about 6.5u deep and 13u tall shows between the dress and the outline (inked on the dress side only), and flares back out to the edge at y 55.5: a > of pink on the front, the hourglass's side. Then a level hem at y 57.5 runs from the front back under the wing, so a band of pink belly shows under the skirt above the legs. Black bodice, pink pinch, black skirt, pink band, legs. No rim: the waist wedge already parts the ink from the outline. (Round 2 pinched the back edge at the wing instead and the dress was a dark sliver that read as a heavy outline.)",
+      note: "Front hourglass on straps: a large pink chest shows above a straight neckline at y 44, held by two 2.5u ink straps from under the neck. The hourglass is cut into the FRONT edge, where it shows against the room: the dress follows the body's edge for a short bodice to y 46.6, slopes in to a pointed waist at (54.4,51) so a wedge of pink 9u deep shows between the dress and the outline, and the skirt flares straight back out (A-line) to the body's front-bottom corner. The hem kicks up from (44,59) to that corner, so a band of pink belly shows under the skirt above the legs. Pink bird, then dress. (The fix asked for the skirt to flare 3u past the outline; the Top region rule allows 1u, and the body clip shows none of it, so the flare is drawn inside the outline as the A-line from the waist.)",
       styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
-        const panel = `M 48.5 39 L 72 39 L 72 41.5 L 64.5 41.5 C 61.5 43.5 58 46.5 56.5 49 C 58 51.5 60.5 54 63 56
-          L 72 56 L 72 57.5 L 24 57.5 ${UNDER_WING} C 47 48.5 49.2 44 49.2 41.4 C 49.2 40.2 48.9 39.4 48.5 39 Z`;
-        return garment(ctx, panel, c.base);
+        const panel = `M 48.8 44 L 72 44 L 72 46.6 L 63.9 46.6 C 60 47.6 56 49.2 54.4 51 C 56.6 52.8 58.8 54.3 61.2 55.8
+          L 44 59 L 24 58 ${UNDER_WING} C 47.5 48.5 48.8 46 48.8 44 Z`;
+        const strap = (x0, y0, x1) => `<path fill="none" stroke="${c.ink}" stroke-width="2.5" stroke-linecap="round" d="M ${x0} ${y0} L ${x1} 44.5"/>`;
+        // the straps start under the neck, which paints over them
+        return garment(ctx, panel, c.base) + strap(54.6, 37.4, 56) + strap(59.4, 39.6, 60.4);
       }
     },
     {
@@ -218,11 +228,6 @@ const littleBlackDress = {
     }
   ]
 };
-
-// The Union Jack dress's skirt hem: cut diagonally from under the chest down
-// to the body's bottom edge, so a wedge of pink lower body shows below it
-// behind the near leg and the bird keeps its silhouette on the dark room.
-const DIAGONAL_HEM = `L 72 74 L 58 74 L 57 66 L 38 56.5 L 38 54.6 L 46.5 52`;
 
 /**
  * The Union Jack's lines through (cx, cy): saltire at ±angle, cross upright.
@@ -253,16 +258,19 @@ const accentOf = (c) => (c.base === c.team ? c.ink : c.team);
  * melting into one field. Both panels are filled shapes clipped to the body;
  * the flag's lines are clipped to the flag panel AND the body.
  */
-const jackDress = (ctx, flag, plain, seam, jack) => {
+const jackDress = (ctx, flag, plain, seam, jack, plainDetail = "") => {
   const c = pal(ctx);
   const body = clip(ctx.bodyPath);
   const f = clip(flag);
+  const pl = clip(plain);
   const both = clip(`${flag} ${plain}`);
-  return `<defs>${body.def}${f.def}${both.def}</defs>
+  return `<defs>${body.def}${f.def}${pl.def}${both.def}</defs>
     <g clip-path="${body.url}">
       <path fill="${c.base}" ${ctx.inkStroke(2)} d="${plain}"/>
       <path fill="${c.base}" ${ctx.inkStroke(2)} d="${flag}"/>
     </g>
+    ${plainDetail ? `<g clip-path="${pl.url}"><g clip-path="${body.url}">${plainDetail}</g></g>
+    <g clip-path="${body.url}"><path fill="none" ${ctx.inkStroke(2)} d="${plain}"/></g>` : ""}
     <g clip-path="${f.url}"><g clip-path="${body.url}">${unionJack(ctx, ...jack)}</g></g>
     <g clip-path="${body.url}"><path fill="none" stroke="${accentOf(c)}" stroke-width="2.4" d="${seam}"/></g>
     <g clip-path="${both.url}"><path fill="none" ${ctx.inkStroke(2)} d="${ctx.bodyPath}"/></g>`;
@@ -276,14 +284,17 @@ const unionJackDress = {
   variants: [
     {
       key: "a",
-      note: "Flag bodice, plain mini skirt: the jack fills the chest from y 40 to the waist at y 56 (thin white so every ink triangle stays 3u+), a pink waistline, then a short plain ink skirt with a diagonal hem.",
-      styles: ["ink", "team"],
+      note: "Flag bodice, flared skirt: the jack fills a short bodice from y 40 to a waist raised to y 52 (thin white so every ink triangle stays 3u+), a pink waistline, then a plain ink skirt that runs back under the wing and flares out to the body's front-bottom corner, its hem kicking up from (44,60) to that corner, with a 3u white band along the hem so the skirt reads as its own flared piece below the flag. Ink only: the team style read the same as ink at 76. b is the straight tube; a is the bodice plus flared skirt. (The fix asked for the skirt to flare 3u past the outline; the Top region rule allows 1u and the body clip shows none of it, so the flare is the hem's kick inside the outline.)",
+      styles: ["ink"],
       whitePoints: 1,
       darkCentre: false,
       draw: (ctx) => {
-        const bodice = `M 48.5 41 Q 57 39.5 70 40 L 70 56 L 47.5 56 C 50.5 50 50.5 45 48.5 41 Z`;
-        const skirt = `M 47.5 56 L 72 56 ${DIAGONAL_HEM} Z`;
-        return jackDress(ctx, bodice, skirt, `M 44 56 L 72 56`, [56.5, 48.5, { saltire: 2.2, cross: 4.6, inner: 2.4, angle: 46, top: 38.5 }]);
+        const bodice = `M 48.5 41 Q 57 39.5 70 40 L 70 52 L 46.4 52 C 49.6 49 50.2 45 48.5 41 Z`;
+        // the hem kicks up from (44,60) under the far leg to the front corner
+        const skirt = `M 46.4 52 L 72 52 L 72 55.8 L 61.2 55.8 L 44 60 L 26 58.6 ${UNDER_WING} L 46.4 52 Z`;
+        // the white band: the hem line raised 3u, run on past the panel (it clips)
+        const band = `<path fill="${pal(ctx).white}" d="M 66 51.5 L 44 57 L 26 55.6 L 18 55 L 18 64 L 66 64 Z"/>`;
+        return jackDress(ctx, bodice, skirt, `M 44 52 L 72 52`, [56.5, 46, { saltire: 2.2, cross: 4.6, inner: 2.4, angle: 46, top: 38.5 }], band);
       }
     },
     {
@@ -348,17 +359,21 @@ const stripeSleeve = {
   ]
 };
 
-// The ruffle hangs off the wing's scalloped trailing edge, in the sleeve's
-// 7-unit fringe below it: its top is tucked under the wing (the wing is
-// redrawn over it), its hem a run of three broad lobes that step up towards
-// the front the way the trailing edge does. One white shape inked only round
-// its outside, so no ink line splits the lobes into teeth.
-const RUFFLE = `M 21 48 L 47.5 46.5 L 47.5 52 Q 47.8 56.4 44.6 57.4 Q 42.4 57.8 41.4 55.9
-  Q 38.1 62.4 34.6 56.8 Q 31.2 63.6 27.6 57.6 Q 24.2 64.2 20.8 57.4 Q 19.8 53 21 48 Z`;
+// The ruffle hangs off the sleeve's cuff in the 7-unit fringe below the wing:
+// three big lobes (9u wide, 6u deep, 2u overlapped so they read as one frill
+// and not as teeth) stepping up towards the front with the cuff, over a strip
+// tucked under the wing. Each its own piece, inked only round the outside.
+const RUFFLE_TUCK = "M 24 47 L 46 46 L 46 50 L 25 53 Z";
+const RUFFLE_LOBES = [P(29, 54.2), P(36, 53.3), P(43, 51.3)].map(
+  ({ x, y }) => `M ${x + 4.5} ${y} A 4.5 6 0 1 1 ${x - 4.5} ${y} A 4.5 6 0 1 1 ${x + 4.5} ${y} Z`
+);
 // The wing redrawn over the ruffle with its trailing edge smoothed through the
 // scallop tips: a sleeve's cuff, one clean line. Over the white, the wing's own
 // scallops zig-zagged across the frill and read as teeth.
 const CUFF_WING = "M 47 35 C 38 29 24 33 20 44 C 19 49 21 53 24 55 C 31 54.6 39 53.4 45 51 C 49 46 51 40 47 35 Z";
+// The cuff band's inner edge, 3u inside the cuff line: a pink band edged in
+// ink, so the frill hangs from a coloured cuff, not from the arm itself.
+const CUFF_LINE = "M 20.6 49.6 C 21.8 51.2 23.2 52 25 52 C 31.5 51.6 38.5 50.6 45.6 47.6";
 
 const puffSleeve = {
   id: "puff-sleeve",
@@ -368,13 +383,16 @@ const puffSleeve = {
   variants: [
     {
       key: "a",
-      note: "Ruffle cuff: the wing's scalloped trailing edge is smoothed into one clean cuff line through the scallop tips, and a white frill hangs below it, one broad lobe (about 7u wide, 3-4u deep) under each tip so it steps up towards the front with the arm. An outline change below the arm, the baby-doll ruffle, where b is a value change on it. Inked only round its outside, so no line splits the lobes. White only: in ink it was a dark underside, a shadow. (Replaces the shoulder cap, which inside the outline could only be a white patch with a slash; the wing's own scallops over the frill zig-zagged into teeth, hence the smooth cuff.)",
+      note: "Ruffle cuff: the wing's scalloped trailing edge is smoothed into one clean cuff line through the scallop tips, edged by a 3u team-pink cuff band (an ink line 3u inside it), and a white frill of three big lobes hangs below it, each about 9u wide and 6u deep, overlapped 2u so they read as one frill, from x 24.5 to 47.5, stepping up towards the front with the arm. An outline change below the arm, the baby-doll ruffle, where b is a value change on it. Inked only round its outside, so no line splits the lobes. White only: in ink it was a dark underside, a shadow. (Round 2's one small lobe per scallop tip blurred toward teeth.)",
       styles: ["white"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
-        return `${silhouette(ctx, RUFFLE, c.base, 1.6)}<path fill="${c.team}" ${ctx.inkStroke(2)} d="${CUFF_WING}"/>`;
+        const ruffle = silhouettes(ctx, [RUFFLE_TUCK, ...RUFFLE_LOBES].map((d) => [d, c.base]), 1.6);
+        const w = clip(CUFF_WING);
+        return `${ruffle}<path fill="${c.team}" ${ctx.inkStroke(2)} d="${CUFF_WING}"/>
+          <defs>${w.def}</defs><g clip-path="${w.url}"><path fill="none" ${ctx.inkStroke(2)} d="${CUFF_LINE}"/></g>`;
       }
     },
     {
@@ -485,56 +503,77 @@ const hang = (from, to, amp) => {
   return [[at(0, 0), at(1 / 3, 1), at(2 / 3, -1), at(1, 0)]];
 };
 
-// Tied on just inside the top and middle tips and splayed wide (the top one
-// hangs steep, the lower one swings well back) so they never hang parallel,
-// which read as a tally mark; each within the tail rule's 10u of the genre tail.
+// Both tied at one knot on the middle tip and splayed 35 degrees apart: the
+// front one hangs down over the fan, the back one swings out behind it, each
+// within the tail rule's 10u of the genre tail.
+const KNOT = P(2, 20);
 const STREAMERS = [
-  { from: P(12, 13), to: P(6, 30), amp: 2.6 },
-  { from: P(3.2, 22), to: P(-7, 34), amp: 2.6 }
-];
+  { deg: 68, len: 20 },
+  { deg: 103, len: 20 }
+].map(({ deg, len }) => {
+  const a = (deg * Math.PI) / 180;
+  return { from: KNOT, to: P(KNOT.x + len * Math.cos(a), KNOT.y + len * Math.sin(a)), amp: 4 };
+});
 
-/** An even band, tapering gently from 3.8u at the tie to 3.0u at the fork. */
-const streamerWidth = (s) => 3.8 - 0.8 * s;
+/** A wide band, tapering from 5u at the knot to 4u at the fork. */
+const streamerWidth = (s) => 5 - s;
+
+// The knot: a 6u ball with one short bow loop sticking out back and up.
+const KNOT_BALL = `M ${KNOT.x + 3} ${KNOT.y} A 3 3 0 1 1 ${KNOT.x - 3} ${KNOT.y} A 3 3 0 1 1 ${KNOT.x + 3} ${KNOT.y} Z`;
+const KNOT_LOOP = `M ${KNOT.x - 1} ${KNOT.y - 2} C ${KNOT.x - 4} ${KNOT.y - 6.5} ${KNOT.x - 8} ${KNOT.y - 5} ${KNOT.x - 7} ${KNOT.y - 2.2}
+  C ${KNOT.x - 6.4} ${KNOT.y - 0.6} ${KNOT.x - 4} ${KNOT.y} ${KNOT.x - 1.5} ${KNOT.y + 0.5} Z`;
 
 const ribbonStreamers = {
   id: "ribbon-streamers",
   slot: "tail",
   name: "Ribbon streamers",
-  note: "Ribbons trailing off the fan's tips: an outline change that flutters behind the bird. Each ends in a swallowtail fork, the mark that says ribbon.",
+  note: "Ribbons trailing off the fan: an outline change that flutters behind the bird. Each ends in a swallowtail fork, the mark that says ribbon.",
   variants: [
     {
       key: "a",
-      note: "Streamers: two ribbons tied at the top and middle tips, splayed wide apart (the top one hangs steep, the lower one swings well back) so they fan out instead of hanging parallel, each an even band tapering gently from 3.8u at the tie to 3.0u at the end, with one clear S-wave (amp 2.6) and a swallowtail 3.5u deep. (Parallel straight strips read as a tally mark; flicking up and back, as flame curls; pinched at a twist, as dog-bones.)",
-      styles: ["white", "team"],
+      note: "Streamers: two wide ribbons tied at one knot on the middle tip (a 6u ball with one short bow loop out of it, back and up), splayed 35 degrees apart, the front one down over the fan and the back one out behind it, each about 20u long, tapering from 5u at the knot to 4u at a 5u swallowtail, with one big S-wave (amp 4). White; the ink style alternates the two, an ink ribbon and knot over the fan and a white ribbon and loop behind it on the room, where ink alone vanished. (Round 1's thin slashes read as feather tips and vanished in team.)",
+      styles: ["white", "ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
-        const d = STREAMERS.map(({ from, to, amp }) =>
-          ribbonBand(hang(from, to, amp), streamerWidth, 3.5)
-        ).join(" ");
-        return silhouette(ctx, d, c.base, 1.4);
+        const [front, back] = STREAMERS.map(({ from, to, amp }) => ribbonBand(hang(from, to, amp), streamerWidth, 5));
+        // the ink style alternates with white: ink over the fan, where it reads
+        // on pink, white behind it on the room, where ink would vanish
+        const behind = [[back, c.white], [KNOT_LOOP, c.white]];
+        const over = [[front, c.base], [KNOT_BALL, c.base]];
+        return c.base === c.white ? silhouettes(ctx, [...behind, ...over], 1.4) : silhouettes(ctx, behind, 1.4) + silhouettes(ctx, over, 1.4);
       }
     },
     {
       key: "b",
-      note: "Gymnast's ribbon: one long, wide ribbon off the top feather, cascading down the back of the fan in an S to below the lowest tip.",
-      styles: ["white", "team"],
+      note: "Gymnast's ribbon: a 10u white baton (2.5u, ink-edged) angled up and back from the top feather's tip, and one long 5u ribbon off its end, tied on narrow and cascading down the back of the fan in an S to below the lowest tip. The stick is what nothing else in the set has. White, or ink as the second style. (Without the baton it read as a white plume or smoke.)",
+      styles: ["white", "ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
         const hi = ctx.tailTips[2];
+        // the baton runs from just inside the tip up and back, (-6,-8) long
+        const grip = P(hi.x + 0.4, hi.y + 1);
+        const end = P(grip.x - 6, grip.y - 8);
         const d = ribbonBand(
           [
-            [P(hi.x + 1, hi.y + 0.5), P(hi.x - 3, hi.y - 4.5), P(hi.x - 8.5, hi.y - 2), P(hi.x - 8, hi.y + 3)],
-            [P(hi.x - 8, hi.y + 3), P(hi.x - 7.5, hi.y + 7.5), P(hi.x - 13.5, hi.y + 7), P(hi.x - 13, hi.y + 12)],
-            [P(hi.x - 13, hi.y + 12), P(hi.x - 12.5, hi.y + 16.5), P(hi.x - 17, hi.y + 17), P(hi.x - 16.5, hi.y + 22)]
+            [end, P(end.x - 0.5, end.y + 4), P(end.x + 2.5, end.y + 6), P(end.x - 0.4, end.y + 10)],
+            [P(end.x - 0.4, end.y + 10), P(end.x - 3.4, end.y + 14), P(end.x - 8.4, end.y + 14), P(end.x - 8.4, end.y + 19)],
+            [P(end.x - 8.4, end.y + 19), P(end.x - 8.4, end.y + 24), P(end.x - 3.4, end.y + 25), P(end.x - 8.4, end.y + 30)]
           ],
-          (s) => 5.2 - s,
+          // tied on narrow at the stick, then a full 5u band
+          (s) => (s < 0.08 ? 1.6 + (3.4 * s) / 0.08 : 5.2 - s),
           3.8
         );
-        return silhouette(ctx, d, c.base, 1.6);
+        // the stick is light on its ink edge: a plain ink stick vanished into
+        // the dark room, and a pink one read as the top feather grown longer.
+        const stick = `M ${grip.x} ${grip.y} L ${end.x} ${end.y}`;
+        const stickFill = c.white;
+        return `${silhouette(ctx, d, c.base, 1.6)}
+          <path fill="none" stroke="${c.ink}" stroke-width="5.3" stroke-linecap="round" d="${stick}"/>
+          <path fill="none" stroke="${stickFill}" stroke-width="2.5" stroke-linecap="round" d="${stick}"/>`;
       }
     }
   ]
@@ -593,28 +632,31 @@ const goGoBoots = {
   id: "go-go-boots",
   slot: "boots",
   name: "Go-go boots",
-  note: "Posh: tall ink boots. Ink on the dark floor loses the leg, so each solution carries one light mark that draws the boot's form. White is the sixties original, offered as a style.",
+  note: "Posh: tall go-go boots. Ink on the dark floor loses the leg, so an ink boot carries one light mark that draws its form; white, the sixties original, is a's default.",
   variants: [
     {
       key: "a",
-      note: "Patent knee-high with a block heel: the shank starts under the body's edge (no leg shows above it), a pointed toe, a heel block with a notch under the arch, one thick patent shine down the shin, and a warm-grey line along the sole so the foot holds on the floor.",
-      styles: ["ink", "white"],
+      note: "White knee-high with a block heel, the sixties go-go boot: an 8u shank that flares to a 10u mouth at the body's edge (y 56), so the top reads as a boot mouth against the belly, a pointed toe out to x+10, and a 3u-tall heel block behind a 3u notch under the arch. White by default (b owns ink with a white cuff); in ink it carries one 3u patent shine down the shin and a warm-grey sole line so the foot holds on the dark floor.",
+      styles: ["white", "ink"],
       whitePoints: 0,
       darkCentre: false,
       draw: (ctx) => {
         const c = pal(ctx);
         const x = ctx.leg.x - 1;
-        const boot = `M ${x - 3.5} 56 L ${x + 2.5} 56 L ${x + 2.5} 66.5 C ${x + 5} 67.5 ${x + 8} 69 ${x + 9.5} ${SOLE}
-          L ${x + 1} ${SOLE} L ${x} ${SOLE - 1.8} L ${x - 2} ${SOLE - 1.8} L ${x - 2} ${SOLE} L ${x - 7.5} ${SOLE}
-          C ${x - 7.5} 69.5 ${x - 5} 68.5 ${x - 3.5} 67 Z`;
-        // one patent highlight down a tall tube (a second glint on the toe
-        // read as a stray tick), and a warm-grey line along the sole so the
-        // foot reads against the dark floor; it breaks at the heel notch
-        const shine = `M ${x + 1} 58 L ${x + 1} 66.5`;
-        const sole = `M ${x - 7} 71.2 L ${x - 2.4} 71.2 M ${x + 1.4} 71.2 L ${x + 9} 71.2`;
-        return `<path fill="${c.base}" ${ctx.inkStroke(2)} d="${boot}"/>
-          <path fill="none" stroke="${c.on}" stroke-width="2.2" stroke-linecap="round" d="${shine}"/>
-          <path fill="none" stroke="${ctx.colors.mutedWarm}" stroke-width="1.2" stroke-linecap="round" d="${sole}"/>`;
+        const boot = `M ${x - 5.5} 56 L ${x + 4.5} 56 L ${x + 3.5} 59.5 L ${x + 3.5} 66 C ${x + 6} 67 ${x + 8.5} 68.6 ${x + 10} ${SOLE}
+          L ${x + 1.5} ${SOLE} L ${x + 1} ${SOLE - 3} L ${x - 2} ${SOLE - 3} L ${x - 2} ${SOLE} L ${x - 7.5} ${SOLE}
+          C ${x - 7.5} 69.5 ${x - 6} 68.2 ${x - 4.5} 66.8 L ${x - 4.5} 59.5 Z`;
+        const ink = c.base === c.ink;
+        // ink only: one patent highlight down the tube and a warm-grey line
+        // along the sole (broken at the heel notch) so the foot reads on the
+        // dark floor; a white boot reads on the floor by itself
+        const shine = `M ${x} 59 L ${x} 65.5`;
+        const sole = `M ${x - 7} 71.2 L ${x - 2.4} 71.2 M ${x + 1.9} 71.2 L ${x + 9.4} 71.2`;
+        // the arch notch is filled ink: open, it showed the orange toes under it
+        const arch = `M ${x + 1.5} ${SOLE} L ${x + 1} ${SOLE - 3} L ${x - 2} ${SOLE - 3} L ${x - 2} ${SOLE} Z`;
+        return `<path fill="${c.ink}" d="${arch}"/><path fill="${c.base}" ${ctx.inkStroke(2)} d="${boot}"/>
+          ${ink ? `<path fill="none" stroke="${c.on}" stroke-width="3" stroke-linecap="round" d="${shine}"/>
+          <path fill="none" stroke="${ctx.colors.mutedWarm}" stroke-width="1.2" stroke-linecap="round" d="${sole}"/>` : ""}`;
       }
     },
     {

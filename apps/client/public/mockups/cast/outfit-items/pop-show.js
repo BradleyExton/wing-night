@@ -132,15 +132,15 @@ const starMic = {
     },
     {
       key: "b",
-      note: "Held up to sing (critic fix, pushed): the star lifted clear of the feet, past the belly the critic asked for, to the front of the breast just under the chin line, a tip aimed up at the beak like a mic sung into. The fat white handle runs forward from the wing. Half the star sits past the breast on the dark page; nothing goes right of x 64 above y 40 or into the head box.",
+      note: "Held up to sing (Gate 1: tilted up toward the chin, so a level stub at the belly no longer reads as a sheriff badge): the fat white handle (half-width 2.4 to 3) rises about 33 degrees from the wing at (49,57.4) toward the beak, and the star (r 8.6, a tip straight up) sits at (63.2,48.2), half past the breast on the dark page, its top tip at y 39.6 so the walk tuck keeps it out of the head box and its upper-right edge under the y-40 face line. A mic held up under the chin.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
       draw: ({ styleFill }) => {
-        const p0 = [44, 48.5];
-        const p1 = [56.5, 50.5];
-        return `${micHandle(p0, p1, 1.9, 2.5, styleFill)}
-          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(62.4, 48.6, 8, { aimDeg: -100, inner: 0.5 })}"/>`;
+        const p0 = [49, 57.4];
+        const p1 = [58.6, 51];
+        return `${micHandle(p0, p1, 2.4, 3, styleFill)}
+          <path fill="${styleFill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${star(63.2, 48.2, 8.6, { aimDeg: -90, inner: 0.5 })}"/>`;
       }
     },
     {
@@ -200,9 +200,9 @@ const cordedMic = (ball, toward, styleFill) => {
   return { markup, butt };
 };
 
-/** The mic's cable: an ink cord (2.2) from the butt along a path of cubic segments. */
-const cable = (butt, segs) =>
-  `<path fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M ${pt(butt)} ${segs}"/>`;
+/** The mic's cable: an ink cord (2.2 unless `width` says) from the butt along a path of cubic segments. */
+const cable = (butt, segs, width = 2.2) =>
+  `<path fill="none" stroke="${INK}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" d="M ${pt(butt)} ${segs}"/>`;
 
 const cordedMicItem = {
   id: "corded-mic",
@@ -212,13 +212,13 @@ const cordedMicItem = {
   variants: [
     {
       key: "a",
-      note: "Sung into, cable swinging (fix 2): the egg head at the front of the breast, half off the body on the dark page, the white cone handle back into the front of the wing, and the cable off the butt in one loop about 10 across in front of the knee, ending there (no trail to the floor).",
+      note: "Sung into (Gate 1: raised to the chin, so a cone poking forward at crotch height no longer reads as an ice cream): the egg head at (61.5,46.3), half off the breast on the dark page, the white cone rising about 43 degrees from the wing toward the beak. A 14 cone puts the butt at (45.3,61.2), on the belly's bottom edge, so the cable (2.4) loops back up from it onto the pink under the wing (x 41..47, y 55..61) and tucks under the handle: dark on pink, not ink lost on the page.",
       styles: ["white", "gold"],
       whitePoints: 1,
       darkCentre: false,
       draw: ({ styleFill }) => {
-        const { markup, butt } = cordedMic([63, 47.5], [44, 54], styleFill);
-        return `${cable(butt, "C 46 66 56 66 56 60 C 56 55 48 56 47 61")}
+        const { markup, butt } = cordedMic([61.5, 46.3], [48.5, 58.3], styleFill);
+        return `${cable(butt, "C 42.6 61.4 40.6 59.6 40.9 57.4 C 41.2 55.2 44 54.4 45.6 55.6 C 46.8 56.5 46.6 58 46 58.8", 2.4)}
           ${markup}`;
       }
     },
@@ -246,6 +246,14 @@ const dimmed = (hex) => {
 /** An ink stick from p0 to p1: the pom's handle, painted under the pom so its top shows. */
 const stick = (p0, p1) => `<path fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round" d="M ${pt(p0)} L ${pt(p1)}"/>`;
 
+/**
+ * A stick for the dark bay: a 4.4 ink line with a 2.4 mutedWarm core over it,
+ * so the length that crosses the near-ink page still shows (a plain ink stick
+ * there is invisible).
+ */
+const litStick = (p0, p1) => `${stick(p0, p1).replace('stroke-width="2.4"', 'stroke-width="4.4"')}
+  <path fill="none" stroke="${COLORS.mutedWarm}" stroke-width="2.4" stroke-linecap="round" d="M ${pt(p0)} L ${pt(p1)}"/>`;
+
 /** A white cloud pom, its outline painted under the fill so the lobe roots stay white. */
 const cloudPom = (styleFill, cx, cy, rot = -6) =>
   `<path fill="${styleFill}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke" d="${cloud(cx, cy, 5.6, 8.5, 13, rot)}"/>`;
@@ -259,7 +267,7 @@ const pomPom = {
     {
       key: "a",
       note: "NEW (fix 2, replaces the cut thigh pom). High V, a pom in each wing: the near pom punched out front at breast height as in b, and the far wing's pom thrown up behind the back, peeking over it in the bay: the bird's body hides its lower half and its stick (it is clipped to outside the body outline) and it is painted 0.7 over the page like the far leg, solid so the tail does not show through, so it reads as behind. Two poms in a V is the cheer pose itself, where b and c each throw one.",
-      styles: ["white", "gold"],
+      styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
       draw: ({ styleFill, uid, shapes }) => {
@@ -275,7 +283,7 @@ const pomPom = {
     {
       key: "b",
       note: "Punched out front (fix 2): the cloud pom thrust forward at breast height on its ink stick, half on the dark page in front of the breast, its top at y 41 (below the face line) and well clear of the feet and trainers. The cheer punched at the crowd.",
-      styles: ["white", "gold"],
+      styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
       draw: ({ styleFill }) => `${stick([45, 48], [57.6, 50.3])}
@@ -283,12 +291,12 @@ const pomPom = {
     },
     {
       key: "c",
-      note: "NEW (run 1b). Shaken high: the cloud pom thrown up and back behind the head on its ink stick, in the bay above the back, half on the dark page. The cheer at the top of the shake, where a and b hold it low.",
-      styles: ["white", "gold"],
+      note: "NEW (run 1b). Shaken high: the cloud pom thrown up and back on its stick, in the bay above the back. Gate 1 lifted it clear of the back, so it no longer sits on the rump like a cottontail: the pom up over the top tail feathers at (15.5,20), clear of the back, which is as high as reach 10 allows at this size, on a long stick from the wing (36,45) to (19.5,25), drawn as a 4.4 ink line with a 2.4 mutedWarm core so the length crossing the dark bay shows. The cheer at the top of the shake, where a and b hold it low.",
+      styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill }) => `${stick([37.6, 45], [29, 31])}
-          ${cloudPom(styleFill, 23.4, 26.2, 4)}`
+      draw: ({ styleFill }) => `${litStick([36, 45], [19.5, 25])}
+          ${cloudPom(styleFill, 15.5, 20, 4)}`
     }
   ]
 };
@@ -399,13 +407,24 @@ const unionJackFlag = {
   variants: [
     {
       key: "a",
-      note: "NEW (replaces the cut hip flag). Waved at the crowd: a short upright pole held at the front of the wing, beside the breast, and the flag flying forward off its top, half past the breast on the dark page, under the chin line and right of the wing. A crowd flag waved at chest height, where b trails low behind and c flies high behind the head.",
+      note: "Waved at the crowd. Gate 1 flew it forward off the breast with a wave, so it is no flat patch on the belly merging into the jack dress: the pole stands at the front of the wing, (53,58) to (54.5,40.6), and the flag (9 deep) streams 17 forward off its top, dipping slightly, in one full wave that grows toward the fly end, so its waving fly half (x 63..71.5) is on the dark page, about 8 past the breast (the critic's pole at x 62 put the fly 17 past, over the reach limit). The wave rises first and falls at the fly, so the top edge stays at or below y 40.6 past x 64 and clear of the head box in the walk tuck. A crowd flag waved at chest height, where b trails low behind and c flies high behind the head.",
       styles: ["ink", "white"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ styleFill, style, fill, clip }) =>
-        `${unionJack({ tl: [52.4, 41], tr: [69, 42.2], down: [-0.3, 10.2], ...jackColours(style, styleFill, fill), clip })}
-          ${pole([52.6, 40.2], [50.6, 60])}`
+      draw: ({ styleFill, style, fill, clip }) => {
+        const top = [54.5, 40.6];
+        const len = 17;
+        const half = 4.5;
+        const d = [1 / Math.hypot(1, 0.12), 0.12 / Math.hypot(1, 0.12)];
+        // the centreline: half a flag below the top edge, one full wave across it growing to 1.8 at the fly,
+        // up first (so the near half never lifts the top edge toward the face) and down at the fly
+        const centre = (t) => {
+          const w = -Math.sin(t * Math.PI * 2) * 1.8 * t;
+          return [top[0] + d[0] * len * t - d[1] * (half + w), top[1] + d[1] * len * t + d[0] * (half + w)];
+        };
+        return `${pole([53, 58], top)}
+          ${wavyJack({ path: centre, h: half, ...jackColours(style, styleFill, fill), clip })}`;
+      }
     },
     {
       key: "b",

@@ -149,7 +149,11 @@
         } else {
           ty -= pose[`${p}Lift`] ?? 0;
         }
-        return `translate(${fix(tx)}px, ${fix(ty)}px) rotate(${fix(r)}deg)`;
+        // The one transform that is not a turn: the wing mirrored about its own
+        // shoulder (wingFlip), so a wing pointing forward keeps its smooth
+        // leading edge on top and its feather notches underneath.
+        const flip = p === "wing" && pose.wingFlip ? " scale(-1, 1)" : "";
+        return `translate(${fix(tx)}px, ${fix(ty)}px) rotate(${fix(r)}deg)${flip}`;
       };
 
       const EASE = {
@@ -190,38 +194,49 @@
       // is the smallest in the cast and floats free of the back beyond
       // wingX −15, so a Move every silhouette shares stops there.
       const STOMP = { legNear: -8, legNearLift: 2 };
-      // The fist pump swings 39° between the arm stood up behind the shoulder
-      // and the arm spread flat out behind: an upright wing and a spread wing
-      // are two different shapes, which is what makes the pump read in motion.
-      const PUMP_UP = { wing: 84, wingX: -19, wingY: -6, tail: -2 };
-      const PUMP_DOWN = { wing: 45, wingX: -24, wingY: -10, tail: -2 };
-      // Between jabs the pointing arm folds right back to the chest, so each
-      // jab is 26° and 10 units of travel out and back: poke, poke, POKE.
-      const JAB_BACK = { wing: -150, wingX: 4, wingY: 4, x: 0, lean: 1, head: 1, tail: 10 };
+      // The fist pump swings 62° and 16 units between the fist stood up behind
+      // the head (its tip above the hair top, y < −12) and a low spread wing at
+      // shoulder height: an upright spike and a low wing are two different
+      // shapes, which is what makes the pump read in motion. The spiky wing is
+      // big enough to stand clear of the back at wingX −24; the broody one is not.
+      const PUMP_UP = { wing: 82, wingX: -24, wingY: -20, tail: -2 };
+      const PUMP_DOWN = { wing: 20, wingX: -18, wingY: -4, tail: -2 };
+      // The pointing arm is the wing mirrored (wingFlip), so its smooth edge
+      // leads and its notches hang underneath; between jabs it folds right
+      // back down the chest, so each jab is 71° and 9 units out and back.
+      const JAB = { wing: -26, wingFlip: true, wingX: 11, wingY: 6 };
+      const JAB_BACK = { wing: 45, wingFlip: true, wingX: 2, wingY: 2, x: 0, lean: 1, head: 1, tail: 10 };
       // The bronco's seesaw: a buck (body flat, head down, heels kicked up
       // behind) against a rear (upright, head back, feet pawing forward).
       const BUCK_LAND = { drop: 4, lean: 6, head: 8, tail: 10, wing: -20 };
       const BUCK = { y: -7, lean: 14, head: 12, tail: 30, legNear: 45, legNearX: -4, legFar: 40, legFarX: -3, wing: -20 };
       const REAR = { y: -4, lean: -14, head: -18, tail: -8, legNear: -30, legFar: -20, wing: 30, wingX: -8, wingY: -3 };
+      // Boot-scoot's heel and toe, both on the near (bright) leg.
+      const SCOOT_HEEL = { x: 5, legFarX: -5, lean: -17, legNear: -46, legNearLift: 3, legNearX: 22, tail: 20, head: -4, wing: -10 };
+      const SCOOT_TOE = { x: -5, legFarX: 5, lean: 10, legNear: 35, legNearX: -6, legNearLift: 1.6, tail: -14, head: 6, wing: 10 };
+      // The chicken dance's flap (tail swung low out from under the wing) and
+      // its clap (the wing folded flat on the chest).
+      const FLAP_UP = { wing: 84, wingX: -15, wingY: -5, y: -3.5, head: -8, tail: -65 };
+      const CLAP = { wing: 60, wingFlip: true, wingX: 2, wingY: 2, y: -2, lean: -3, head: -8 };
       const FEVER_UP = { wingX: -14, wingY: -6, lean: -10, head: -12, legNear: -28, legNearLift: 3 };
 
       const MOVES = [
         {
           id: "horns-pump", genre: "metal", name: "Fist pump",
-          note: `The arena fist pump. A wing can't make Dio's horns (no part transform turns it into a point: it reads as a mitten), so it does what the crowd at a metal show does with its fist: one stamp-and-thrust on beat 2, then pumps on every eighth through beat 3. Up is the wing stood nearly vertical and slid back behind the shoulder (+84°, wingX −19, wingY −6), standing in clear air behind the hair; down is the wing thrown flat out behind the back (+45°, wingX −24, wingY −10), a spread wing. That is a 39° swing between two different shapes, an upright arm and a flat one, so each pump reads in motion the way the chicken flap does, not as a twitch. The spiky tail drops to −2° so its spikes splay out under the raised wing. The head bangs and the near foot stomps against every pump; it holds on 3& and drops on 4&. The id stays horns-pump.`,
+          note: `The arena fist pump. A wing can't make Dio's horns (no part transform turns it into a point: it reads as a mitten), so it does what the crowd at a metal show does with its fist: one stamp-and-thrust on beat 2, then pumps on every eighth through beat 3. Gate 1 put the fist above the head: up is the wing stood near-vertical and slid back and up behind the head (+82°, wingX −24, wingY −20), a separate spike in clear air behind the hair with its tip above the hair top (y −14 on the pumps); down is a low spread wing at shoulder height (+20°, wingX −18, wingY −4), so each pump travels 62° and 16 units from the shoulder to above the head. The beat-2 thrust is the tallest frame (+84°, wingY −22 and a 4-unit hop, tip at y −20). The lean back on the up beats is only −3…−4°, because leaning back drops a wing that far behind the hips. The spiky tail drops to −2° so its spikes splay out under the raised wing. The head bangs and the near foot stomps against every pump; it holds on 3& and drops on 4&. The id stays horns-pump.`,
           cues: [[0, "rest"], [0.25, "wind-up"], [0.5, "thrust"], [0.625, "pump down"], [1.0, "pump up"], [1.5, "hold"]],
           keys: [
             [0, {}],
             [10, { wing: -24, head: 8, drop: 1.5, lean: 3 }, "in"],
             [15, { wing: -30, head: 10, drop: 2, lean: 4, ...STOMP }, "in"],
-            [25, { ...PUMP_UP, head: -12, lean: -7, drop: -1.5, ...STOMP }, "out"],
+            [25, { ...PUMP_UP, wing: 84, wingY: -22, y: -4, head: -12, lean: -4, drop: -1.5, ...STOMP }, "out"],
             [31.25, { ...PUMP_DOWN, head: 12, lean: -4 }],
-            [37.5, { ...PUMP_UP, head: -10, lean: -7, drop: -1.5, ...STOMP }],
+            [37.5, { ...PUMP_UP, head: -10, lean: -3, drop: -1.5, ...STOMP }],
             [43.75, { ...PUMP_DOWN, head: 12, lean: -4 }],
-            [50, { ...PUMP_UP, head: -12, lean: -7, drop: -1.5, ...STOMP }],
+            [50, { ...PUMP_UP, head: -12, lean: -3, drop: -1.5, ...STOMP }],
             [56.25, { ...PUMP_DOWN, head: 12, lean: -4 }],
-            [62.5, { ...PUMP_UP, head: -10, lean: -7, drop: -1.5, ...STOMP }],
-            [75, { wing: 82, wingX: -19, wingY: -6, tail: 0, head: -8, lean: -6 }, "in"],
+            [62.5, { ...PUMP_UP, head: -10, lean: -3, drop: -1.5, ...STOMP }],
+            [75, { ...PUMP_UP, tail: 0, head: -8, lean: -3 }, "in"],
             [87.5, { wing: -8, head: 4, lean: 1 }],
             [100, {}]
           ]
@@ -244,17 +259,17 @@
         },
         {
           id: "heart-point", genre: "pop", name: "Point and swoon",
-          note: `Point, then swoon. The wing cocks back and swings under into a long flat arm straight out at the room (−176°, slid forward and down, wingX 14, wingY 7), low enough that there is a clear notch of daylight between the arm and the chin, so it reads as an arm pointing and not as a beard. Jabbed three times on 2, 2& and 2a, each a thrust out and back: between jabs the arm folds right back to the chest (−150°, wingX 4, wingY 4, the body upright again), so every jab travels 26° and 10 units and snaps out on a fast ease: "you, you, YOU", the third the biggest (the arm furthest out, the body leaning into it). Then the swoon on beat 3: the bird falls back (lean −12°, head −22°, a −34° photo turn), the arm flung up and back clear of the hair (+64°, not higher: at +96° it lies on the hair), the tail flounced up to +30°, both feet planted, held through beat 4 with two heartbeat sinks ("ba-dum"). Hand-on-heart was tried first and dropped: a same-colour wing on a same-colour chest vanishes in silhouette.`,
+          note: `Point, then swoon. The wing cocks back and whips round into an arm straight out at the room. Gate 1 mirrored the pointing wing about its shoulder (wingFlip, the page's one transform that is not a turn): turned to point forward unmirrored, its feather notches faced up into the chin and made a crab pincer; mirrored, the smooth edge leads in one taper and the notches hang underneath. The arm starts low on the chest and rises forward (−26°, wingX 11, wingY 6), leaving a notch of daylight under the chin. Jabbed three times on 2, 2& and 2a, each a thrust out and back: between jabs the arm folds right back down the chest (+45°, still mirrored), so every jab travels 71° and 9 units: "you, you, YOU". The third is plainly the longest and highest: further out (wingX 15, the body leaning 7° into it) and tipped up to −42°, so its tip reaches chin height and not above. wingX stops at 15, short of the 18–20 asked for: further out, the mirrored wing's root leaves the chest and the arm floats. Then the swoon on beat 3: the bird falls back (lean −12°, head −22°, a −34° photo turn), the arm flung up and back clear of the hair (+64°, not higher: at +96° it lies on the hair), the tail flounced up to +30°, both feet planted, held through beat 4 with two heartbeat sinks ("ba-dum"). Hand-on-heart was tried first and dropped: a same-colour wing on a same-colour chest vanishes in silhouette.`,
           cues: [[0, "rest"], [0.25, "cock"], [0.5, "point"], [0.875, "YOU"], [1.0, "swoon"], [1.125, "ba-dum"]],
           keys: [
             [0, {}],
             [15, { wing: 28, head: -6, lean: -3, tail: 6 }, "in"],
-            [25, { wing: -176, wingX: 14, wingY: 7, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
+            [25, { ...JAB, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
             [31.25, { ...JAB_BACK }],
-            [37.5, { wing: -176, wingX: 14, wingY: 7, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
+            [37.5, { ...JAB, head: 4, lean: 5, x: 1.5, tail: 12 }, "out"],
             [40.625, { ...JAB_BACK }],
-            [43.75, { wing: -176, wingX: 15, wingY: 7, head: 5, lean: 7, x: 2.5, tail: 14 }, "out"],
-            [47, { wing: -150, wingX: 6, wingY: 4, head: 0, lean: 2, x: 1, tail: 12 }, "in"],
+            [43.75, { ...JAB, wing: -42, wingX: 15, wingY: 6, head: 5, lean: 7, x: 2.5, tail: 14 }, "out"],
+            [47, { ...JAB_BACK, head: 0, lean: 2, x: 1, tail: 12 }, "in"],
             [50, { lean: -12, head: -22, tail: 30, wing: 64, wingX: -13, wingY: -3 }, "out"],
             [56.25, { lean: -12, head: -22, tail: 30, wing: 64, wingX: -13, wingY: -3, drop: -2 }],
             [59.375, { lean: -12, head: -22, tail: 30, wing: 64, wingX: -13, wingY: -3 }],
@@ -283,17 +298,17 @@
         },
         {
           id: "boot-scoot", genre: "country", name: "Boot-scoot",
-          note: `Heel-toe, heel-toe, stomp, as a line-dance step: the body travels forward onto each heel and back over each toe (x +5 then −5) while the standing foot stays pinned to the floor. The broody belly hides a foot tucked under it, so each heel lifts the hip and pokes the boot out ahead of the belly front as a clear diagonal (the near hip slides 22 units forward, because the near foot starts furthest back under the belly), and each toe taps well behind. A foot lifts one sixteenth before beat 4 and comes down as the stomp, the body sinking onto it with a flick of the tail.`,
+          note: `Heel-toe, heel-toe, stomp, as a line-dance step: the body travels forward onto each heel and back over each toe (x +5 then −5) while the standing foot stays pinned to the floor. Both heel-toes are on the near leg, the bright one (Gate 1: the beat-3 heel was the dim far leg). The broody belly hides a foot tucked under it, so each heel lifts the hip and pokes the boot out ahead of the belly front as a clear diagonal (the near hip slides 22 units forward), the body leaning back into it (−17°) so the rock carries at TV distance; each toe taps well behind. On 3a the knee comes up: a 3-unit hop, the body leaning back 12°, the near hip lifted 8 and slid 27 forward with the leg kicked to −75°, so the foot sticks out level in front of the belly, clear of it in silhouette. (The −40° / +14…18 asked for left the foot inside the belly outline.) On beat 4 it drives down as the stomp: the body sinks 4.5 units onto it and the tail flicks up to +28°.`,
           cues: [[0, "rest"], [0.25, "heel"], [0.5, "toe"], [1.0, "heel"], [1.375, "lift"], [1.5, "stomp"]],
           keys: [
             [0, {}],
-            [12.5, { x: 5, legFarX: -5, lean: -14, legNear: -46, legNearLift: 3, legNearX: 22, tail: 20, head: -4, wing: -10 }, "out"],
-            [25, { x: -5, legFarX: 5, lean: 10, legNear: 35, legNearX: -6, legNearLift: 1.6, tail: -14, head: 6, wing: 10 }, "out"],
+            [12.5, { ...SCOOT_HEEL }, "out"],
+            [25, { ...SCOOT_TOE }, "out"],
             [37.5, { tail: 0 }],
-            [50, { x: 5, legNearX: -5, lean: -14, legFar: -38, legFarLift: 4, legFarX: 9, tail: 20, head: -4, wing: -10 }, "out"],
-            [62.5, { x: -5, legNearX: 5, lean: 10, legFar: 35, legFarX: -6, legFarLift: 1.6, tail: -14, head: 6, wing: 10 }, "out"],
-            [68.75, { legNear: -10, legNearLift: 3, tail: 14, head: -8, wing: -24, drop: -1 }, "in"],
-            [75, { drop: 3.5, head: 10, tail: 24, wing: 6 }, "out"],
+            [50, { ...SCOOT_HEEL }, "out"],
+            [62.5, { ...SCOOT_TOE }, "out"],
+            [68.75, { y: -3, lean: -12, legNear: -75, legNearLift: 8, legNearX: 27, tail: 14, head: -8, wing: -24, drop: -1 }, "in"],
+            [75, { drop: 4.5, head: 10, tail: 28, wing: 6 }, "out"],
             [87.5, { drop: 0.5, head: 2 }],
             [100, {}]
           ]
@@ -378,7 +393,7 @@
         },
         {
           id: "chicken-dance", genre: "shared", name: "The Chicken Dance",
-          note: `The four figures of the Birdie Song, one beat each, two hits a figure with every pose a full sixteenth (125 ms) after the last, so each hit is a gesture and not a flicker: two beak pecks on 1 and 1& (a deep head peck, then thrown back), two wing flaps on 2 and 2& with the wing stood up behind the head (+84°, wingX −15, wingY −5) and the tail dropped out from under it so the wing reads apart from the tail, then thrown down; a deep squat-and-wiggle on 3 and 3& (tail and hips swinging, so the broody bird's short tail reads too), and two claps of the wing onto the chest on 4 and 4&. Drawn on all four silhouettes; it is the same keyframes on every one, so the flap stops at wingX −15, where the small broody wing still sits on the back.`,
+          note: `The four figures of the Birdie Song, one beat each, two hits a figure with every pose a full sixteenth (125 ms) after the last, so each hit is a gesture and not a flicker: two beak pecks on 1 and 1& (a deep head peck, then thrown back), two wing flaps on 2 and 2& with the wing stood up behind the head (+84°, wingX −15, wingY −5), then thrown down; a deep squat-and-wiggle on 3 and 3& with the hips swinging (x ±4, the lean alternating +6° and −6°, the tail up then down), and two claps on 4 and 4&. Gate 1: on the flap the tail swings out low behind to −65°, so the preener's upright feathers sweep back clear of the wing and the wing stands alone (at −10° they made one fan with it); the page has no per-silhouette keyframes, so the value is shared, and −65° rather than Night Fever's −95° because at −95° the spiky tail's spikes point at the floor like a kickstand. The clap is the mirrored wing (wingFlip, as in Point and swoon) folded flat down the chest (+60°), notches turned back against the body, opened forward to +10° between the two claps; the old −135° clap stuck out under the chin as a pincer. Drawn on all four silhouettes, the same keyframes on every one, so the flap stops at wingX −15, where the small broody wing still sits on the back.`,
           cues: [[0.0625, "peck"], [0.5, "flap up"], [0.625, "flap down"], [1.0625, "wiggle"], [1.3125, "wiggle"], [1.5625, "clap"]],
           keys: [
             [0, {}],
@@ -386,16 +401,16 @@
             [9.375, { head: -6, wing: 8 }],
             [15.625, { head: 18, drop: 1, wing: -18 }, "out"],
             [21.875, { head: -6, wing: 8 }],
-            [25, { wing: 84, wingX: -15, wingY: -5, y: -3.5, head: -8, tail: -10 }, "out"],
+            [25, { ...FLAP_UP }, "out"],
             [31.25, { wing: -40, drop: 1, head: 4, tail: 4 }, "out"],
-            [37.5, { wing: 84, wingX: -15, wingY: -5, y: -3.5, head: -8, tail: -10 }, "out"],
+            [37.5, { ...FLAP_UP }, "out"],
             [43.75, { wing: -40, drop: 1, head: 4, tail: 4 }, "out"],
-            [53.125, { drop: 4, lean: 12, tail: 34, x: -2.5, head: 2, wing: -10 }, "out"],
-            [65.625, { drop: 4, lean: 12, tail: -28, x: 2.5, head: 2, wing: -10 }, "out"],
+            [53.125, { drop: 4, lean: 6, tail: 34, x: -4, head: 2, wing: -10 }, "out"],
+            [65.625, { drop: 4, lean: -6, tail: -28, x: 4, head: 2, wing: -10 }, "out"],
             [71.875, { drop: 1, lean: 2, head: 0, wing: -30 }, "in"],
-            [78.125, { wing: -135, wingX: 4, y: -2, lean: -3, head: -8 }, "out"],
-            [84.375, { wing: -40, head: 0 }],
-            [90.625, { wing: -135, wingX: 4, y: -2, lean: -3, head: -8 }, "out"],
+            [78.125, { ...CLAP }, "out"],
+            [84.375, { wing: 10, wingFlip: true, wingX: 3, head: 0 }],
+            [90.625, { ...CLAP }, "out"],
             [96, { wing: -30 }],
             [100, {}]
           ]

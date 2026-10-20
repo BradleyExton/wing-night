@@ -55,6 +55,15 @@
 //                 end: a light straw wall, three eggs of three sizes, lopsided
 //                 tapered straw ends
 //
+// Gate 1 (Brad kept every "fix" tile on condition the critic's fix is made):
+//   team-sash b   knot lower and 9 x 13, broad 8u tails swung back over the
+//                 band (two on the broody, one on the stock and the spiky, none
+//                 on the preener, whose chest has no room)
+//   golden-egg a  the egg moves forward and down off the sash band
+//   drumstick a   hangs behind the legs, a bigger meat (r 5.5)
+//   egg-nest b    ember straw, a lumpy rim and underside, one back curl, a
+//                 bigger front egg
+//
 // Shared items have to work on all four bodies, so every placement is read off
 // the silhouette (stock/pop, spiky/metal, broody/country, preener/disco):
 //
@@ -378,25 +387,36 @@ const pageantSash = (ctx) => {
 // The knotted sash (run 1b, replaces the cut far-shoulder sash, whose
 // mirrored slash read as a prohibition sign). Polish round 2: the band is a's
 // WHOLE diagonal, shoulder to back hip, because the full-length band is the
-// one shape that says "sash"; round 1 stopped it at a fat knot ellipse with
-// two forks splayed 60 degrees, which read as a white glove (ink: a crow).
-// Now the knot is tied ON the band: a rounded rectangle 7u along it by 11u
-// across (1.3x the band), half way down, with two short ribbon tails hanging
-// almost straight down out of it in a narrow 20-degree inverted V. The critic
-// asked for the knot at 60%; there the belly is so close under it that only
-// 3u of tail showed, so it sits at 50% (45% on the preener, the highest its
-// top corner can go without rising past the costume shoulders) and the tails
-// get about 10u below the knot.
-// `t` is where the knot sits along the band, `k` its scale, `tail` each
-// tail's length from its root under the knot's middle: as long as the belly
-// allows with every tip at least 2u inside it (stock tips y 60.8 over a belly
-// at 62.9, spiky 57.6 / 59.6, broody 61.9 / 65.9). The preener's chest is
-// ~11u deep under the band, so its knot is 85% and its tails show ~4u.
+// one shape that says "sash", with the knot tied ON it.
+// Gate 1: the tails hung between the hips and read as a third leg (or a
+// comb), so the knot slides down the band toward the back hip and the tails
+// are broad 8u ribbons with 3.5u V notches, swung back toward the tail and
+// painted over the band, under the knot. The knot is 9 along the band by 13
+// across on every body. `t` is where the knot sits along the band; each tail
+// is [u, v, dir, len]: its root in the knot's frame (u along the band toward
+// the hip, -v down), its direction in degrees (90 straight down, 180 back) and
+// its length, as long as the body allows with its notch tip 2u inside the
+// outline, its corners 1.2u inside, and nothing right of x 29.5 below y 55,
+// so the near leg's top (x ~32 from y 57) stays orange and unbroken.
+// The critic's two tails (115 and 138 degrees, roots 3.5u apart) only fit the
+// broody: on the stock and the spiky the strip of body under the band and
+// behind the leg is about 6u deep, so each gets ONE 8u tail at 125 degrees out
+// of the knot's back end, with the knot as low as still leaves that tail 6u
+// clear of it (stock t 0.64, spiky 0.62, short of the critic's 0.68, where it
+// would show 5u and 3u). The preener's chest is about 4u deep under the band,
+// so not even one tail gets 6u clear: it wears the knot alone (a nub reads as
+// a leg).
 const KNOT = {
-  stock: { t: 0.5, k: 1, tail: 15.5 },
-  spiky: { t: 0.5, k: 1, tail: 12.3 },
-  broody: { t: 0.5, k: 1, tail: 17 },
-  preener: { t: 0.45, k: 0.85, tail: 8 }
+  stock: { t: 0.64, tails: [[4.5, -0.6, 125, 7.5]] },
+  spiky: { t: 0.62, tails: [[4.5, -0.6, 125, 6]] },
+  broody: {
+    t: 0.68,
+    tails: [
+      [4, -3.5, 138, 10],
+      [0.5, -3.5, 115, 12]
+    ]
+  },
+  preener: { t: 0.6, tails: [] }
 };
 
 /**
@@ -443,39 +463,32 @@ const knottedSash = (ctx) => {
   const kc = [a[0] + (b[0] - a[0]) * c.t, a[1] + (b[1] - a[1]) * c.t];
   const deg = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI;
   const along = frame(kc, deg);
-  const [kl, kw] = [7 * c.k, 11 * c.k];
-  const knotD = roundRect(kc, deg, kl, kw, 1.5);
-  // The tails leave from under the knot, 3.1u apart along the band (u runs
-  // toward the hip, -v is down), and hang 10 degrees back (100) and 10
-  // degrees forward (80) of straight down.
-  const hw = 2.6 * c.k;
-  const tails = [
-    [along([1.2 * c.k, -0.6]), 100],
-    [along([-1.9 * c.k, -0.6]), 80]
-  ].map(([p0, dir]) => {
-    const tip = [p0[0] + c.tail * Math.cos(rad(dir)), p0[1] + c.tail * Math.sin(rad(dir))];
-    return ribbon(p0, tip, hw, hw * 0.85);
+  const [kl, kw] = [9, 13];
+  const knotD = roundRect(kc, deg, kl, kw, 1.8);
+  const tails = c.tails.map(([u, v, dir, len]) => {
+    const p0 = along([u, v]);
+    return ribbon(p0, [p0[0] + len * Math.cos(rad(dir)), p0[1] + len * Math.sin(rad(dir))], 4, 3.5);
   });
-  const all = `${bandD} ${tails.join(" ")} ${knotD}`;
+  const all = [bandD, ...tails, knotD].join(" ");
   const fill = ctx.styleFill;
   if (ctx.style === "white") {
-    // White: the tails first, each with its own 2.4u ink edge, then the band
-    // and the knot as ONE lump (both 4.8u strokes, then both fills), so the
-    // knot is a cinch on the band and never an oval in its own ring.
-    const tailWhite = tails.map((d) => `<path d="${d}" fill="${fill}" ${ctx.inkStroke(2.4)}/>`).join("");
-    const lump = [bandD, knotD];
+    // White: the band and the knot share one 4.8u ink stroke (so the knot is
+    // a cinch on the band, never an oval in its own ring), then the band's
+    // fill, the tails over it with their own 2.4u ink edge, and the knot's
+    // fill over the tails' roots.
     return onBody(
       ctx,
       all,
-      tailWhite +
-        lump.map((d) => `<path d="${d}" fill="none" ${ctx.inkStroke(4.8)}/>`).join("") +
-        lump.map((d) => `<path d="${d}" fill="${fill}"/>`).join("")
+      [bandD, knotD].map((d) => `<path d="${d}" fill="none" ${ctx.inkStroke(4.8)}/>`).join("") +
+        `<path d="${bandD}" fill="${fill}"/>` +
+        tails.map((d) => `<path d="${d}" fill="${fill}" ${ctx.inkStroke(2.4)}/>`).join("") +
+        `<path d="${knotD}" fill="${fill}"/>`
     );
   }
-  // Ink: each tail keeps a 1.6u team-colour rim UNDER its fill, so the two
-  // read as two ribbons; the knot has no ring (a ring round it drew an eye),
-  // just two straight team-colour lines across the band at its two ends, so
-  // it reads as a cinch.
+  // Ink: each tail keeps a 1.6u team-colour rim under its fill, so it reads
+  // as a ribbon over the ink band; the knot has no ring (a ring round it drew
+  // an eye), just two straight 13u team-colour lines across the band at its
+  // two ends, so it reads as a cinch.
   const tailInk = tails
     .map((d) => `<path d="${d}" fill="${fill}" stroke="${ctx.fill}" stroke-width="3.2" stroke-linejoin="miter" paint-order="stroke"/>`)
     .join("");
@@ -488,20 +501,25 @@ const knottedSash = (ctx) => {
   return onBody(
     ctx,
     all,
-    `${tailInk}<path d="${bandD}" fill="${fill}"/><path d="${knotD}" fill="${fill}"/>` +
+    `<path d="${bandD}" fill="${fill}"/>${tailInk}<path d="${knotD}" fill="${fill}"/>` +
       `<path d="${cinch}" fill="none" stroke="${ctx.fill}" stroke-width="1.6"/>`
   );
 };
 
 // ------------------------------------------------------------ golden egg --
 
-// Under the wing's trailing edge, just forward of the grip, low enough to poke
-// below the belly where the body allows it.
+// Under the wing's trailing edge, low enough to poke below the belly where
+// the body allows it. Gate 1: in a white team sash the egg fused with the band
+// into one white club, so it moves forward and down until at least 3u of team
+// colour shows between its outline and the band's (measured against the band
+// as the body clips it). The critic's +3u x, +2u y left 0.3..1.6u; the stock
+// needs [36, 63.5] (at [34, 64.5] the pop squash dips it to y 77.4), the spiky
+// [34, 64], the broody [37, 63], the preener [32, 64].
 const CLUTCH = {
-  stock: { c: [31, 60.5], tilt: -18 },
-  spiky: { c: [31, 59.5], tilt: -18 },
-  broody: { c: [35, 59], tilt: -14 },
-  preener: { c: [29, 59], tilt: -20 }
+  stock: { c: [36, 63.5], tilt: -18 },
+  spiky: { c: [34, 64], tilt: -18 },
+  broody: { c: [37, 63], tilt: -14 },
+  preener: { c: [32, 64], tilt: -20 }
 };
 
 /**
@@ -682,20 +700,23 @@ const glazeDrip = (t, end) => {
   return `M ${f(t[0] - 1.6)} ${f(t[1] - 1.2)} L ${f(t[0] + 1.4)} ${f(t[1] - 1.2)} L ${f(t[0] + w)} ${f(end - w * 1.4)} A ${f(w)} ${f(w)} 0 0 1 ${f(t[0] - w)} ${f(end - w * 1.4)} Z`;
 };
 
-// Mic drop: knuckle in the wing tip, meat hanging under the belly between
-// the legs (x ~33.7..43.3), the moment after the last line.
+// Mic drop: knuckle in the wing tip, the moment after the last line. Gate 1:
+// it hung between the legs and its meat lay over the near foot (a club foot,
+// or a boot), so it now hangs BEHIND the legs, under the tail, against the
+// dark room, with a bigger meat (r 5.5, at least 11u across). The preener's
+// tip stays right of x 9 for the Night Fever drop.
 const DROP = {
-  stock: { k: [28.5, 53.5], t: [38.5, 69] },
-  spiky: { k: [28.5, 53], t: [38.5, 69] },
-  broody: { k: [31, 51], t: [39.6, 71], glazeEnd: 71 },
-  preener: { k: [27.5, 52.5], t: [38.5, 69] }
+  stock: { k: [26, 46], t: [19, 59.5], glazeEnd: 63.1 },
+  spiky: { k: [26, 46], t: [18.5, 59], glazeEnd: 62.6 },
+  broody: { k: [25, 46], t: [20.5, 60.5], glazeEnd: 64.1 },
+  preener: { k: [25, 46], t: [20.5, 60.5], glazeEnd: 64.1 }
 };
 
 const micDrop = (ctx) => {
-  // Run 1b: the drip ends 1u higher (70.6, broody 71); at 71.6 / 72.4 the
-  // pop squash and the broody walk tuck swung it under the floor.
-  const { k, t, glazeEnd = 70.6 } = DROP[keyOf(ctx)];
-  const p = drumstickParts({ k, t, r: 4.8, meat: 0.55 });
+  // The drip ends at or above y 70.6 (broody 70.5): lower, the pop squash
+  // and the broody walk tuck swing it under the floor.
+  const { k, t, glazeEnd } = DROP[keyOf(ctx)];
+  const p = drumstickParts({ k, t, r: 5.5, meat: 0.55 });
   const glazed = ctx.style !== "ink";
   return (
     outlined([
@@ -802,21 +823,31 @@ const clutch = (ctx) => {
 
 // The nest (polish round 2, replaces the cut straw nest, whose ink bowl
 // vanished into the dark floor and left two piles of straight crossed planks
-// either side of the legs: a woodpile, or crossbones). Now there is ONE nest,
-// beside her at the tail end, and it reads by one light shape: a thick straw
-// (mutedWarm) wall, dished on top and round underneath, with three eggs of
-// three sizes standing well up out of it, each with its own outline so they
-// overlap as a clutch (never a same-size pair peeking over a wall, which read
-// as eyes). Straw ends curl out of the wall's two ends: tapered, curved, light,
-// sharing the wall's one ink outline, so nothing reads as a plank or a bone.
-// No separate bowl or brim under the wall: a rim band over a smaller bowl
-// read as a saucer (blurred, a flying saucer with egg domes), and ink spikes
-// under it as its landing legs.
-// It stops at x 20, short of the far foot (so straw never sits behind the
-// orange legs) and as far back as the stage's side limit allows, because the
-// stage paints behind the body and the broody's low belly hides anything
-// right of x ~16 above y 61. Under the feet is the clutch's thin ink pad.
-const NEST_WALL = "M -6.8 65 C -1 67.6 14 67.6 19.8 65 C 21 70 15 73.8 6.5 73.8 C -2 73.8 -8 70 -6.8 65 Z";
+// either side of the legs: a woodpile, or crossbones). ONE nest, beside her at
+// the tail end, reading by one light shape with three eggs of three sizes
+// standing up out of it, each with its own outline so they overlap as a
+// clutch (never a same-size pair peeking over a wall, which read as eyes).
+// Gate 1: a smooth grey wall with pointed straw ends read as a gravy boat or
+// a turtle shell. Now the straw is ember (warm, and still clear of the legs:
+// the nest stops at x 22, the near foot's back toe is at x ~25), and the wall
+// is a lumpy woven silhouette: a rim whose three round bumps (9.8u wide, 2.5u
+// high) top out at y 64.5, so the big egg stands 9u clear of it, and an
+// underside at 72.5 with three round bumps, 9.2u wide and 2u deep, down to
+// 74.5. Its back end is at x -7.5, not the critic's
+// -9: a stage may not reach past x -8. Under the feet is the clutch's thin
+// ink pad.
+const bumps = (x0, x1, y, h, n) => {
+  const w = (x1 - x0) / n;
+  let d = "";
+  for (let i = 0; i < n; i += 1) {
+    const [a, b] = [x0 + w * i, x0 + w * (i + 1)];
+    d += ` C ${f(a)} ${f(y - h * 1.333)} ${f(b)} ${f(y - h * 1.333)} ${f(b)} ${f(y)}`;
+  }
+  return d;
+};
+const NEST_WALL =
+  `M -7.5 67${bumps(-7.5, 22, 67, 2.5, 3)} C 23.6 68.2 23.6 71.2 21 72.5` +
+  `${bumps(21, -6.5, 72.5, -2, 3)} C -8 71.6 -8 68.4 -7.5 67 Z`;
 
 /**
  * A tapered strand: a quadratic curve from `a` (half-width w) through the
@@ -843,33 +874,24 @@ const strand = (a, c, b, w) => {
   return poly([...left, ...right.reverse()]);
 };
 
-// Four straw ends, deliberately lopsided: one long curl up and out of the
-// back corner, one short flick out low at the back, and two fanned out of
-// the front end at their own angles. A matching pair at each end (round 2's
-// first draft) made the nest a sack with four corners, or a cat's head. Each
-// root sits inside the wall, so the wall's fill hides it.
-const NEST_STRANDS = [
-  [[-4.6, 66], [-8.2, 63.6], [-5.2, 57.4]],
-  [[-3.4, 71.4], [-6, 72.4], [-7.2, 74.6]],
-  [[17.4, 66], [21.6, 65.2], [25.6, 63.4]],
-  [[16, 71], [19, 73], [20.6, 77]]
-];
+// One straw end: a curl rooted 8u wide inside the wall's back end, tapering
+// to a point up and back at (-7.8, 56), inside the stage's x -8 limit. Gate 1 dropped the two front strands
+// and the low back flick: with them the nest had a prow and a stern (a boat).
+const NEST_CURL = strand([-2, 67], [-6.5, 64.5], [-7.8, 56], 4);
 
 const strawNest = (ctx) => {
-  // Back to front: the middle-sized egg, the small one, then the big one over
-  // both, each outlined on its own.
+  // Back to front: the middle-sized egg, the small one, then the big one
+  // (14 x 17, so 9u of it stands above the rim) over both.
   const eggs = [
     [-1.6, 64.4, 11, 13.5, -24],
     [14.2, 64.6, 10, 12.5, 14],
-    [5.6, 63.2, 12.5, 15.5, -8]
+    [5.6, 64, 14, 17, -8]
   ];
-  const straw = ctx.colors.mutedWarm;
-  const strands = NEST_STRANDS.map(([a, c, b]) => strand(a, c, b, 1.9));
   return (
     `<path d="${PAD}" fill="${INK}" ${ctx.inkStroke(2)}/>` +
     eggs.map(([x, y, w, h, tilt]) => outlined([{ d: eggPath(x, y, w, h, tilt), fill: ctx.styleFill }], 4.4)).join("") +
-    // The wall and its straw ends share one 1.6u ink outline.
-    outlined([NEST_WALL, ...strands].map((d) => ({ d, fill: straw })), 3.2)
+    // The wall and its straw curl share one 1.6u ink outline.
+    outlined([NEST_WALL, NEST_CURL].map((d) => ({ d, fill: EMBER })), 3.2)
   );
 };
 
@@ -937,7 +959,7 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "Knotted sash (run 1b, replaces the cut far-shoulder sash, which read as a prohibition sign). Polish round 2: a's whole shoulder-to-hip band with the knot tied ON it, because the full-length diagonal is what says sash (round 1 stopped the band at a knot ellipse with two forks splayed 60 degrees: a white glove, or in ink a crow). The knot is a rounded rectangle 7u along the band by 11u across (1.3x the band) half way down; in white it is one lump with the band under one 2.4u ink edge, in ink it has no ring, just two straight 1.6u team-colour lines across the band at its ends, a cinch. Two constant-width ribbon tails (5.2u, no flare) hang out of it almost straight down, 10 degrees back and 10 forward, each end with one 2.2u V notch; white tails keep their own ink edge, ink tails a 1.6u team rim. The knot sits at 50% (the critic's 60% left only 3u of tail above the belly) and every tip is at least 2u inside the belly; the preener's shallow chest gets an 85% knot at 45% and tails that show about 4u.",
+        note: "Knotted sash (run 1b, replaces the cut far-shoulder sash): a's whole shoulder-to-hip band with the knot tied on it. Gate 1: the thin tails between the hips read as a third leg, so the knot slides down toward the back hip (t 0.64 stock, 0.62 spiky, 0.68 broody, 0.6 preener) and grows to 9 along the band by 13 across, and the tails are broad 8u ribbons with 3.5u V notches, swung back and painted over the band, never right of x 29.5 below y 55, so the near leg stays orange. The broody wears the critic's two tails (138 and 115 degrees, 10 and 12 long); the stock and the spiky have room behind the leg for only one 8u tail at 125 degrees (7.5 and 6 long); the preener's chest is too shallow for a tail to clear the band, so it wears the knot alone. White: band and knot share one 4.8u ink stroke, the tails their own 2.4u edge; ink: a 1.6u team rim on the tails and two 13u team cinch lines.",
         styles: ["white", "ink"],
         whitePoints: 1,
         darkCentre: false,
@@ -953,7 +975,7 @@ export const ITEMS = [
     variants: [
       {
         key: "a",
-        note: "Clutched: a big egg (10.5 × 13.5) tucked under the wing's trailing edge, leaning back, its bottom poking below the belly. Gold adds a white streak along the upper-back edge and an ink crescent (22%) across the lower front.",
+        note: "Clutched: a big egg (10.5 x 13.5) under the wing, leaning back, its bottom poking below the belly. Gate 1: it moves forward and down (stock [36, 63.5], spiky [34, 64], broody [37, 63], preener [32, 64]) so at least 3u of team colour shows between it and a white sash band; the Team colours Look also wears sash a in ink. Gold adds a white streak along the upper-back edge and an ink crescent (22%) across the lower front.",
         styles: ["white", "gold"],
         whitePoints: 1,
         darkCentre: false,
@@ -977,7 +999,7 @@ export const ITEMS = [
     variants: [
       {
         key: "a",
-        note: "Mic drop (was b in round 1): knuckle in the wing tip, ember meat hanging between the legs (r 4.8, so both legs show), glazed in the style with a wavy cap and one drip. Round 3: on the broody the knuckle is at the wing grip (31,51) and the meat hangs down to y 71.6, half below the body against the hearth; ink char is two blotches on the meat's rim, not stripes.",
+        note: "Mic drop: the drumstick hanging from the wing, glazed in the style with a wavy cap and one drip; ink char is two blotches on the meat's rim. Gate 1: it lay over the near foot (a club foot), so it now hangs behind the legs off the rump, knuckle at (26, 46) (broody and preener (25, 46)), meat r 5.5 (11u across) with its tip at about (19, 59.5). The critic's lower hang, under the tail at y 67, dipped 3..7u under the soft floor in the chicken-dance flap down and the genre stamps even after steepening, so the meat sits as low as the sweep allows: half against the room on the stock, spiky and preener, on the body on the broody.",
         styles: ["team", "ink", "gold"],
         whitePoints: 1,
         darkCentre: false,
@@ -1009,7 +1031,7 @@ export const ITEMS = [
       },
       {
         key: "b",
-        note: "The nest (polish round 2, replaces the cut straw nest, whose dark bowl vanished into the floor and left two piles of crossed planks: a woodpile, or crossbones). ONE nest beside her at the tail end (x -7.5..26), reading by one light shape: a thick straw (mutedWarm) wall, dished on top and round underneath, with three eggs of three sizes (12.5 x 15.5, 11 x 13.5, 10 x 12.5) standing well up out of it, each outlined on its own so they overlap as a clutch, never a same-size pair over a wall. Four tapered, curved straw ends share the wall's ink outline, deliberately lopsided (a long curl up off the back corner, a short flick low at the back, two fanned out of the front end): a matching pair at each end made a sack, or a cat's head, and a rim over a smaller bowl made a flying saucer. It stops short of the far foot, so no straw sits behind the orange legs; under the feet is the thin ink pad.",
+        note: "The nest: one nest beside her at the tail end with three eggs of three sizes standing up out of it, each outlined on its own. Gate 1: the smooth grey wall with pointed straw ends read as a gravy boat, so the straw is ember, the wall a lumpy woven silhouette from x -7.5 to 22 (three round 2.5u bumps topping out at y 64.5 on the rim, three round 2u bumps underneath down to 74.5), the two front strands and the low back flick are gone (they made a prow and a stern), one 8u-rooted curl tapers up and back to (-7.8, 56), and the front egg is 14 x 17, so 9u of it stands above the rim. It stops at x 22, short of the near foot; under the feet is the thin ink pad.",
         styles: ["white", "gold"],
         whitePoints: 0,
         darkCentre: false,

@@ -43,6 +43,13 @@
 // down off the grip. Hay a runs long behind the feet to a ragged end in front
 // of the breast; hay b (the stack, books) cut and replaced by one chunky bale
 // in front of the breast. No strands on any bale.
+//
+// Gate 1 (2026-10-20): hay a cut. Corn a and c get a gently lumpy cob with a
+// blunt bullet tip, two lengthwise kernel rows and two hugging white husk
+// leaves (the drooping husk goes); both lean back so the leaves stay left of
+// x 34 above the chin. Guitar b is white only (the ink body was a frying pan),
+// so no guitar has an ink style. Hay b is a soft straw block: rounded corners,
+// a bowed top, long leaning wisps, splayed tufts, thicker twine.
 
 import { COLORS } from "../outfit-harness.js";
 
@@ -135,18 +142,18 @@ const cobFrame = (p0, p1, { w0, wMax, wTip }) => {
 };
 
 /**
- * The cob: its two long edges are knobbly (kernel knobs of radius 2.2 every
- * 4.4 units, about 2px each at 76), so the silhouette itself is lumpy corn.
- * Nothing inside it: kernel rows were 1-unit texture that never showed, and
- * any grid on a tapered oval is a pineapple grenade or a pinecone. Filled
+ * The cob: its two long edges are a gentle lumpy wave (kernel bumps 0.9 high
+ * every 3.4 units, Gate 1: 2.2 every 4.4 was a saw edge, a wheat sheaf or a
+ * flame) ending in a blunt bullet tip, with two lengthwise ink kernel rows
+ * (stroke 2) at ±width/5 from t 0.2 to 0.85, following the taper. Lengthwise
+ * only: cross lines on a tapered oval are the pineapple grenade. Filled
  * ember, the yellow of corn; a white cob was a pinecone or a cone.
  */
 const cob = (p0, p1, dims, fill) => {
   const { u, n, len, r1, ts, width, at } = cobFrame(p0, p1, dims);
-  // Full-size knobs on the fat of the cob, easing to about half at the tip: a
-  // full knob on the narrow end made a saw edge, a flame or a fir tree.
+  // Full-size bumps on the fat of the cob, easing to about half at the tip.
   const knob = (t) => Math.min(1, Math.max(0.55, width(t) / (0.75 * dims.wMax)));
-  const bump = (d) => 2.2 * knob(d / len) * Math.abs(Math.sin((Math.PI * d) / 4.4));
+  const bump = (d) => 0.9 * knob(d / len) * Math.abs(Math.sin((Math.PI * d) / 3.4));
   const side = (s) => {
     const pts = [];
     for (let d = 0; d <= ts * len + 1e-6; d += 0.25) {
@@ -161,16 +168,15 @@ const cob = (p0, p1, dims, fill) => {
   const capR = r1 - 0.8 + bump(ts * len);
   const outline = `M ${left.map(pt).join(" L ")} A ${f(capR)} ${f(capR)} 0 0 0 ${pt(add(shoulder, n, -capR))} L ${right.map(pt).join(" L ")}
     C ${pt(add(right[right.length - 1], u, -1.6))} ${pt(add(left[0], u, -1.6))} ${pt(left[0])} Z`;
-  return `<path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${outline}"/>`;
+  const row = (s) => {
+    const pts = [];
+    for (let t = 0.2; t <= 0.85 + 1e-6; t += 0.05) pts.push(at(t, (s * width(t)) / 5));
+    return `M ${pts.map(pt).join(" L ")}`;
+  };
+  return `<path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${outline}"/>
+    <path fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="${row(1)} ${row(-1)}"/>`;
 };
 
-/** A pointed leaf from base b to tip t, about w wide at its belly; bend > 0 curves it to its left. */
-const leaf = (b, t, w, bend = 0) => {
-  const m = { x: (b.x + t.x) / 2, y: (b.y + t.y) / 2 };
-  const n = normal(unit(b, t));
-  const side = (s) => add(m, n, s * w + bend);
-  return `M ${pt(b)} Q ${pt(side(1))} ${pt(t)} Q ${pt(side(-1))} ${pt(b)} Z`;
-};
 /**
  * A husk leaf hugging one side (s = 1 left of the axis, −1 right) of a cob
  * from its base to `reach` along it, its outer edge flaring `flare` out.
@@ -184,22 +190,11 @@ const hugLeaf = (frame, s, reach = 0.58, flare = 2.6, overlap = 2.4) => {
   const inner = at(reach * 0.55, s * (half(reach * 0.55) - overlap));
   return `M ${pt(b0)} Q ${pt(outer)} ${pt(tip)} Q ${pt(inner)} ${pt(b0)} Z`;
 };
-/** Fresh husk: white with an ink outline. White husk round a yellow lumpy cob is the corn icon; a dark leaf was the grenade's lever. */
-const husk = (d) => `<path fill="${WHITE}" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round" d="${d}"/>`;
-/**
- * The peeled husk: three blades drooping DOWN from the base `b` like a peeled
- * banana skin under the cob. Blades pointing sideways made a white bow or a
- * propeller; drooping, they are husk pulled back.
- */
-const droopingHusk = (b) =>
-  [
-    leaf(b, { x: b.x - 9, y: b.y + 10.6 }, 4.4, 1.2),
-    leaf(b, { x: b.x - 2.4, y: b.y + 13.6 }, 4.4, 0),
-    leaf(b, { x: b.x + 5.4, y: b.y + 11.2 }, 4.4, -1.2)
-  ]
-    .map(husk)
-    .join("");
-
+/** Fresh husk: white with a 2-unit ink outline. White husk round a yellow lumpy cob is the corn icon; a dark leaf was the grenade's lever. */
+const husk = (d) => `<path fill="${WHITE}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${d}"/>`;
+/** The two white husk leaves hugging a cob's sides, tips up and out: the corn emoji's outline. */
+const huskPair = (frame, reach, flare, overlap) =>
+  husk(hugLeaf(frame, 1, reach, flare, overlap)) + husk(hugLeaf(frame, -1, reach, flare, overlap));
 // ----------------------------------------------------------------- guitar --
 
 /**
@@ -222,11 +217,10 @@ const guitarBody = ({ lx, ly, lr, ux, uy, ur, waist = 0.55 }, fill) => {
 
 /**
  * A neck from `from` to `end`, a slab headstock carrying on past it and a
- * tuning peg nub either side. Ink style: ink on a mutedWarm rim, so the part
- * that leaves the bird still shows on the hearth. White style: a white neck
- * and headstock in an ink casing.
+ * tuning peg nub either side: a white neck and headstock in an ink casing, so
+ * the part that leaves the bird shows on the orange and on the hearth.
  */
-const neckAndHead = (from, end, style, { headLen = 6, headW = 5.6, neckW = 4, peg = 1.4 } = {}) => {
+const neckAndHead = (from, end, { headLen = 6, headW = 5.6, neckW = 4, peg = 1.4 } = {}) => {
   const u = unit(from, end);
   const n = normal(u);
   const a = add(end, n, headW / 2);
@@ -237,18 +231,14 @@ const neckAndHead = (from, end, style, { headLen = 6, headW = 5.6, neckW = 4, pe
   const pegPts = [1, -1].map((s) => add(mid, n, s * (headW / 2 + 0.3 + peg / 2)));
   const neckD = `M ${pt(from)} L ${pt(add(end, u, 0.5))}`;
   const headD = `M ${pt(a)} L ${pt(a2)} L ${pt(b2)} L ${pt(b)} Z`;
-  const core = style === "ink" ? INK : WHITE;
-  const casing = style === "ink" ? STRAW : INK;
   const pegs = (fill, r) => pegPts.map((p) => `<circle fill="${fill}" cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r)}"/>`).join("");
-  return `${pegs(casing, peg + 1)}
-    <path fill="none" stroke="${casing}" stroke-width="${neckW + 2}" stroke-linecap="round" d="${neckD}"/>
-    <path fill="${casing}" stroke="${casing}" stroke-width="3" stroke-linejoin="round" d="${headD}"/>
-    <path fill="none" stroke="${core}" stroke-width="${neckW}" stroke-linecap="round" d="${neckD}"/>
-    <path fill="${core}" stroke="${core}" stroke-width="1" stroke-linejoin="round" d="${headD}"/>
+  return `${pegs(INK, peg + 1)}
+    <path fill="none" stroke="${INK}" stroke-width="${neckW + 2}" stroke-linecap="round" d="${neckD}"/>
+    <path fill="${INK}" stroke="${INK}" stroke-width="3" stroke-linejoin="round" d="${headD}"/>
+    <path fill="none" stroke="${WHITE}" stroke-width="${neckW}" stroke-linecap="round" d="${neckD}"/>
+    <path fill="${WHITE}" stroke="${WHITE}" stroke-width="1" stroke-linejoin="round" d="${headD}"/>
     ${pegs(INK, peg)}`;
 };
-
-const guitarFill = (style) => (style === "ink" ? INK : WHITE);
 
 // ------------------------------------------------------------------ props --
 
@@ -302,35 +292,31 @@ const cornCob = {
   id: "corn-cob",
   slot: "prop",
   name: "Corn cob",
-  note: "A tapered ember (yellow) cob on its ink outline whose long edges are knobbly with kernels, and fresh white husk blades drooping from its base. The yellow lumpy cob in a white husk is the corn icon; a white cob read as a pinecone, a cone or a shuttlecock, and a cross-hatched oval with a dark husk was a grenade. The default style is named white for the husk; the cob is always ember. Gold recolours the cob, on trial, only on the trophy, which stands against the hearth; on the orange it is 1.30:1.",
+  note: "A tapered ember (yellow) cob ending in a blunt bullet, its long edges a gentle lumpy wave, two lengthwise ink kernel rows down it, and two white husk leaves hugging its sides with their tips up and out: the corn emoji, a yellow striped bullet between two white leaves. Lengthwise rows only (cross lines are the grenade); a white cob read as a pinecone or a cone. The default style is named white for the husk; the cob is always ember. No gold: it is 1.30:1 on country's orange (Gate 1).",
   variants: [
     {
       key: "a",
-      note: "The harvest pair: two yellow cobs raised in a V behind the back from one grip at the wing tip, both standing against the hearth, the white husk peeled down off the grip. A farmhand holding up the harvest; two cobs fanned are an outline no single shape shares, and nothing hangs under the belly.",
+      note: "The harvest pair: two yellow cobs, 8 to 10.5 across with blunt 7-unit tips, raised in a V behind the back from one grip at the wing tip, each between its own two hugging white husk leaves. Gate 1 blunted the saw edge, added the kernel rows and swapped the drooping husk for the hugging leaves; the upright cob leans back to (21.8,23) and the back cob drops to (7.8,36), so the right-hand leaf stays left of x 34 above the chin line and the V stays about 46 degrees open.",
       styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
       draw: () => {
-        const dims = { w0: 8.6, wMax: 11, wTip: 5 };
-        const back = cob({ x: 29, y: 46 }, { x: 11, y: 30 }, dims, EMBER);
-        const up = cob({ x: 29.6, y: 46 }, { x: 27, y: 24 }, dims, EMBER);
-        return `${back}${up}${droopingHusk({ x: 29, y: 46.4 })}`;
+        const dims = { w0: 8, wMax: 10.5, wTip: 7 };
+        const ear = (p0, p1) => `${cob(p0, p1, dims, EMBER)}${huskPair(cobFrame(p0, p1, dims), 0.62, 4, 1.8)}`;
+        return `${ear({ x: 29, y: 46 }, { x: 7.8, y: 36 })}${ear({ x: 29.6, y: 46 }, { x: 21.8, y: 23 })}`;
       }
     },
     {
       key: "c",
-      note: "The trophy: one fat yellow cob hoisted up behind the back like a prize, standing against the hearth, its lower third wrapped in white husk and three husk blades drooping off the grip. A knobbly yellow cob rising out of a white husk is the corn icon; held up and back, it never sits on the legs.",
-      styles: ["white", "gold"],
+      note: "The trophy: one fat yellow cob (13.5 across, a 9-unit blunt bullet tip) hoisted up behind the back like a prize, with two lengthwise kernel rows and two big white husk leaves flaring out either side of its lower half. Gate 1 dropped the drooping husk and the flame tip; the cob leans back to (19.4,23.6) so the leaves stay left of x 34 above the chin line.",
+      styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
-      draw: ({ style, styleFill }) => {
+      draw: () => {
         const p0 = { x: 29, y: 46 };
-        const p1 = { x: 23.4, y: 21.8 };
-        const dims = { w0: 9.4, wMax: 14, wTip: 5.6 };
-        const frame = cobFrame(p0, p1, dims);
-        return `${droopingHusk({ x: 29, y: 46.6 })}
-          ${cob(p0, p1, dims, style === "gold" ? styleFill : EMBER)}
-          ${husk(hugLeaf(frame, 1, 0.46, 2.6, 1.8))}${husk(hugLeaf(frame, -1, 0.46, 2.6, 1.8))}`;
+        const p1 = { x: 19.4, y: 23.6 };
+        const dims = { w0: 9.4, wMax: 13.5, wTip: 9 };
+        return `${cob(p0, p1, dims, EMBER)}${huskPair(cobFrame(p0, p1, dims), 0.6, 4.2, 1.8)}`;
       }
     }
   ]
@@ -340,30 +326,30 @@ const acousticGuitar = {
   id: "acoustic-guitar",
   slot: "prop",
   name: "Acoustic guitar",
-  note: "A figure-eight body with a deep waist, a neck and a slab headstock with a peg nub either side. No sound hole and no bridge: any light mark inside a dark body (or dark inside a light one) is an eye or a mouth at 76px. The waist and the neck are the read. Ink is the doc's body; white is the cased figure-eight for wearing over ink clothes. The neck and headstock carry a light rim (ink) or ink casing (white) where they leave the bird. No team (1.00:1) and no gold (1.30:1) on country.",
+  note: "A figure-eight body with a deep waist, a neck and a slab headstock with a peg nub either side. No sound hole and no bridge: any mark inside the body is an eye or a mouth at 76px. The waist and the neck are the read. White only, in its ink casing (2.91:1 on the orange, on its outline): an ink body was a frying pan. The neck and headstock carry the ink casing where they leave the bird, so they show on the hearth. No team (1.00:1) and no gold (1.30:1) on country.",
   variants: [
     {
       key: "a",
-      note: "The strummer: in playing position across the belly, a big body forward and low and the neck rising up and back over the thigh to a pegged headstock at the bird's back edge. The rising diagonal neck is what makes it a guitar (a level neck read as a bone or a frying pan). White only: an ink body here lands on the wing's lower outline and the waist vanishes; ink stays on the troubadour, where the body sits on plain orange.",
+      note: "The strummer: in playing position across the belly, a big body forward and low and the neck rising up and back over the thigh to a pegged headstock at the bird's back edge. The rising diagonal neck is what makes it a guitar (a level neck read as a bone or a frying pan). White only: an ink body here lands on the wing's lower outline and the waist vanishes.",
       styles: ["white"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ style }) => {
+      draw: () => {
         const body = { lx: 50, ly: 60.5, lr: 8.5, ux: 41.6, uy: 56, ur: 5.6, waist: 0.5 };
-        return `${neckAndHead({ x: 38.6, y: 54.4 }, { x: 24, y: 47 }, style)}
-          ${guitarBody(body, guitarFill(style))}`;
+        return `${neckAndHead({ x: 38.6, y: 54.4 }, { x: 24, y: 47 })}
+          ${guitarBody(body, WHITE)}`;
       }
     },
     {
       key: "b",
-      note: "The troubadour: slung across the back, the body on the rear of the bird under the wing and the long neck rising up and back over the tail to a headstock against the hearth. A guitar carried to the gig on the back, held up the way the relaxed sweep allows; the rising neck is what says guitar.",
-      styles: ["ink", "white"],
+      note: "The troubadour: slung across the back, the body on the rear of the bird under the wing and the long neck rising up and back over the tail to a headstock against the hearth. A guitar carried to the gig on the back; the rising neck is what says guitar. White only since Gate 1: the ink body was a black frying pan.",
+      styles: ["white"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ style }) => {
+      draw: () => {
         const body = { lx: 32, ly: 56.6, lr: 8, ux: 24.6, uy: 47.8, ur: 5.6, waist: 0.48 };
-        return `${neckAndHead({ x: 23, y: 45.4 }, { x: 14, y: 35 }, style, { headLen: 5.2, headW: 5.4 })}
-          ${guitarBody(body, guitarFill(style))}`;
+        return `${neckAndHead({ x: 23, y: 45.4 }, { x: 14, y: 35 }, { headLen: 5.2, headW: 5.4 })}
+          ${guitarBody(body, WHITE)}`;
       }
     }
   ]
@@ -371,131 +357,84 @@ const acousticGuitar = {
 
 // ----------------------------------------------------------------- stages --
 
-/** Stray straws: ink strokes 2 wide poking out of the outline at uneven angles — outline, not surface. */
-const strays = (list) =>
-  `<path fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" d="${list
-    .map(([x, y, dx, dy]) => `M ${f(x)} ${f(y)} l ${f(dx)} ${f(dy)}`)
-    .join(" ")}"/>`;
-
 /**
- * Straw sticking up from y = `y` between xa and xb, as path steps left to
- * right: spikes of uneven height (up to `tall`) and lean, so the edge is
- * shaggy, never a saw or the pages of a book.
+ * A cut end walked from (x, yFrom) to (x, yTo): `n` tufts of straw splayed
+ * out `out` units (negative = to the left) at uneven lengths (0.75 to 1 of
+ * it) and angles, so the end of the outline is shaggy at 76.
  */
-const spikes = (xa, xb, y, tall) => {
-  const H = [1, 0.62, 0.9, 0.5, 0.8, 0.68, 1, 0.56];
-  const L = [-0.6, 0.5, -0.2, 0.7, -0.5, 0.3, -0.7, 0.4];
-  const W = [2.4, 2, 2.6, 2.2, 2.4, 2, 2.6, 2.2];
-  const out = [];
-  let x = xa;
-  for (let i = 0; x + W[i % 8] <= xb + 0.01; i += 1) {
-    const w = W[i % 8];
-    out.push(`L ${f(x + w * 0.5 + L[i % 8])} ${f(y - tall * H[i % 8])} L ${f(x + w)} ${f(y)}`);
-    x += w;
-  }
-  return out.join(" ");
-};
-
-/**
- * A cut end walked from (x, yFrom) to (x, yTo): tufts of straw splayed out
- * `out` units (negative = to the left) at uneven lengths and angles.
- */
-const ragged = (x, yFrom, yTo, out, n = 5) => {
-  const K = [0.7, 1, 0.55, 0.9, 0.65, 1];
-  const T = [-0.8, 0.4, -0.3, 0.7, -0.6, 0.3];
+const ragged = (x, yFrom, yTo, out, n = 4) => {
+  const K = [0.8, 1, 0.75, 0.95];
+  const T = [-0.8, 0.4, -0.3, 0.7];
   const step = (yTo - yFrom) / n;
   return Array.from({ length: n }, (_, i) => {
     const y = yFrom + step * (i + 0.5);
-    return `L ${f(x + out * K[i % 6])} ${f(y + T[i % 6])} L ${f(x)} ${f(y + step / 2)}`;
+    return `L ${f(x + out * K[i % 4])} ${f(y + T[i % 4])} L ${f(x)} ${f(y + step / 2)}`;
   }).join(" ");
 };
 
 /**
- * A bale in 3/4, seen from its left: a front face (x0..x1, top..bottom), the
- * LEFT end face receding up and left by (dx, dy) in the shadow colour `shade`
- * with a tufted cut edge, a top face above both whose back edge is shaggy
- * straw `tall` high, thin ink twine at `bands`, and (with `rightOut`) a
- * ragged right cut end and `rightStrays`, for a bale long enough to show past
- * the breast. It turns to the left because the bale sits behind the bird: its
- * left end and the corner under the tail show most, so that is where the
- * shaded end and the top face have to be.
+ * A soft straw block seen side on: corners rounded `r`, the top edge bowed up
+ * `bow` at its middle, long wisps of straw poking out of the top (each
+ * { x, h, lean } — h units tall, leaning `lean` degrees, + = to the right),
+ * tufted cut ends `out` long, and ink twine `twine` wide at `bands`. Nothing
+ * on its face: strands read as concrete scratches.
  */
-const bale3q = ({ x0, x1, top, bottom, dx, dy, bands, tall = 3, rightOut = 0, rightStrays = [] }, fill, shade) => {
-  const L = x0 - dx;
-  const rightEdge = rightOut ? ragged(x1, top, bottom, rightOut, 4) : "";
-  const front = `M ${f(x0)} ${f(top)} L ${f(x1)} ${f(top)} ${rightEdge} L ${f(x1)} ${f(bottom)} L ${f(x0)} ${f(bottom)} Z`;
-  const endFace = `M ${f(x0)} ${f(top)} L ${f(x0)} ${f(bottom)} L ${f(L)} ${f(bottom - dy)} ${ragged(L, bottom - dy, top - dy, -1.6, 4)} L ${f(L)} ${f(top - dy)} Z`;
-  const topFace = `M ${f(x0)} ${f(top)} L ${f(L)} ${f(top - dy)} ${spikes(L + 0.4, x1 - dx, top - dy, tall)} L ${f(x1)} ${f(top)} Z`;
-  const twine = bands.map((x) => `M ${f(x - dx)} ${f(top - dy + 0.4)} L ${f(x)} ${f(top)} L ${f(x)} ${f(bottom - 0.6)}`).join(" ");
-  return `<path fill="${shade}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${endFace}"/>
-    <path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${topFace}"/>
-    <path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${front}"/>
-    <path fill="none" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round" d="${twine}"/>
-    ${strays([
-      [L - 0.4, top - dy + 2.4, -1.4, -1.2],
-      [L - 0.4, bottom - dy - 2.4, -1.4, 1],
-      [L + 3.6, top - dy - 0.4, -1, -2],
-      [L + 9, top - dy - 0.4, 1.4, -2],
-      ...rightStrays
-    ])}`;
-};
-
-/** A flat bale seen side on: shaggy straw `tall` high along its top (if `spiky`), tufted cut ends `out` long, twine at `bands`. No strands on the face: they were texture, read as concrete scratches. */
-const baleFlat = ({ x0, x1, top, bottom, bands, spiky = true, tall = 3, out = 1.8 }, fill) => {
-  const topEdge = spiky ? spikes(x0 + 0.6, x1 - 0.6, top, tall) : "";
-  const d = `M ${f(x0)} ${f(top)} ${topEdge} L ${f(x1)} ${f(top)} ${ragged(x1, top, bottom, out, 3)} L ${f(x1)} ${f(bottom)} L ${f(x0)} ${f(bottom)} ${ragged(x0, bottom, top, -out, 3)} Z`;
-  const twine = bands.map((x) => `M ${f(x)} ${f(top + 0.6)} L ${f(x)} ${f(bottom - 0.6)}`).join(" ");
+const bale = ({ x0, x1, top, bottom, r, bow, wisps, out, bands, twine }, fill) => {
+  const mid = (x0 + x1) / 2;
+  const half = (x1 - x0) / 2 - r;
+  const topY = (x) => top - bow * (1 - ((x - mid) / half) ** 2);
+  const edge = [];
+  let x = x0 + r;
+  for (const w of [...wisps].sort((p, q) => p.x - q.x)) {
+    for (; x < w.x - 1.2; x += 1) edge.push(`L ${f(x)} ${f(topY(x))}`);
+    const tip = { x: w.x + w.h * Math.tan((w.lean * Math.PI) / 180), y: topY(w.x) - w.h };
+    edge.push(`L ${f(w.x - 1.2)} ${f(topY(w.x - 1.2))} L ${pt(tip)} L ${f(w.x + 1.2)} ${f(topY(w.x + 1.2))}`);
+    x = w.x + 2.2;
+  }
+  for (; x < x1 - r; x += 1) edge.push(`L ${f(x)} ${f(topY(x))}`);
+  const corner = (px, py) => `A ${f(r)} ${f(r)} 0 0 1 ${f(px)} ${f(py)}`;
+  const d = `M ${f(x0)} ${f(top + r)} ${corner(x0 + r, top)} ${edge.join(" ")} L ${f(x1 - r)} ${f(top)} ${corner(x1, top + r)}
+    ${ragged(x1, top + r, bottom - r, out)} L ${f(x1)} ${f(bottom - r)} ${corner(x1 - r, bottom)} L ${f(x0 + r)} ${f(bottom)} ${corner(x0, bottom - r)}
+    ${ragged(x0, bottom - r, top + r, -out)} Z`;
+  const ties = bands.map((bx) => `M ${f(bx)} ${f(topY(bx) + 0.6)} L ${f(bx)} ${f(bottom - 0.6)}`).join(" ");
   return `<path fill="${fill}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${d}"/>
-    <path fill="none" stroke="${INK}" stroke-width="1.4" d="${twine}"/>
-    ${strays([
-      [x0 - 0.6, top + (bottom - top) * 0.35, -2.4, -1.4],
-      ...(spiky ? [[x0 + 5, top - 0.8, -1, -2.2]] : [[x0 - 0.6, bottom - 1.6, -2.4, 1]])
-    ])}`;
+    <path fill="none" stroke="${INK}" stroke-width="${twine}" d="${ties}"/>`;
 };
-
-const strawOf = (style, styleFill) => (style === "gold" ? styleFill : EMBER);
 
 const hayBale = {
   id: "hay-bale",
   slot: "stage",
   name: "Hay bale",
-  note: "Straw on the ground beside the bird, its base level with the feet so the bird keeps its own floor line: behind the feet and out past the breast, or standing in front of the breast. Straw is ember (warm yellow), with any end face in mutedWarm as the shadow side: grey straw read as concrete, planks or a pallet. What makes it hay and not a block: a shaggy outline of straw spikes, ragged cut ends and ink strays, and thin ink twine that does not cut it into panels. Nothing on its face: strands read as concrete scratches. The default style is named ink for the twine and outline. Gold recolours the straw (front and top only), on trial: it sits on the hearth, off the orange.",
+  note: "Straw on the ground in front of the breast, its base level with the feet so the bird keeps its own floor line. Straw is ember (warm yellow): grey straw read as concrete, planks or a pallet. What makes it hay and not a crate or a block of cheese: rounded corners and a top bowed up 1 unit, long wisps of straw leaning out of the top, ragged tufted ends, and ink twine. Nothing on its face: strands read as concrete scratches. The default style is named ink for the twine and outline. No gold: it is 1.30:1 on country's orange (Gate 1).",
   variants: [
     {
-      key: "a",
-      note: "The long bale, in 3/4 from the left: one long straw bale lying behind the feet, so straw shows on BOTH sides of the hen: its shaded left cut end and spiky top under the tail, and its ragged right cut end in front of the breast, one twine band at each visible end. The stage region (y ≥ 55) caps it at 16 units tall, spikes included.",
-      styles: ["ink", "gold"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ style, styleFill }) =>
-        bale3q(
-          {
-            x0: -2.4,
-            x1: 84,
-            top: 61.4,
-            bottom: 71.4,
-            dx: 3.6,
-            dy: 3.2,
-            bands: [6, 78],
-            tall: 3,
-            rightOut: 2.2,
-            rightStrays: [
-              [85, 63, 2.2, -1.4],
-              [85, 69, 2.2, 1.2]
-            ]
-          },
-          strawOf(style, styleFill),
-          STRAW
-        )
-    },
-    {
       key: "b",
-      note: "The bale in front: one chunky side-on bale standing on the floor in front of the breast, where the barrel stands, fully visible: shaggy straw along its top, ragged cut ends, two twine bands. The bird paints over its left end. One block beside the hen, against a's long bale behind her feet.",
-      styles: ["ink", "gold"],
+      note: "The bale in front: one soft straw block 25 by 12.6 standing on the floor in front of the breast, corners rounded 2.6 and its top bowed up 1: five wisps leaning out 30 to 42 degrees (two at each top corner, one mid-top, 2.8 to 3.8 tall so the tallest reach y 55), four tufts splayed 2.4 to 3 out at each end, and two 2.2-wide twine bands. Gate 1 traded the uniform spike row for the wisps; the bird paints over its left end.",
+      styles: ["ink"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ style, styleFill }) =>
-        baleFlat({ x0: 61.6, x1: 85.6, top: 58.6, bottom: 71.6, bands: [68, 79], spiky: true, tall: 3, out: 2.2 }, strawOf(style, styleFill))
+      draw: () =>
+        bale(
+          {
+            x0: 60,
+            x1: 85,
+            top: 59,
+            bottom: 71.6,
+            r: 2.6,
+            bow: 1,
+            wisps: [
+              { x: 63.4, h: 3.8, lean: -42 },
+              { x: 66, h: 3.3, lean: -30 },
+              { x: 72.5, h: 2.8, lean: 10 },
+              { x: 78.4, h: 3.3, lean: 30 },
+              { x: 81.6, h: 3.8, lean: 42 }
+            ],
+            out: 3,
+            bands: [67, 80],
+            twine: 2.2
+          },
+          EMBER
+        )
     }
   ]
 };

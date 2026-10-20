@@ -55,14 +55,16 @@ const chestGround = (bodyPath, color, inner) => {
 // The open shirt's V: deep, its apex below the belly outline, so the cyan
 // opening runs off the bottom of the bird — unbuttoned to the navel.
 const OPEN_V = "M 45 37 L 68 37 L 57.5 57 Z";
-// a's V is narrower, so a strip of the white shirt shows in front of it too
-// and the white reads as a shirt worn open, not as a white belly.
-const SHIRT_V = "M 50 37 L 62.6 37 L 56 55 Z";
 
-/** `inner` clipped to the visible chest, so nothing on the shirt crosses onto the wing. */
-const onChest = (inner) => {
+/**
+ * `inner` clipped to the visible chest, so nothing on the shirt crosses onto
+ * the wing, and inside that to the body, so nothing runs off the belly. The
+ * body clip is the inner one: the harness measures a shape by its nearest clip.
+ */
+const onChest = (bodyPath, inner) => {
   const c = clip(CHEST);
-  return `<defs>${c.def}</defs><g clip-path="${c.url}">${inner}</g>`;
+  const b = clip(bodyPath);
+  return `<defs>${c.def}${b.def}</defs><g clip-path="${c.url}"><g clip-path="${b.url}">${inner}</g></g>`;
 };
 
 const openShirt = {
@@ -71,21 +73,6 @@ const openShirt = {
   name: "Open shirt",
   note: "The shirt unbuttoned to the navel, bare chest showing. Each variant carries one disco signifier that survives 76px: the loud lapel, the medallion, the sequins.",
   variants: [
-    {
-      key: "a",
-      note: "The loud shirt: a WHITE shirt, so it is never the bird's black belly and it parts from every ink sleeve, open in a deep cyan V, with one big ember 70s lapel laid back along the V's back edge — the V and the lapel are one silhouette. Round 2's ink shirt with a white collar triangle read as a tuxedo front or a penguin bib.",
-      styles: ["white"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ bodyPath, fill, styleFill }) =>
-        chestGround(
-          bodyPath,
-          styleFill,
-          `<path fill="${styleFill}" ${inkStroke(2)} d="${CHEST}"/>
-           <path fill="${fill}" ${inkStroke(2)} d="${SHIRT_V}"/>
-           <path fill="${EMBER}" ${inkStroke(1.6)} d="M 50 37 L 53.6 37 L 56.8 49.6 L 45.2 46.8 Z"/>`
-        )
-    },
     {
       key: "b",
       note: "The medallion: an ink shirt open to the navel in a deep cyan V, and a big solid ember medallion (12 units across with its casing) hung on a heavy chain in the V — the largest light shape on the chest, sitting wholly on the bare chest so it is a pendant and never a button. Every ember line is cased in ink so it reads on cyan; the disc is solid, no ring and no dark centre.",
@@ -124,15 +111,6 @@ const openShirt = {
 // two points with light between them read as a sawtooth jaw, and two light
 // points on ink read as fangs whatever their colour.
 const FEVER_COLLAR = "M 49.5 37 L 62 37.5 L 59.8 41.5 L 55.5 52 L 51.5 42.5 L 44 48.5 Z";
-// The buttoned shirt under the kipper tie: a black shirt front from the throat
-// down the middle, its collar points spread out over the white lapels — the
-// back one long, toward the wing. The tie blade covers its middle.
-const TIE_SHIRT = "M 46 37 L 61 37.5 L 59.6 43.2 L 55.6 41.2 L 56.8 51 L 47.4 51 L 48.4 42.6 L 39.5 47.8 Z";
-// The kipper: a small knot at the throat and a 10-unit blade that widens to a
-// point above the belly outline. Ember, never the team colour: a cyan blade on
-// the black shirt reads as bare chest, which is b's open V again.
-const KIPPER = "M 49.6 38.6 L 54.6 38.6 L 53.8 42 L 57.2 48.8 L 52.2 52.6 L 47.2 48.8 L 50.4 42 Z";
-
 const daggerCollar = {
   id: "dagger-collar",
   slot: "top",
@@ -147,38 +125,18 @@ const daggerCollar = {
       darkCentre: false,
       draw: ({ bodyPath, styleFill }) =>
         chestGround(bodyPath, styleFill, `<path fill="${INK}" ${inkStroke(1.2)} d="${FEVER_COLLAR}"/>`)
-    },
-    {
-      key: "c",
-      note: "The kipper tie: the white suit, a black shirt buttoned up under a spread black collar, and a fat ember kipper tie down the middle, widening to its point — the 1975 leisure suit. b is the shirt open in a V; c is the shirt done up with a tie, so the middle of the chest is an ember blade on ink, never a black wedge and never a bare-chest cyan V.",
-      styles: ["white"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ bodyPath, styleFill }) =>
-        chestGround(
-          bodyPath,
-          styleFill,
-          `<path fill="${INK}" ${inkStroke(1.2)} d="${TIE_SHIRT}"/>
-           <path fill="${EMBER}" ${inkStroke(1.4)} stroke-linejoin="round" d="${KIPPER}"/>`
-        )
     }
   ]
 };
 
-// The rib collar starts under the neck's lower edge and runs 5 units down
-// from it, so it shows as a band at the throat and not a floating sliver.
-const RIB = "M 46 32.6 L 62.5 40.3 L 61.8 45.2 L 46 37.6 Z";
-// a's piping: a white line just under the rib's lower edge, its ink stroke
-// left showing between them, so the collar is a cased band on the ink jacket.
-const RIB_PIPING = "M 45.5 38.9 L 61.3 46.5";
-
-// b's triple stripe: three level bars, each starting on the wing's trailing
-// edge (sampled from CHEST's curve, so a bar never paints over the wing) and
-// running to the front, where the body clip trims it. The white stripes carry
-// no stroke, so a strip of jacket always shows between them and the band.
-const STRIPE_HI = "M 43.86 40.2 L 70 40.2 L 70 42.6 L 35.91 42.6 L 37.68 41.8 L 40 41 Z";
-const STRIPE_BAND = "M 32.88 44.4 L 70 44.4 L 70 49 L 27.48 49 L 29.06 47.47 L 30.83 45.93 Z";
-const STRIPE_LO = "M 25.59 51 L 70 51 L 70 53.4 L 23.5 53.4 L 24.18 52.6 L 24.88 51.8 Z";
+// The rib collar starts under the neck's lower edge and runs 7.5 units down
+// from it (about 7 square to the band), so it reads as a band at the throat at
+// 76px and not a floating sliver. Its top is cut at y 37, the chest's top
+// (the neck covers the rest), so the body clip alone can hold it.
+const RIB = "M 46 37 L 55.43 37 L 62.5 40.3 L 62.5 47.8 L 46 40.1 Z";
+// The zip: one closed vertical line down the front, out from under the rib to
+// the belly — the opposite of the open shirt's V.
+const ZIP = "M 57 40.5 L 55.5 58";
 
 const satinJacket = {
   id: "satin-jacket",
@@ -188,41 +146,24 @@ const satinJacket = {
   variants: [
     {
       key: "a",
-      note: "The rink patch: closed ink jacket, team rib collar edged below with a white piping line (so the collar shows as a band at 76 and is not lost in the cyan neck), and one big sharp team-colour star (13 units across, tilted, thin points) set back on the breast toward the wing, off the belly's centre and clipped to the chest. The star stays team-coloured in every style (an ink star on white is a splat); in the white style the rib turns ink and the piping drops.",
+      note: "The rink patch: a closed ink jacket zipped up the front (a 2.6-unit white zip cased in ink, out from under the collar to the belly — a closed line, never the open shirt's V), a 7-unit team rib collar that reads as a band at 76, and one big team-colour star patch (15 units across, tilted, ink-edged) set back on the breast toward the wing, clipped to the chest. Gate 1 added the zip, widened the rib and dropped its piping, and grew the star from a glint to a patch. The star stays team-coloured in every style (an ink star on white is a splat); in the white style the rib and the zip turn ink.",
       styles: ["ink", "white"],
       whitePoints: 0,
       darkCentre: false,
       draw: ({ bodyPath, fill, style, styleFill }) => {
         const white = style === "white";
         const rib = white ? INK : fill;
-        const piping = white ? "" : `<path fill="none" stroke="${WHITE}" stroke-width="1.6" stroke-linecap="butt" d="${RIB_PIPING}"/>`;
+        const zip = white
+          ? `<path fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" d="${ZIP}"/>`
+          : cased(ZIP, WHITE, 2.6, 1.2);
         return chestGround(
           bodyPath,
           styleFill,
           onChest(
-            `<path fill="${rib}" ${inkStroke(1.2)} d="${RIB}"/>${piping}
-             <path fill="${fill}" ${inkStroke(1.2)} stroke-linejoin="miter" d="${star(41.6, 48.4, 6.4, 5, 0.42, 12)}"/>`
+            bodyPath,
+            `${zip}<path fill="${rib}" ${inkStroke(1.2)} d="${RIB}"/>
+             <path fill="${fill}" ${inkStroke(1.2)} stroke-linejoin="miter" d="${star(40, 49.5, 7.5, 5, 0.42, 12)}"/>`
           )
-        );
-      }
-    },
-    {
-      key: "b",
-      note: "The rink stripe: closed ink jacket, team rib collar, and one level team-colour band straight across the chest, edged above and below by a 2.4-unit flat white stripe with a gap of jacket between — the team, white and ink triple stripe of a roller-rink jacket, which no feather pattern makes. Each stripe runs from the wing's trailing edge to the front. In the white style the band stays team colour and the stripes and rib turn ink.",
-      styles: ["ink", "white"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ bodyPath, fill, style, styleFill }) => {
-        const white = style === "white";
-        const rib = white ? INK : fill;
-        const pin = white ? INK : WHITE;
-        return chestGround(
-          bodyPath,
-          styleFill,
-          `${onChest(`<path fill="${rib}" ${inkStroke(1.2)} d="${RIB}"/>`)}
-           <path fill="${pin}" d="${STRIPE_HI}"/>
-           <path fill="${pin}" d="${STRIPE_LO}"/>
-           <path fill="${fill}" ${inkStroke(2)} d="${STRIPE_BAND}"/>`
         );
       }
     }
@@ -242,8 +183,8 @@ const satinJacket = {
 // near y 56 — round 2's bell hung straight down beside the thigh
 // and read as a patch on the bird's rear, not the mouth of a sleeve.
 const BELL = "M 27 34 C 24 39 25 45 29 49 L 21.6 55 C 17 56.2 12.6 53 10.8 48.7 L 16.8 46 C 16.6 44.5 16.9 43.5 17.4 42.6 C 19 38 22.5 35 27 34 Z";
-// c's cuff band: a broad ink stroke laid along the bell's joint, unclipped, so
-// it shows on both sides of the seam between the white sleeve and its bell.
+// The cuff band (c, and b's team style): a broad ink stroke laid along the
+// bell's joint, unclipped, so it shows on both sides of the seam.
 const BELL_CUFF = "M 27 34 C 24 39 25 45 29 49";
 /** The hem just inside the bell's mouth: the line that says "cuff". */
 const BELL_HEM = "M 20.2 52.9 L 13.2 48.6";
@@ -256,13 +197,14 @@ const flareSleeve = {
   variants: [
     {
       key: "b",
-      note: "The white trumpet: a white bell flares back out of the ink wing along its axis, past the back tip, with an ink hem line inside its mouth.",
+      note: "The white trumpet: a white bell flares back out of the ink wing along its axis, past the back tip, with an ink hem line inside its mouth. In the team style the cyan sleeve melts into the body, so Gate 1 gave it the 3.4-unit ink cuff band along the bell's joint: a dark seam between the sleeve and the white bell, so the bell stays a bell and not a paper cup.",
       styles: ["ink", "team"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ wingPath, styleFill }) =>
+      draw: ({ wingPath, style, styleFill }) =>
         `<path fill="${styleFill}" ${inkStroke(2)} d="${wingPath}"/>
          <path fill="${WHITE}" ${inkStroke(2)} d="${BELL}"/>
+         ${style === "team" ? `<path fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round" d="${BELL_CUFF}"/>` : ""}
          <path fill="none" ${inkStroke(1.4)} stroke-linecap="round" d="${BELL_HEM}"/>`
     },
     {
@@ -367,45 +309,32 @@ const tinsel = {
   variants: [
     {
       key: "a",
-      note: "Two glinting ribbons of unequal length, one off each tip: each a broad flat ribbon fluttering in a wide S (amplitude 3, period 10 — round 2's quick ±0.6 kink was sub-pixel and the strands read as candy canes or steam lines) and ending in a big four-point glint, the long one off the low sickle down the back to y 38.5 (its glint inside the tail's 10-unit reach), the short one off the high sickle stopping above the low one. The two glints sit at different heights far apart, so they never pair into eyes. White or gold cased in ink. No team style: cyan on the cyan sickles is mush.",
+      note: "Two crinkled foil ribbons of unequal length, one off each tip, each drooping in one gentle curve with big zigzag teeth (±1.6 units, a 3.4-unit core cased 1.2 in ink, mitered so the edge is foil) and ending in a fat four-point sparkle 12 units tip to tip: the long one off the low sickle down the back to (6, 37), its sparkle inside the tail's 10-unit reach, the short one off the high sickle stopping at y 17, above the low one. Gate 1 dropped the S-wiggle, which read as stink lines. The two sparkles sit at different heights far apart, so they never pair into eyes. White or gold cased in ink. No team style: cyan on the cyan sickles is mush.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
       draw: ({ styleFill }) =>
         `${cased(
-          "M 9 10 Q 4 10 4 16 C 7 21 1 26 4 31 C 7 35 4.5 37 5.5 38.5 M 17 0 Q 20 0 20 4 C 23 8 17 12 20 16",
-          styleFill, 3, 1.2
+          `${crinkleC([9, 10], [4, 18], [3, 28], [6, 37], 12, 1.6)} ${crinkleC([17, 0], [21, 5], [22, 11], [21, 17], 7, 1.6)}`,
+          styleFill, 3.4, 1.2, "miter"
         )}
-         <path fill="${styleFill}" ${inkStroke(1)} paint-order="stroke" d="${sparkle(5.5, 38.5, 4.5)}"/>
-         <path fill="${styleFill}" ${inkStroke(1)} paint-order="stroke" d="${sparkle(20, 16, 4.5)}"/>`
-    },
-    {
-      key: "b",
-      note: "The garland: one finely crinkled tinsel rope strung across the faces of both sickles in two stacked drooping loops, high tip to low tip to body — the Christmas-tree festoon. It crosses the sickles instead of following them (a crinkle along a sickle edge reads as a serrated feather).",
-      styles: ["white", "gold"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ styleFill }) =>
-        cased(
-          [
-            crinkleC([17, 1], [22, 18], [8, 24], [9, 10.5], 30, 0.55),
-            crinkleC([9, 10.5], [3, 31], [19, 35], [27, 28], 30, 0.55)
-          ].join(" "),
-          styleFill, 3, 1.2, "miter"
-        )
+         <path fill="${styleFill}" ${inkStroke(1)} paint-order="stroke" d="${sparkle(6, 37, 6, 0.5)}"/>
+         <path fill="${styleFill}" ${inkStroke(1)} paint-order="stroke" d="${sparkle(21, 17, 6, 0.5)}"/>`
     }
   ]
 };
 
 // A boa is a long fluffy rope: drawn as a thick cased stroke whose edge is
-// lumped by a second, wider dotted stroke — round bumps every 3.2 units, so
-// the edge reads as feathers at 304px (not finger lobes) and merely soft at
-// 76. It stays out at the back (x < 22) so it never touches the wing tip and
-// never merges with a white Sleeve.
+// lumped by a second, much wider dotted stroke — round bumps every 5.5 units
+// standing about 2.75 units proud of the rope, so the edge shows as a
+// scalloped fluff at 76px (Gate 1: the 3.2-unit bumps were invisible and the
+// boa read as a bent pipe). It stays out at the back (x < 22) so it never
+// touches the wing tip and never merges with a white Sleeve.
 /** The boa's widths: core and fluff, each as ink casing and colour, and the fluff's bump period. */
-const BOA_THIN = { core: 6.6, coreIn: 3.8, fluff: 8.6, fluffIn: 5.8, period: 3.2 };
-const BOA_FAT = { core: 7.4, coreIn: 4.6, fluff: 10, fluffIn: 7.2, period: 3.6 };
-const boaStroke = (d, color, w = BOA_THIN) => {
+const BOA_FAT = { core: 7, coreIn: 4.4, fluff: 12.5, fluffIn: 9.6, period: 5.5 };
+/** b's flung end: a's fluff on its original, slimmer rope. */
+const BOA_FLUNG = { ...BOA_FAT, core: 6.6, coreIn: 3.8 };
+const boaStroke = (d, color, w) => {
   const fluff = `stroke-dasharray="0 ${w.period}" stroke-linecap="round"`;
   const line = 'stroke-linecap="round" stroke-linejoin="round"';
   return (
@@ -424,19 +353,20 @@ const featherBoa = {
   variants: [
     {
       key: "a",
-      note: "Slung: one fat boa comes out from behind the bird's back (its end tucked behind the body, so it has no knob there), sags across both sickles to the back and falls on down the outside as ONE long loose end to y 40, like a scarf thrown over a shoulder. Round 2's two short splayed ends made it a bone with knobbed ends; one fat drape with one long tail can only be a boa.",
+      note: "Slung: one fat boa comes out from behind the bird's back (its end tucked behind the body, so it has no knob there), sags in a gentle swag back to the low sickle, curves over it and falls down the outside as ONE long loose end to y 42, like a scarf thrown over a shoulder. Gate 1 re-pathed the hard L (a bent pipe, a hockey stick) into that swag and fattened the fluff to 12.5-unit bumps every 5.5, so the edge scallops at 76.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill }) => boaStroke("M 33.5 33 C 25 17 14 29 3 21 C 0 27 1 34 4 40", styleFill, BOA_FAT)
+      draw: ({ styleFill }) => boaStroke("M 33.5 31 C 26 34 15 31 10 16 C 4 20 1 30 3.5 42", styleFill, BOA_FAT)
     },
     {
       key: "b",
-      note: "Flung: the boa caught on the high sickle's tip mid-twirl, its long end streaming straight back off the top of the tail in a wave, its tip flicking down — the diva's toss. a sags across the tail and hangs; b flies out behind it, an open wave with background all round it, the tail's outline made longer.",
+      note: "Flung: the boa caught on the high sickle's tip mid-twirl, its start hidden at the tip so only ONE free end shows, streaming straight back off the top of the tail in a wave, its tip flicking down — the diva's toss, an open wave with background all round it, the tail's outline made longer. Gate 1 hid the second end (two knobs made a bag handle) and gave it the fat 12.5-unit fluff every 5.5 units. a sags across the tail and hangs; b flies out behind it.",
       styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ styleFill }) => boaStroke("M 21.5 7 C 21 0 15 -2.5 11.5 1 C 8.5 4 7 8.5 3.5 10 C 0 11.5 -1.5 15 -0.5 20", styleFill)
+      draw: ({ styleFill }) =>
+        boaStroke("M 17 1.5 C 15 -2.5 10 -1 8 3 C 6 7 3 8.5 0.5 11 C -2 13.5 -2 18 -0.5 23", styleFill, BOA_FLUNG)
     }
   ]
 };
@@ -450,10 +380,9 @@ const featherBoa = {
 // UP from the floor. The feet stand on the dark hearth, where an ink sole
 // vanishes, so a sole is never ink, and it is always a different value from
 // the upper (cyan under white, white under ink or gold): round 2's same-value
-// sole made b one white brick with no platform.
-
-/** The sole is always a different value from the upper: team under white, white under ink or gold. */
-const soleOf = (style, fill) => (style === "white" ? fill : WHITE);
+// sole made b one white brick with no platform. Gate 1: the sole is always
+// white, under an ink or gold upper, never cyan (a cyan sole drops into the
+// lit-floor stage).
 
 const platforms = {
   id: "platforms",
@@ -463,26 +392,19 @@ const platforms = {
   variants: [
     {
       key: "a",
-      note: "The platform shoe: a short upper on a 7-unit sole block, and the sole always a different value from the upper — a cyan sole under the white shoe, a white sole under the ink or gold one — so at 76px the platform is its own slab and not one white brick.",
-      styles: ["white", "ink", "gold"],
+      note: "The platform shoe: a white sole cut as a shoe — a 9-unit heel and a 7-unit toe joined over a 3-unit arch notch that shows floor — under a short ink (or gold) upper, the sole always the other value. Gate 1 replaced the flat sole block (the two feet made one two-tone brick) with that silhouette, narrowed the far shoe to 13 units so near and far only kiss (the near heel runs 3 units further back, over the back toe), and dropped the cyan sole, which vanished into the lit floor; the white style is that white sole under an ink upper, so it replaces the old ink style.",
+      styles: ["white", "gold"],
       whitePoints: 0,
       darkCentre: false,
-      draw: ({ leg, style, styleFill, fill }) => {
+      draw: ({ leg, style, styleFill }) => {
         const x = leg.x - 1;
-        return `<path fill="${soleOf(style, fill)}" ${inkStroke(1.8)} d="M ${x - 7.5} 65.5 L ${x + 8} 65.5 L ${x + 8} 72.5 L ${x - 7.5} 72.5 Z"/>
-          <path fill="${styleFill}" ${inkStroke(1.8)} d="M ${x - 4.5} 60.5 L ${x + 2} 60.5 L ${x + 2.5} 62 C ${x + 5.5} 62.5 ${x + 8} 63.5 ${x + 8} 65.5 L ${x - 7.5} 65.5 C ${x - 7} 63.5 ${x - 5.5} 61.5 ${x - 4.5} 60.5 Z"/>`;
-      }
-    },
-    {
-      key: "b",
-      note: "Knee-high platform boot: the upper runs from under the thigh down to an 8.5-unit sole block, so all the leg you see is boot, standing on a slab of its own value (a's sole rule) — the go-go boot on a platform, not one white brick.",
-      styles: ["white", "ink", "gold"],
-      whitePoints: 0,
-      darkCentre: false,
-      draw: ({ leg, style, styleFill, fill }) => {
-        const x = leg.x - 1;
-        return `<path fill="${soleOf(style, fill)}" ${inkStroke(1.8)} d="M ${x - 6.5} 64 L ${x + 7.5} 64 L ${x + 7.5} 72.5 L ${x - 6.5} 72.5 Z"/>
-          <path fill="${styleFill}" ${inkStroke(1.8)} d="M ${x - 3} 55.5 L ${x + 3.5} 55.5 L ${x + 3} 61 C ${x + 5.5} 61.4 ${x + 7.5} 62.5 ${x + 7.5} 64 L ${x - 6.5} 64 C ${x - 5} 62 ${x - 3.6} 59.5 ${x - 3} 55.5 Z"/>`;
+        const upper = style === "white" ? INK : styleFill;
+        // The near (back) heel runs back to x−8 to cover the back toe, which
+        // pokes out behind a 6-unit heel; the far heel keeps x−5, its toe hidden
+        // behind the near shoe, so the two shoes still only kiss.
+        const back = leg.far ? x - 5 : x - 8;
+        return `<path fill="${WHITE}" ${inkStroke(1.8)} d="M ${back} 63.5 L ${x + 1} 63.5 L ${x + 8} 65.5 L ${x + 8} 72.5 L ${x + 2} 72.5 Q ${x + 0.5} 69.5 ${x - 1} 72.5 L ${back} 72.5 Z"/>
+          <path fill="${upper}" ${inkStroke(1.8)} d="M ${x - 4} 60.5 L ${x + 2} 60.5 L ${x + 2.5} 62 C ${x + 5.5} 62.5 ${x + 8} 63.5 ${x + 8} 65.5 L ${x + 1} 63.5 L ${x - 4} 63.5 Z"/>`;
       }
     }
   ]

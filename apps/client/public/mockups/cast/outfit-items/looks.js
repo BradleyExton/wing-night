@@ -6,7 +6,9 @@
 // Run 1b: every Look points at art the critics KEPT, so Brad cuts from strong
 // candidates. Where the doc's item has no kept variant, the Look swaps in a
 // kept item from the same slot (or leaves the slot empty) and says so in a
-// comment beside it.
+// comment beside it. Gate 1 (2026-10-20) kept every critic "fix" with the fix
+// made, so those items are wearable now; the Looks only change where a cut or
+// a fix forced it.
 //
 // Styles are set where rule 8 needs them: a Prop's style must contrast with
 // the Sleeve it is held against, so a Look with both names both. If the item
@@ -44,9 +46,12 @@ export const LOOKS = {
     {
       name: "Drummer",
       outfit: {
-        top: { item: "biker-jacket", variant: "b" },
-        // Sticks raised in a V behind the back, so they never cover the jacket.
-        prop: { item: "drumsticks", variant: "c", style: "white" },
+        // biker-jacket b's ember hem lined up with the drumsticks' raised meats
+        // into one orange bar at the hips, so Drummer wears the plain leather a.
+        top: { item: "biker-jacket", variant: "a" },
+        // Gate 1 cut the raised V (c); a's crossbones, splayed out past the
+        // legs, is the kept pair.
+        prop: { item: "drumsticks", variant: "a", style: "white" },
         // The doc's speaker cab was never drawn; the bolt disc is the kept stage.
         stage: { item: "bolt-disc", variant: "a" }
       }
@@ -57,8 +62,7 @@ export const LOOKS = {
       outfit: {
         top: { item: "bandolier", variant: "b", style: "ink" },
         sleeve: { item: "flame-sleeve", variant: "a", style: "ink" },
-        tail: { item: "chain-loop", variant: "a" },
-        // spiked-boots has no kept variant.
+        tail: { item: "chain-loop", variant: "b" },
         boots: { item: "combat-boots", variant: "b", style: "ink" },
         prop: { item: "battle-axe", variant: "a", style: "white" },
         stage: { item: "lava-disc", variant: "a" }
@@ -111,7 +115,6 @@ export const LOOKS = {
       outfit: {
         top: { item: "tracksuit-top", variant: "b", style: "ink" },
         sleeve: { item: "stripe-sleeve", variant: "a", style: "team" },
-        // ribbon-streamers has no kept variant.
         tail: { item: "big-bow", variant: "a", style: "white" },
         boots: { item: "platform-trainers", variant: "b", style: "white" },
         prop: { item: "corded-mic", variant: "b", style: "white" },
@@ -128,7 +131,7 @@ export const LOOKS = {
         // White on the ink fringe sleeve (rule 8); the twirl swings it up
         // behind the tail, clear of the white star buckle.
         prop: { item: "lasso", variant: "b", style: "white" },
-        // hay-bale has no kept variant; the barrel is barrel racing.
+        // The barrel is barrel racing.
         stage: { item: "sawdust-ring", variant: "a" }
       }
     },
@@ -145,8 +148,7 @@ export const LOOKS = {
       name: "Farmhand",
       outfit: {
         top: { item: "bandana", variant: "b", style: "white" },
-        // corn-cob has no kept variant and rope-coil (the Tail) none either;
-        // the ranch hand's rope comes in as the Prop instead.
+        // The ranch hand's rope comes in as the Prop.
         prop: { item: "lasso", variant: "c", style: "ink" },
         stage: { item: "egg-nest", variant: "a" }
       }
@@ -157,7 +159,8 @@ export const LOOKS = {
       outfit: {
         top: { item: "fringed-vest", variant: "a" },
         sleeve: { item: "fringe-sleeve", variant: "b", style: "ink" },
-        // No country Tail item has a keep yet.
+        // Gate 1 kept tail-bandana b by eye: country has a Tail at last.
+        tail: { item: "tail-bandana", variant: "b", style: "white" },
         prop: { item: "lasso", variant: "b", style: "white" },
         stage: { item: "sawdust-ring", variant: "a" }
       }
@@ -170,7 +173,7 @@ export const LOOKS = {
         top: { item: "open-shirt", variant: "b" },
         // White bell sleeve against the ink shirt: two values, not one mass.
         sleeve: { item: "flare-sleeve", variant: "c", style: "white" },
-        // platforms has no kept variant, so Fever goes without boots.
+        // Fever goes without boots: the lit floor carries the feet.
         stage: { item: "lit-floor", variant: "a" }
       }
     },
@@ -178,8 +181,7 @@ export const LOOKS = {
       name: "Studio 54",
       outfit: {
         top: { item: "dagger-collar", variant: "b", style: "white" },
-        // tinsel and feather-boa have no kept variant, nor does hand-fan; the
-        // mirror ball, raised overhead, is the club's own prop.
+        // The mirror ball, raised overhead, is the club's own prop.
         prop: { item: "mirror-ball-egg", variant: "c", style: "white" },
         stage: { item: "neon-flames", variant: "b" }
       }
@@ -187,9 +189,8 @@ export const LOOKS = {
     {
       name: "Roller",
       outfit: {
-        // satin-jacket has no kept variant. Every kept disco Sleeve is white,
-        // and the white satin sleeve swallowed the record's white sleeve
-        // (rule 8, 2.43:1), so Roller wears the ink sparkle shirt instead.
+        // The white satin sleeve swallowed the record's white sleeve (rule 8,
+        // 2.43:1), so Roller wears the ink sparkle shirt and no sleeve.
         top: { item: "open-shirt", variant: "c" },
         boots: { item: "roller-skates", variant: "a", style: "white" },
         prop: { item: "vinyl", variant: "b" }
@@ -201,11 +202,11 @@ export const LOOKS = {
       outfit: {
         top: { item: "open-shirt", variant: "c" },
         sleeve: { item: "satin-sleeve", variant: "b", style: "white" },
-        // No disco Tail item has a keep yet. Every kept disco Sleeve is white
-        // and every kept Prop is white or team, so this pair fails rule 8 on
-        // purpose: it is the gap (a dark kept Sleeve, or an ink Prop).
+        tail: { item: "tinsel", variant: "a", style: "white" },
         boots: { item: "roller-skates", variant: "b", style: "white" },
-        prop: { item: "vinyl", variant: "b" },
+        // The Gate 1 hand fan is an ink leaf: the ink Prop disco lacked, so a
+        // white Sleeve and a Prop finally pass rule 8 together.
+        prop: { item: "hand-fan", variant: "b", style: "ink" },
         stage: { item: "neon-flames", variant: "a" }
       }
     }

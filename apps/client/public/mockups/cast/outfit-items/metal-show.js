@@ -87,9 +87,6 @@ const guitarV = ({ J, deg, L, s, w, notch, n, nw = 2, h, flare = 1, body, detail
   return strapD + outlined(shapes) + bar(2.2, 4.6, 3.6) + bar(-n - 0.2, -n + 1.8, nw);
 };
 
-/** The pickup and nut bars: ink on a white or gold guitar, mutedWarm on an ink one, so the ink guitar is still an instrument. */
-const detailOf = (ctx) => (ctx.style === "ink" ? ctx.colors.mutedWarm : INK);
-
 /** Variant a's sling, shared with the worn variant b. */
 const SLUNG = { J: [27.5, 45.5], deg: 66, L: 19, s: 11, w: 5.6, notch: 11.5, n: 27, nw: 2.1, h: 7, flare: 1 };
 
@@ -194,15 +191,15 @@ export const ITEMS = [
     slot: "prop",
     name: "Flying V",
     note:
-      "The headline metal prop, white with the ink outline so it stands off an ink leather sleeve (white on bare chrome is 1.35:1, so it reads there by its outline and by the parts that leave the body). Every variant holds the guitar the way a player or a roadie does, never hung straight down under the belly (run 1's paper plane), and gives it a real Flying V: a deep notch between two chunky prongs, a short neck, a flared Gibson blade headstock, a pickup bar across the body and a nut bar at the headstock. Two dark cross-strokes in a white shape say instrument, not arrow; on the ink style they turn mutedWarm so the ink guitar keeps them.",
+      "The headline metal prop, white with the ink outline so it stands off an ink leather sleeve (white on bare chrome is 1.35:1, so it reads there by its outline and by the parts that leave the body). Every variant holds the guitar the way a player or a roadie does, never hung straight down under the belly (run 1's paper plane), and gives it a real Flying V: a deep notch between two chunky prongs, a short neck, a flared Gibson blade headstock, a pickup bar across the body and a nut bar at the headstock. Two dark cross-strokes in a white shape say instrument, not arrow. White or gold only: an ink guitar read as a black plank or a tombstone slab (Gate 1 dropped the ink style from every variant).",
     variants: [
       {
         key: "a",
-        note: "Slung across the back: the V body low at the hip with its prongs opening down either side of the near leg, the neck rising up and BACK across the wing and the tail root, the headstock out in the dark gap between the tail blades. Polish 1 made the body chunkier and the neck shorter (body 19 long and 22 across the tips, was 16 and 19; neck 27, was 30), so on bare chrome the V is a third of the guitar rather than a split end on a stick. The low prong still stops at about y 67.2 and the headstock tip near (13.7, 14.4).",
-        styles: ["white", "ink", "gold"],
+        note: "Slung across the back: the V body low at the hip with its prongs opening down either side of the near leg, the neck rising up and BACK across the wing and the tail root, the headstock out in the dark gap between the tail blades. Polish 1 made the body chunkier and the neck shorter (body 19 long and 22 across the tips, was 16 and 19; neck 27, was 30), so on bare chrome the V is a third of the guitar rather than a split end on a stick. The low prong still stops at about y 67.2 and the headstock tip near (13.7, 14.4). Gate 1 dropped the ink style, which read as a black plank; white is the default.",
+        styles: ["white", "gold"],
         whitePoints: 1,
         darkCentre: false,
-        draw: (ctx) => guitarV({ ...SLUNG, body: ctx.styleFill, detail: detailOf(ctx) })
+        draw: (ctx) => guitarV({ ...SLUNG, body: ctx.styleFill })
       },
       {
         key: "b",
@@ -210,15 +207,15 @@ export const ITEMS = [
         styles: ["white", "gold"],
         whitePoints: 1,
         darkCentre: false,
-        draw: (ctx) => guitarV({ ...SLUNG, body: ctx.styleFill, detail: detailOf(ctx), strap: { at: [42, 41.5], neck: 14, width: 2.6, color: ctx.colors.ember } })
+        draw: (ctx) => guitarV({ ...SLUNG, body: ctx.styleFill, strap: { at: [42, 41.5], neck: 14, width: 2.6, color: ctx.colors.ember } })
       },
       {
         key: "c",
-        note: "Hoisted: a's guitar lifted 8.5 units up the back and stood steeper (the neck 16° off vertical, was 24°; neck 23, was 27), the way a player raises the axe at the end of a song. The V sits on the wing instead of at the hip, so both legs stand clear under it (a's low prong hides the near shank, the one fault the critic found in a), and the neck rises over the dorsal spikes to a headstock at about (16, 6.5). Lifting it further fails the rules: a neck that towers more than 10 past the outline breaks the reach limit, and a longer one drops through the floor on the Chicken Dance clap. A low-angle carry with the neck out over the tail was tried and read as an arrow through the back. Replaces polish 1's c, the V laid back over the shoulder, which read as a delta jet or paper dart stuck in the back: here the V opens down on the body and the long neck rises out of it, so the guitar's proportions (a third body, two thirds neck) carry it.",
-        styles: ["white", "ink", "gold"],
+        note: "Hoisted: a's guitar lifted 8.5 units up the back and stood steeper (the neck 16° off vertical, was 24°; neck 23, was 27), the way a player raises the axe at the end of a song. The V sits on the wing instead of at the hip, so both legs stand clear under it (a's low prong hides the near shank, the one fault the critic found in a), and the neck rises over the dorsal spikes to a headstock at about (16, 6.5). Lifting it further fails the rules: a neck that towers more than 10 past the outline breaks the reach limit, and a longer one drops through the floor on the Chicken Dance clap. A low-angle carry with the neck out over the tail was tried and read as an arrow through the back. Replaces polish 1's c, the V laid back over the shoulder, which read as a delta jet or paper dart stuck in the back: here the V opens down on the body and the long neck rises out of it, so the guitar's proportions (a third body, two thirds neck) carry it. Gate 1 dropped the ink style, which read as a tombstone slab; white is the default.",
+        styles: ["white", "gold"],
         whitePoints: 1,
         darkCentre: false,
-        draw: (ctx) => guitarV({ ...SLUNG, J: [25.5, 37], deg: 74, n: 23, body: ctx.styleFill, detail: detailOf(ctx) })
+        draw: (ctx) => guitarV({ ...SLUNG, J: [25.5, 37], deg: 74, n: 23, body: ctx.styleFill })
       }
     ]
   },
@@ -232,38 +229,14 @@ export const ITEMS = [
       {
         key: "a",
         note:
-          "Crossbones under the belly, meat down: a wide X with the knuckles up at the wing and the chest. The X is raised and splayed so each ember meat lands OUTSIDE the legs, the back one behind the near leg and the front one ahead of the far leg's toes, both against the dark, with the orange shanks standing clear between them (run 1 put the meat on the toes and the two fused into one orange mass). Short meat (a third of the stick) keeps the bones long, which is the crossbones read.",
+          "Crossbones under the belly, meat down: a flat X (about 20° each way) with the knuckles up at the wing and the chest, at y 42.5. Gate 1 raised it 6.5 and splayed it 4 to 5 further (the meats sat on the legs and blurred into an orange skirt), so each ember meat now hangs out past the legs and above the hips, at about x 14..25 behind and x 53..64 ahead, lowest edge near y 57.5, at least 6 units sideways from the shanks, both against the dark beside the belly with the orange legs standing fully clear below. Short meat (a third of the stick) keeps the bones long, which is the crossbones read.",
         styles: ["white", "gold"],
         whitePoints: 1,
         darkCentre: false,
         draw: (ctx) =>
           outlined([
-            ...drumstickShapes({ k: [29, 49], t: [60, 60.5], r: 3.7, meat: 0.33, color: meatOf(ctx), boneColor: ctx.colors.white }),
-            ...drumstickShapes({ k: [51, 49.5], t: [19, 60.5], r: 3.7, meat: 0.33, color: meatOf(ctx), boneColor: ctx.colors.white })
-          ])
-      },
-      {
-        key: "b",
-        note: "Mid-fill: one stick up, one stick down, the instant between two hits. The raised stick leans back over the tail root with its meat in the dark above the back; the low stick swings forward under the belly with its meat ahead of the far leg's toes, where a puts its front meat. The two cross at the wing in a lopsided λ, neither a's low X nor c's high X, and the outline says motion: a drummer mid-beat. Replaces polish 1's tucked pair, whose low meats read as exhaust puffs out of the rump.",
-        styles: ["white", "gold"],
-        whitePoints: 1,
-        darkCentre: false,
-        draw: (ctx) =>
-          outlined([
-            ...drumstickShapes({ k: [24, 48], t: [58, 61], r: 3.7, meat: 0.33, color: meatOf(ctx), boneColor: ctx.colors.white }),
-            ...drumstickShapes({ k: [36, 50], t: [24, 10], r: 4, meat: 0.42, color: meatOf(ctx), boneColor: ctx.colors.white })
-          ])
-      },
-      {
-        key: "c",
-        note: "Raised: the sticks crossed high behind the back like a drummer counting in, knuckles down at the wing, the X up over the tail root and the two ember meats fanned out in the dark above the tail, as far from the orange feet as the bird allows. Kept behind the head column (x < 34) at rest; on the Chicken Dance clap they swing down behind and stop at y 72.",
-        styles: ["white", "gold"],
-        whitePoints: 1,
-        darkCentre: false,
-        draw: (ctx) =>
-          outlined([
-            ...drumstickShapes({ k: [33, 44], t: [12, 13], r: 4, meat: 0.42, color: meatOf(ctx), boneColor: ctx.colors.white }),
-            ...drumstickShapes({ k: [18, 45], t: [30, 11], r: 4, meat: 0.42, color: meatOf(ctx), boneColor: ctx.colors.white })
+            ...drumstickShapes({ k: [31, 42.5], t: [64, 55], r: 3.7, meat: 0.33, color: meatOf(ctx), boneColor: ctx.colors.white }),
+            ...drumstickShapes({ k: [49, 42.5], t: [14, 55], r: 3.7, meat: 0.33, color: meatOf(ctx), boneColor: ctx.colors.white })
           ])
       }
     ]
