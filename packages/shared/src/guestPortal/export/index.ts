@@ -6,7 +6,7 @@
 // Imports its guards with the `.ts` suffix, like ../routes, because the pull runs under plain
 // `node`, which resolves no `.js` alias (see ../routes).
 import { isNonNegativeInteger, isRecord } from "../../guards/index.ts";
-import { validateOutfitsByGenre, type OutfitsByGenre } from "../../outfit/index.ts";
+import type { OutfitsByGenre } from "../../outfit/index.ts";
 
 export type AdminGuestExportHead = {
   // The SHA-256 hex of the PNG's bytes, which the pull checks the download against and names the
@@ -30,7 +30,8 @@ export type AdminGuestExport = {
   // Every genre's outfit the guest has built (docs/research/bird-wardrobe.md §2.4: all of them, so
   // a reseat on the night keeps the guest dressed), which the pull writes onto the player's
   // `outfits`. Optional because the Worker does not send it until the wardrobe ships on the
-  // portal; the shape is checked here and the items are not, the same tolerance the pack has.
+  // portal. Only "an object" is checked here: one guest's malformed outfit must not refuse the
+  // whole export, so the pull checks each guest's shape itself and leaves a bad one undressed.
   outfits?: OutfitsByGenre;
 };
 
@@ -55,7 +56,7 @@ export const isAdminGuestExport = (value: unknown): value is AdminGuestExport =>
     typeof value.displayName === "string" &&
     (value.head === null || isExportHead(value.head)) &&
     (value.team === null || (typeof value.team === "string" && value.team.length > 0)) &&
-    (value.outfits === undefined || validateOutfitsByGenre(value.outfits).length === 0)
+    (value.outfits === undefined || isRecord(value.outfits))
   );
 };
 

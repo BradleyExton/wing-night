@@ -40,12 +40,11 @@ test("does read a guest's outfits whatever items they name when the shape is rig
   assert.equal(isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits }]), true);
 });
 
-test("does refuse a guest's outfits when they are not genre -> slot -> choice", () => {
-  for (const outfits of [[], { metal: { hat: { item: "x" } } }, { metal: { top: "battle-vest-a" } }]) {
-    assert.equal(
-      isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits }]),
-      false,
-      JSON.stringify(outfits)
-    );
-  }
+test("does read a guest's malformed outfits rather than refuse every guest, and refuse a non-object", () => {
+  const read = (outfits: unknown): boolean =>
+    isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits }]);
+
+  assert.equal(read({ metal: { hat: { item: "x" } } }), true);
+  assert.equal(read([]), false);
+  assert.equal(read("metal"), false);
 });

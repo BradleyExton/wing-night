@@ -321,3 +321,15 @@ test("does list outfit changes in the dry-run description", () => {
 
   assert.ok(describePlan(result).includes("  Rob: (bare) -> metal"));
 });
+
+test("does leave a player's outfits alone and say so when their guest's outfits are malformed", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: ROB_METAL }, { name: "Ada" }] };
+  const result = plan(playersFile, [
+    { ...guest("g_rob", "Rob"), outfits: { metal: { hat: { item: "x" } } } as unknown as OutfitsByGenre },
+    { ...guest("g_ada", "Ada"), outfits: ROB_METAL }
+  ]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: ROB_METAL }, { name: "Ada", outfits: ROB_METAL }]);
+  assert.deepEqual(result.outfitNotes, [{ name: "Rob", problem: "outfits.metal.hat is not a slot (top, sleeve, tail, boots, prop, stage, move)" }]);
+  assert.ok(describePlan(result)[0]?.startsWith("Note: Rob's outfits were not pulled"));
+});

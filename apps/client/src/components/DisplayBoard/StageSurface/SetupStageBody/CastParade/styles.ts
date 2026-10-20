@@ -57,7 +57,10 @@ export const memberFacingLeft = "-scale-x-100";
 // Inside the member, so the bounce composes with that mirror rather than
 // overwriting it — an animation's transform beats a utility's, and a bird
 // that lost its flip would dance with its back to the room.
-export const jive = "block h-full";
+// Positioned, so the bird always paints over the pool or the Stage under it (both
+// absolute siblings before it): an unpositioned bird would sink under a worn
+// Stage while it walks and only rise over it once the dance gave it a transform.
+export const jive = "relative block h-full";
 
 // Off its feet: a hop, a lean and a little wander, at this bird's own tempo
 // and phase (`--cast-jive-*` from the cast's `resolveCharacterGroove`, set on the
@@ -65,7 +68,7 @@ export const jive = "block h-full";
 // and not the whole bird swinging. Only while the pair is DANCING — the walk
 // on and off is the group's own transform and wants no wobble under it.
 export const jiveDancing =
-  "block h-full origin-bottom will-change-transform motion-safe:[animation:cast-jive_var(--cast-jive-ms,820ms)_ease-in-out_var(--cast-jive-delay,0ms)_infinite]";
+  "relative block h-full origin-bottom will-change-transform motion-safe:[animation:cast-jive_var(--cast-jive-ms,820ms)_ease-in-out_var(--cast-jive-delay,0ms)_infinite]";
 
 // The pool of shade under a bird, the same depth cue JOUST draws on the sand
 // (DESIGN.md §2.7): without it the floor is a strip of stickers pasted on the

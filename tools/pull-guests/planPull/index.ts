@@ -23,6 +23,7 @@
 // Brad dressed by hand survives a pull.
 import { slugifyName } from "../../../packages/avatar-head/src/index.ts";
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
+import { validateOutfitsByGenre } from "../../../packages/shared/src/outfit/index.ts";
 
 // Where a head's file goes, pack-relative: `avatarSrc` names it from the assets root
 // (`avatars/<file>`, no leading slash, as `pnpm import:avatars` writes it), and the file itself
@@ -88,6 +89,13 @@ export type OutfitChange = {
   to: string[];
 };
 
+// A guest whose outfits are not genre -> slot -> { item, style? }: they are not pulled, and the
+// player keeps what players.json has.
+export type OutfitNote = {
+  name: string;
+  problem: string;
+};
+
 // A guest whose portal name no longer matches their player's: the player keeps theirs.
 export type NameNote = {
   name: string;
@@ -101,6 +109,7 @@ export type PullPlan = {
   avatarChanges: AvatarChange[];
   teamChanges: TeamChange[];
   outfitChanges: OutfitChange[];
+  outfitNotes: OutfitNote[];
   nameNotes: NameNote[];
   downloads: HeadDownload[];
   playersChanged: boolean;
@@ -253,6 +262,7 @@ export const planPull = ({
   const avatarChanges: AvatarChange[] = [];
   const teamChanges: TeamChange[] = [];
   const outfitChanges: OutfitChange[] = [];
+  const outfitNotes: OutfitNote[] = [];
   const nameNotes: NameNote[] = [];
   const downloads: HeadDownload[] = [];
   let playersChanged = false;
@@ -289,8 +299,13 @@ export const planPull = ({
       playersChanged = true;
     }
 
-    // A dressed guest replaces every outfit; an undressed one leaves the pack's alone.
-    if (
+    // A dressed guest replaces every outfit; an undressed one leaves the pack's alone, and so does
+    // one whose outfits the night server would refuse to boot on.
+    const outfitIssue = guest.outfits === undefined ? undefined : validateOutfitsByGenre(guest.outfits)[0];
+
+    if (outfitIssue !== undefined) {
+      outfitNotes.push({ name: player.name, problem: `outfits.${outfitIssue.path} ${outfitIssue.message}` });
+    } else if (
       guest.outfits !== undefined &&
       Object.keys(guest.outfits).length > 0 &&
       !isSameJson(player.outfits, guest.outfits)
@@ -346,6 +361,7 @@ export const planPull = ({
     avatarChanges,
     teamChanges,
     outfitChanges,
+    outfitNotes,
     nameNotes,
     downloads,
     playersChanged,
@@ -364,9 +380,10 @@ export const listPlannedWrites = (plan: PullPlan): string[] => [
 // The diff a dry run prints, and a real run prints before it writes.
 export const describePlan = (plan: PullPlan): string[] => {
   const writes = listPlannedWrites(plan);
-  const notes = plan.nameNotes.map(
-    (note) => `Note: portal name is now "${note.portalName}"; player keeps "${note.name}".`
-  );
+  const notes = [
+    ...plan.nameNotes.map((note) => `Note: portal name is now "${note.portalName}"; player keeps "${note.name}".`),
+    ...plan.outfitNotes.map((note) => `Note: ${note.name}'s outfits were not pulled (${note.problem}); the player keeps theirs.`)
+  ];
 
   if (writes.length === 0) {
     return [...notes, "Nothing to pull: the pack already has every guest and every head."];
