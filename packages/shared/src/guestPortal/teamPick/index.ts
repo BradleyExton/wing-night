@@ -1,30 +1,29 @@
 // A guest's team on wingnight.tv before the party: which of the night's teams they picked, and
-// (from milestone 3 of docs/guest-portal-team-pick-plan.md) what their bird wears on each team's
-// rail. The teams themselves are the pack's (`teaser-roster.json`, read by the Worker through its
-// ASSETS binding): a pick names one by its exact roster name, and a name the roster no longer has
-// is an orphaned pick — shown on /me as "pick again" and on /admin as unseated.
+// what their bird wears on each genre's rail (docs/research/bird-wardrobe.md). The teams themselves
+// are the pack's (`teaser-roster.json`, read by the Worker through its ASSETS binding): a pick names
+// one by its exact roster name, and a name the roster no longer has is an orphaned pick — shown on
+// /me as "pick again" and on /admin as unseated.
 import { isRecord } from "../../guards/index.js";
+import { isOutfit, type Outfit, type OutfitsByGenre } from "../../outfit/index.js";
 import { GENRE_KEYS, type GenreKey, type TeamColorToken } from "../../teamTheme/index.js";
 import type { Team } from "../../team/index.js";
 
-// Milestone 1 carries the outfit row empty: `packages/shared/src/outfit` (milestone 3) brings the
-// slot and item vocabulary and replaces this shape-only draft with `Outfit`. Until then it is a
-// map of slot -> item id, strings both, kept per genre so a bird dressed for metal keeps that
-// outfit while the guest tries disco (plan, decision 6).
-export type OutfitDraft = Record<string, string>;
-
+// The outfits are kept per genre, in the pick's row, so a bird dressed for metal keeps that outfit
+// while the guest tries disco, and gets it back on switching home (research §2.4). A genre the
+// guest dressed and then stripped bare is kept too, as an empty outfit: that is how "cleared"
+// reaches the pack, where a genre missing from the map means "never dressed" and leaves Brad's
+// hand-dressing alone (tools/pull-guests).
 export type TeamPick = {
   teamName: string;
-  outfitsByGenre: Partial<Record<GenreKey, OutfitDraft>>;
+  outfitsByGenre: OutfitsByGenre;
 };
 
 const isGenreKey = (value: string): value is GenreKey => (GENRE_KEYS as readonly string[]).includes(value);
 
-const isOutfitDraft = (value: unknown): value is OutfitDraft =>
-  isRecord(value) && Object.values(value).every((item) => typeof item === "string");
-
-const isOutfitsByGenre = (value: unknown): value is TeamPick["outfitsByGenre"] =>
-  isRecord(value) && Object.entries(value).every(([genre, outfit]) => isGenreKey(genre) && isOutfitDraft(outfit));
+// Shape only (genre -> slot -> { item, style? }): whether an item is on the rail is the strict
+// reader's to say at the write, and the tolerant one's everywhere after.
+const isOutfitsByGenre = (value: unknown): value is OutfitsByGenre =>
+  isRecord(value) && Object.entries(value).every(([genre, outfit]) => isGenreKey(genre) && isOutfit(outfit));
 
 export const isTeamPick = (value: unknown): value is TeamPick => {
   return (
@@ -42,6 +41,23 @@ export type TeamPickRequest = {
 
 export const isTeamPickRequest = (value: unknown): value is TeamPickRequest =>
   isRecord(value) && typeof value.teamName === "string" && value.teamName.length > 0;
+
+// PUT myOutfit's body: the whole outfit for one genre, which replaces that genre's and leaves
+// every other genre's alone. `{}` strips the bird bare there. The genre is the one the page was
+// dressing — the Worker refuses it unless it is the guest's team's — and the outfit is read
+// strictly by the Worker (parseOutfit), not here.
+export type OutfitRequest = {
+  genre: GenreKey;
+  outfit: Outfit;
+};
+
+export const isOutfitRequest = (value: unknown): value is OutfitRequest =>
+  isRecord(value) && typeof value.genre === "string" && isGenreKey(value.genre) && isRecord(value.outfit);
+
+// PUT myOutfit's answer: the pick as stored now, every genre's outfit in it.
+export type PortalOutfitSaved = {
+  team: TeamPick;
+};
 
 // POST resolveAdminGuestTeamRoute's body: a team to seat the guest on, or null to unseat them.
 export type AdminTeamSeatRequest = {
@@ -73,6 +89,10 @@ export type PortalTeamMember = {
   displayName: string;
   // The kept head's SHA-256 (PortalAvatarStatus.headHash), for `?v=` on resolveGuestAvatarRoute.
   headHash: string | null;
+  // What they wear on this team: their outfit for its genre, read tolerantly, so the wardrobe's
+  // team strip shows them as the parade will. Absent while they are bare there, and on the
+  // unseated, who have no team to dress for.
+  outfit?: Outfit;
 };
 
 export type PortalTeam = {

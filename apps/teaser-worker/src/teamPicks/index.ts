@@ -2,6 +2,7 @@
 // need them: a guest's own pick, the list GET teams answers, the board /admin reads, and the
 // switch. The writes live with their routes (src/guestRoutes seats under the cap, src/adminRoutes
 // seats over it); this module is the shared reads and the one seating query behind them.
+import { isRecord, resolveGenreKey, resolveWornOutfit } from "@wingnight/shared";
 import {
   isTeamPick,
   resolveTeamSeatCap,
@@ -25,6 +26,7 @@ type SeatingRow = {
   guest_id: string;
   display_name: string;
   team_name: string | null;
+  outfits_json: string | null;
   head_hash: string | null;
 };
 
@@ -34,7 +36,8 @@ type PickRow = {
 };
 
 // A stored pick read back through the same guard that guards the wire, so a row the schema has
-// outgrown reads as no pick rather than a malformed one.
+// outgrown reads as no pick rather than a malformed one. Every outfit in it was read strictly on
+// the way in (PUT myOutfit), so the guard only has the shape to check.
 export const parsePickRow = (row: PickRow): TeamPick | null => {
   try {
     const pick: unknown = { teamName: row.team_name, outfitsByGenre: JSON.parse(row.outfits_json) };
@@ -81,7 +84,7 @@ export const readGuestCount = async (deps: PortalDeps): Promise<number> => {
 const readSeatingRows = async (deps: PortalDeps): Promise<SeatingRow[]> => {
   const { results } = await deps.db
     .prepare(
-      `SELECT g.guest_id, g.display_name, p.team_name, ${HEAD_HASH_SUBQUERY} AS head_hash
+      `SELECT g.guest_id, g.display_name, p.team_name, p.outfits_json, ${HEAD_HASH_SUBQUERY} AS head_hash
        FROM guests g LEFT JOIN team_picks p ON p.guest_id = g.guest_id
        ORDER BY g.display_name COLLATE NOCASE, g.guest_id`
     )
@@ -95,6 +98,25 @@ const toMember = (row: SeatingRow): PortalTeamMember => ({
   displayName: row.display_name,
   headHash: row.head_hash
 });
+
+// One genre's outfit out of a row's JSON, read tolerantly — an item cut since the guest wore it
+// just goes — or undefined when they are bare there. A row that is not JSON is a bare bird: the
+// team strip is decoration, and nothing on it is worth failing the list over.
+const readMemberOutfit = (outfitsJson: string | null, genre: string | undefined): PortalTeamMember["outfit"] => {
+  if (outfitsJson === null) {
+    return undefined;
+  }
+
+  try {
+    const outfits: unknown = JSON.parse(outfitsJson);
+    const genreKey = resolveGenreKey(genre);
+    const worn = resolveWornOutfit(genreKey, isRecord(outfits) ? outfits[genreKey] : undefined);
+
+    return Object.keys(worn).length === 0 ? undefined : worn;
+  } catch {
+    return undefined;
+  }
+};
 
 // A member belongs to the roster team whose name their pick matches EXACTLY; a pick naming any
 // other team is orphaned (the pack renamed the team) and lands among the unseated.
@@ -113,7 +135,14 @@ export const readTeamBoard = async (deps: PortalDeps, roster: PortalRoster): Pro
   for (const row of rows) {
     const team = row.team_name === null ? undefined : teamsByName.get(row.team_name);
 
-    (team === undefined ? unseated : team.members).push(toMember(row));
+    if (team === undefined) {
+      unseated.push(toMember(row));
+      continue;
+    }
+
+    const outfit = readMemberOutfit(row.outfits_json, team.genre);
+
+    team.members.push(outfit === undefined ? toMember(row) : { ...toMember(row), outfit });
   }
 
   return { teams, seatCap: resolveTeamSeatCap(rows.length, roster.teams.length), picksClosed, unseated };

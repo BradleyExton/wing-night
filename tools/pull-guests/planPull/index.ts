@@ -20,7 +20,10 @@
 // Outfits come down the same way: a guest who has dressed their bird REPLACES the player's whole
 // `outfits` map (every genre, so a reseat keeps them dressed), and a guest who never opened the
 // wardrobe (no outfits, or an empty map) leaves whatever players.json has — which is how a bird
-// Brad dressed by hand survives a pull.
+// Brad dressed by hand survives a pull. A genre the guest dressed and then stripped bare comes as
+// an empty outfit (`{ metal: {} }`), which is a dressed map like any other: it replaces the
+// player's, and their bird goes to the party bare. That is the one way a guest undresses a bird
+// the pack already has.
 import { slugifyName } from "../../../packages/avatar-head/src/index.ts";
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
 import { validateOutfitsByGenre } from "../../../packages/shared/src/outfit/index.ts";
@@ -153,7 +156,14 @@ export const readAvatarManifest = (value: unknown, filePath: string): AvatarMani
 // difference that is not a change, and the pull writes the export's order.
 const isSameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-const dressedGenres = (outfits: unknown): string[] => (isRecord(outfits) ? Object.keys(outfits).sort() : []);
+// The genres a bird is actually dressed for: one stripped bare (`{}`) is no outfit to list.
+const dressedGenres = (outfits: unknown): string[] =>
+  isRecord(outfits)
+    ? Object.entries(outfits)
+        .filter(([, outfit]) => isRecord(outfit) && Object.keys(outfit).length > 0)
+        .map(([genre]) => genre)
+        .sort()
+    : [];
 
 export const resolveHeadFileName = (slug: string, sha256: string): string =>
   `${slug}-${sha256.slice(0, HEAD_HASH_PREFIX_LENGTH)}.png`;
@@ -403,7 +413,7 @@ export const describePlan = (plan: PullPlan): string[] => {
     ...plan.teamChanges.map((change) => `  ${change.name}: ${change.from ?? "(unseated)"} -> ${change.to}`),
     `Outfit changes (${plan.outfitChanges.length}):`,
     ...plan.outfitChanges.map(
-      (change) => `  ${change.name}: ${change.from.join(", ") || "(bare)"} -> ${change.to.join(", ")}`
+      (change) => `  ${change.name}: ${change.from.join(", ") || "(bare)"} -> ${change.to.join(", ") || "(bare)"}`
     ),
     `Files to write (${writes.length}):`,
     ...writes.map((write) => `  ${write}${sizeByWrite.get(write) ?? ""}`)

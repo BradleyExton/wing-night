@@ -3,12 +3,14 @@
 // and a deploy boundary, so a page that got an answer it cannot read says so instead of
 // rendering `undefined`. Shape checks only, as deep as a caller reads.
 import { isNonNegativeInteger, isRecord } from "../../guards/index.js";
+import { isOutfit } from "../../outfit/index.js";
 import { isTeamColorToken } from "../../teamTheme/index.js";
 import { PORTAL_ERROR_CODES, type PortalErrorCode } from "../index.js";
 import {
   isTeamPick,
   type AdminPicksState,
   type AdminTeamBoard,
+  type PortalOutfitSaved,
   type PortalTeam,
   type PortalTeamList,
   type PortalTeamMember,
@@ -113,7 +115,13 @@ export const isAdminAvatarReset = (value: unknown): value is AdminAvatarReset =>
 };
 
 const isPortalTeamMember = (value: unknown): value is PortalTeamMember => {
-  return isRecord(value) && isString(value.guestId) && isString(value.displayName) && isNullableString(value.headHash);
+  return (
+    isRecord(value) &&
+    isString(value.guestId) &&
+    isString(value.displayName) &&
+    isNullableString(value.headHash) &&
+    (value.outfit === undefined || isOutfit(value.outfit))
+  );
 };
 
 // `genre` and `color` are optional on the way out, as on a roster `Team`: absent, not null.
@@ -139,6 +147,10 @@ export const isPortalTeamList = (value: unknown): value is PortalTeamList => {
 
 export const isPortalTeamPicked = (value: unknown): value is PortalTeamPicked => {
   return isRecord(value) && isTeamPick(value.team) && isPortalTeamList(value.teams);
+};
+
+export const isPortalOutfitSaved = (value: unknown): value is PortalOutfitSaved => {
+  return isRecord(value) && isTeamPick(value.team);
 };
 
 export const isAdminTeamBoard = (value: unknown): value is AdminTeamBoard => {

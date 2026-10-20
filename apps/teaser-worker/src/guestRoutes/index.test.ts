@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { PortalMe, PortalTeamList, PortalTeamPicked } from "@wingnight/shared/guestPortal";
+import type { OutfitsByGenre } from "@wingnight/shared";
+import type { PortalMe, PortalOutfitSaved, PortalTeamList, PortalTeamPicked } from "@wingnight/shared/guestPortal";
 
 import { resolveHeadKey } from "../avatarStore/index.ts";
 import { FAKE_HEAD_PNG_BASE64 } from "../headPainter/fakeHead.ts";
@@ -11,7 +12,8 @@ const GUEST_ROUTES = [
   ["GET", "/api/me"],
   ["GET", "/api/guests/g_ana/avatar"],
   ["GET", "/api/teams"],
-  ["PUT", "/api/me/team"]
+  ["PUT", "/api/me/team"],
+  ["PUT", "/api/me/outfit"]
 ] as const;
 
 const [IRON_HENS, MIRROR_BALLS, BARN_BURNERS] = TEST_TEAM_NAMES as [string, string, string];
@@ -27,6 +29,15 @@ const portalWithGuests = (options?: Parameters<typeof createTestPortal>[0]): Tes
 
 const pickTeam = (portal: TestPortal, cookie: string, teamName: unknown): Promise<Response> =>
   portal.request("PUT", "/api/me/team", { cookie, body: { teamName } });
+
+const saveOutfit = (portal: TestPortal, cookie: string, body: unknown): Promise<Response> =>
+  portal.request("PUT", "/api/me/outfit", { cookie, body });
+
+const THRASH = {
+  top: { item: "battle-vest-a" },
+  sleeve: { item: "leather-sleeve-a", style: "ink" },
+  prop: { item: "flying-v-a", style: "gold" }
+} as const;
 
 const readMe = async (portal: TestPortal, cookie: string): Promise<PortalMe> =>
   (await (await portal.request("GET", "/api/me", { cookie })).json()) as PortalMe;
@@ -160,7 +171,7 @@ test("does seat the guest and answer the pick with the list when they pick a tea
 test("does move the guest and keep every outfit in the row when they switch teams", async () => {
   const portal = portalWithGuests();
   const cookie = await portal.signInAs("g_rob");
-  const outfits = { metal: { torso: "battle-vest" }, disco: { wing: "medallion" } };
+  const outfits: OutfitsByGenre = { metal: { top: { item: "battle-vest-a" } }, disco: { tail: { item: "tinsel-a" } } };
 
   await pickTeam(portal, cookie, IRON_HENS);
   portal.db.raw
@@ -293,6 +304,171 @@ test("does refuse with bad_request when the pick names a team the roster lacks o
   }
 
   assert.equal(readPickRow(portal, "g_rob"), undefined);
+});
+
+test("does keep the outfit for the team's genre and answer with every genre's when a guest dresses their bird", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw
+    .prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'")
+    .run(JSON.stringify({ disco: { tail: { item: "tinsel-a" } } }));
+
+  const response = await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH });
+  const saved = (await response.json()) as PortalOutfitSaved;
+  const expected = { disco: { tail: { item: "tinsel-a" } }, metal: THRASH };
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(saved.team, { teamName: IRON_HENS, outfitsByGenre: expected });
+  assert.deepEqual(JSON.parse(readPickRow(portal, "g_rob")?.outfits_json ?? ""), expected);
+  assert.deepEqual((await readMe(portal, cookie)).team?.outfitsByGenre, expected);
+});
+
+test("does replace the genre's whole outfit, keeping an emptied genre as {}, when the guest strips their bird", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH });
+  await saveOutfit(portal, cookie, { genre: "metal", outfit: { top: { item: "battle-vest-a" } } });
+
+  assert.deepEqual((await readMe(portal, cookie)).team?.outfitsByGenre, { metal: { top: { item: "battle-vest-a" } } });
+
+  const cleared = await saveOutfit(portal, cookie, { genre: "metal", outfit: {} });
+
+  assert.equal(cleared.status, 200);
+  assert.deepEqual(((await cleared.json()) as PortalOutfitSaved).team.outfitsByGenre, { metal: {} });
+  assert.equal(readPickRow(portal, "g_rob")?.outfits_json, '{"metal":{}}');
+});
+
+test("does keep each genre's outfit when the guest switches teams and dresses for the other", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH });
+  await pickTeam(portal, cookie, MIRROR_BALLS);
+  await saveOutfit(portal, cookie, { genre: "disco", outfit: { tail: { item: "tinsel-a" } } });
+  await pickTeam(portal, cookie, IRON_HENS);
+
+  assert.deepEqual((await readMe(portal, cookie)).team, {
+    teamName: IRON_HENS,
+    outfitsByGenre: { metal: THRASH, disco: { tail: { item: "tinsel-a" } } }
+  });
+});
+
+test("does refuse with outfit_invalid and write nothing when the outfit is not one the genre's wardrobe has", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+
+  for (const outfit of [
+    { hat: { item: "battle-vest-a" } },
+    { top: { item: "no-such-thing" } },
+    { sleeve: { item: "battle-vest-a" } },
+    { tail: { item: "tinsel-a" } },
+    { prop: { item: "flying-v-a", style: "team" } },
+    { top: "battle-vest-a" }
+  ]) {
+    const response = await saveOutfit(portal, cookie, { genre: "metal", outfit });
+
+    assert.equal(response.status, 400, JSON.stringify(outfit));
+    assert.deepEqual(await response.json(), { error: "outfit_invalid" });
+  }
+
+  // Country's bird shows no shank, so it has no Boots slot at all.
+  await pickTeam(portal, cookie, BARN_BURNERS);
+
+  const boots = await saveOutfit(portal, cookie, { genre: "country", outfit: { boots: { item: "combat-boots-a" } } });
+
+  assert.equal(boots.status, 400);
+  assert.equal(readPickRow(portal, "g_rob")?.outfits_json, "{}");
+});
+
+test("does refuse with bad_request when the body is not a genre and an outfit", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+
+  for (const body of [{ outfit: {} }, { genre: "Metal", outfit: {} }, { genre: "metal", outfit: [] }, "x"]) {
+    const response = await saveOutfit(portal, cookie, body);
+
+    assert.equal(response.status, 400, JSON.stringify(body));
+    assert.deepEqual(await response.json(), { error: "bad_request" });
+  }
+});
+
+test("does refuse with too_large and read nothing when the body is past the cap", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+
+  const padded = { genre: "metal", outfit: { top: { item: "battle-vest-a" } }, pad: "x".repeat(2100) };
+  const response = await saveOutfit(portal, cookie, padded);
+
+  assert.equal(response.status, 413);
+  assert.deepEqual(await response.json(), { error: "too_large" });
+  assert.equal(readPickRow(portal, "g_rob")?.outfits_json, "{}");
+});
+
+test("does refuse with no_team when the guest has no team, an orphaned one, or one of another genre", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  const unseated = await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH });
+
+  assert.equal(unseated.status, 409);
+  assert.deepEqual(await unseated.json(), { error: "no_team" });
+
+  // A page left open on the metal wardrobe after the guest moved to disco.
+  await pickTeam(portal, cookie, MIRROR_BALLS);
+
+  const stale = await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH });
+
+  assert.equal(stale.status, 409);
+  assert.equal(readPickRow(portal, "g_rob")?.outfits_json, "{}");
+
+  portal.db.raw.prepare("UPDATE team_picks SET team_name = 'Gone Team' WHERE guest_id = 'g_rob'").run();
+
+  assert.equal((await saveOutfit(portal, cookie, { genre: "disco", outfit: {} })).status, 409);
+});
+
+test("does keep the wardrobe open when Brad has closed picks", async () => {
+  const portal = portalWithGuests();
+  const cookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, cookie, IRON_HENS);
+  portal.db.raw.prepare("INSERT INTO settings (key, value) VALUES ('picks_closed', '1')").run();
+
+  assert.equal((await saveOutfit(portal, cookie, { genre: "metal", outfit: THRASH })).status, 200);
+});
+
+test("does show each member in the outfit for their team's genre, read tolerantly, when the teams are read", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+  const anaCookie = await portal.signInAs("g_ana");
+
+  await pickTeam(portal, robCookie, IRON_HENS);
+  await pickTeam(portal, anaCookie, MIRROR_BALLS);
+  // Rob dressed for metal and disco and wears an item cut since; Ana only ever dressed for metal.
+  portal.db.raw
+    .prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'")
+    .run(JSON.stringify({ metal: { ...THRASH, tail: { item: "cut-since" } }, disco: { tail: { item: "tinsel-a" } } }));
+  portal.db.raw
+    .prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_ana'")
+    .run(JSON.stringify({ metal: THRASH }));
+
+  const teams = (await readTeams(portal, robCookie)).teams;
+
+  // Read as worn: the cut tail is gone and every choice carries its style, the default when none.
+  assert.deepEqual(teams[0]?.members, [
+    { guestId: "g_rob", displayName: "Rob", headHash: null, outfit: { ...THRASH, top: { item: "battle-vest-a", style: "ink" } } }
+  ]);
+  assert.deepEqual(teams[1]?.members, [{ guestId: "g_ana", displayName: "Ana", headHash: null }]);
 });
 
 test("does read a pick the guard no longer accepts as no pick when /api/me is read", async () => {

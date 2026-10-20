@@ -47,6 +47,9 @@ const ERROR_STATUS: Record<PortalErrorCode, number> = {
   // PUT myTeam: the seat or the window is gone, not the request's fault.
   team_full: 409,
   picks_closed: 409,
+  // PUT myOutfit: the team under the page changed; an outfit the wardrobe does not have.
+  no_team: 409,
+  outfit_invalid: 400,
   server_error: 500
 };
 

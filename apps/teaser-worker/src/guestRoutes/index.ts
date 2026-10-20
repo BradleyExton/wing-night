@@ -1,16 +1,20 @@
 // What a signed-in guest can read and write: themself, the night's teams and their own pick of
-// one, any guest's kept head (the heads on a team tile), and how far along their own head is
+// one, their bird's outfit for that team's genre, any guest's kept head (the heads on a team tile), and how far along their own head is
 // (src/avatarRoutes).
+import { parseOutfit, resolveGenreKey } from "@wingnight/shared";
 import {
+  OUTFIT_REQUEST_MAX_BYTES,
   PORTAL_API_ROUTES,
+  isOutfitRequest,
   isTeamPickRequest,
   resolveTeamSeatCap,
   type PortalMe,
+  type PortalOutfitSaved,
   type PortalTeamPicked
 } from "@wingnight/shared/guestPortal";
 
 import { readAvatarStatus, serveHead } from "../avatarStore/index.ts";
-import { errorResponse, jsonResponse, readJsonBody } from "../http/index.ts";
+import { errorResponse, jsonResponse, readContentLength, readJsonBody } from "../http/index.ts";
 import { findRosterTeam, readRoster } from "../roster/index.ts";
 import type { GuestContext, PortalRoute } from "../routeContext/index.ts";
 import { readGuestCount, readPicksClosed, readTeamList, readTeamPick } from "../teamPicks/index.ts";
@@ -102,6 +106,88 @@ const pickTeam = async ({ request, url, deps, session }: GuestContext): Promise<
   return jsonResponse(picked);
 };
 
+// The JSON body of a small request, or "too_large" past the cap — by its declared length before a
+// byte is read, and by what actually came when it declared none.
+const readCappedJsonBody = async (request: Request, maxBytes: number): Promise<unknown> => {
+  const declaredLength = readContentLength(request);
+
+  if (declaredLength !== null && declaredLength > maxBytes) {
+    return "too_large";
+  }
+
+  const bytes = new Uint8Array(await request.arrayBuffer());
+
+  if (bytes.byteLength > maxBytes) {
+    return "too_large";
+  }
+
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+  } catch {
+    return undefined;
+  }
+};
+
+// Every tap in the wardrobe is a save: one genre's whole outfit, read strictly for that genre
+// (parseOutfit), written into the pick's row beside every other genre's. The genre must be the
+// guest's team's — a page left open across a team switch is told so (no_team) rather than
+// dressing a bird for a team they left. The write is one statement that sets just that genre's
+// key, and only while the row still names the team that was checked, so a switch racing it wins
+// and the outfit is refused. `{}` is kept as `{}`: the guest stripped this genre bare, which the
+// pull must carry down (research §2.4). Picks closing leaves the wardrobe open.
+const saveOutfit = async ({ request, url, deps, session }: GuestContext): Promise<Response> => {
+  const body = await readCappedJsonBody(request, OUTFIT_REQUEST_MAX_BYTES);
+
+  if (body === "too_large") {
+    return errorResponse("too_large");
+  }
+
+  if (!isOutfitRequest(body)) {
+    return errorResponse("bad_request");
+  }
+
+  const outfit = parseOutfit(body.genre, body.outfit);
+
+  if (outfit === null) {
+    return errorResponse("outfit_invalid");
+  }
+
+  const roster = await readRoster(deps, url.origin);
+
+  if (roster === null) {
+    return errorResponse("server_error");
+  }
+
+  const current = await readTeamPick(deps, session.guestId);
+  const team = current === null ? undefined : findRosterTeam(roster, current.teamName);
+
+  if (team === undefined || resolveGenreKey(team.genre) !== body.genre) {
+    return errorResponse("no_team");
+  }
+
+  const { meta } = await deps.db
+    .prepare(
+      `UPDATE team_picks SET outfits_json = json_set(outfits_json, ?, json(?)), updated_at = ?
+       WHERE guest_id = ? AND team_name = ?`
+    )
+    .bind(`$.${body.genre}`, JSON.stringify(outfit), deps.now(), session.guestId, team.name)
+    .run();
+
+  if (meta.changes === 0) {
+    return errorResponse("no_team");
+  }
+
+  const saved = await readTeamPick(deps, session.guestId);
+
+  if (saved === null) {
+    throw new Error(`outfit: ${session.guestId}'s row did not read back after the outfit was saved`);
+  }
+
+  const answer: PortalOutfitSaved = { team: saved };
+
+  return jsonResponse(answer);
+};
+
 // Any guest's kept head, for the heads on a team tile: the same bytes the TV shows on the night.
 const readGuestHead = async ({ params, deps }: GuestContext): Promise<Response> => {
   return serveHead(deps, params.guestId ?? "");
@@ -111,5 +197,6 @@ export const GUEST_ROUTES: PortalRoute[] = [
   { method: "GET", pattern: PORTAL_API_ROUTES.me, access: "guest", handle: readMe },
   { method: "GET", pattern: `${PORTAL_API_ROUTES.guests}/:guestId/avatar`, access: "guest", handle: readGuestHead },
   { method: "GET", pattern: PORTAL_API_ROUTES.teams, access: "guest", handle: listTeams },
-  { method: "PUT", pattern: PORTAL_API_ROUTES.myTeam, access: "guest", handle: pickTeam }
+  { method: "PUT", pattern: PORTAL_API_ROUTES.myTeam, access: "guest", handle: pickTeam },
+  { method: "PUT", pattern: PORTAL_API_ROUTES.myOutfit, access: "guest", handle: saveOutfit }
 ];

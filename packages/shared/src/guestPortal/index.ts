@@ -32,6 +32,7 @@ export {
 export {
   isAdminPicksRequest,
   isAdminTeamSeatRequest,
+  isOutfitRequest,
   isTeamPick,
   isTeamPickRequest,
   resolveTeamSeatCap,
@@ -40,7 +41,8 @@ export {
   type AdminPicksState,
   type AdminTeamBoard,
   type AdminTeamSeatRequest,
-  type OutfitDraft,
+  type OutfitRequest,
+  type PortalOutfitSaved,
   type PortalTeam,
   type PortalTeamList,
   type PortalTeamMember,
@@ -61,6 +63,7 @@ export {
   isPortalAvatarStatus,
   isPortalErrorCode,
   isPortalMe,
+  isPortalOutfitSaved,
   isPortalTeamList,
   isPortalTeamPicked,
   readPortalErrorCode
@@ -119,6 +122,11 @@ export const PORTAL_ERROR_CODES = [
   // PUT myTeam: every seat on that team is taken (resolveTeamSeatCap), or Brad has closed picks.
   "team_full",
   "picks_closed",
+  // PUT myOutfit: the guest is on no team (or one the roster no longer has), or not on a team of
+  // the outfit's genre any more — read /api/me again.
+  "no_team",
+  // PUT myOutfit: a slot, item or style the genre's wardrobe does not have (parseOutfit).
+  "outfit_invalid",
   "server_error"
 ] as const;
 export type PortalErrorCode = (typeof PORTAL_ERROR_CODES)[number];
@@ -126,6 +134,10 @@ export type PortalErrorCode = (typeof PORTAL_ERROR_CODES)[number];
 export type PortalErrorBody = {
   error: PortalErrorCode;
 };
+
+// PUT myOutfit's body cap. A whole outfit is seven slots of an id and a style, a few hundred bytes;
+// anything near this is not an outfit (research §2.7).
+export const OUTFIT_REQUEST_MAX_BYTES = 2048;
 
 // Every timestamp the API returns is milliseconds since the epoch, like the party's `endsAt`.
 

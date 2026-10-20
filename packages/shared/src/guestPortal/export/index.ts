@@ -1,7 +1,6 @@
 // GET adminExport: everything `pnpm pack:pull` copies from wingnight.tv into the night pack, and
-// deliberately nothing more — no address, no sign-in history, and (until milestone 3 of
-// docs/guest-portal-team-pick-plan.md adds the picked team's outfit) nothing else ever leaves for
-// the party. A head's bytes come separately, from resolveAdminGuestAvatarRoute.
+// deliberately nothing more — no address, no sign-in history: a name, a head, a team and the bird's
+// outfits are all that ever leave for the party. A head's bytes come separately, from resolveAdminGuestAvatarRoute.
 //
 // Imports its guards with the `.ts` suffix, like ../routes, because the pull runs under plain
 // `node`, which resolves no `.js` alias (see ../routes).
@@ -29,8 +28,10 @@ export type AdminGuestExport = {
   team: string | null;
   // Every genre's outfit the guest has built (docs/research/bird-wardrobe.md §2.4: all of them, so
   // a reseat on the night keeps the guest dressed), which the pull writes onto the player's
-  // `outfits`. Optional because the Worker does not send it until the wardrobe ships on the
-  // portal. Only "an object" is checked here: one guest's malformed outfit must not refuse the
+  // `outfits`. `{}` is a guest who never dressed; a genre whose outfit is `{}` is one they dressed
+  // and then stripped bare, which the pull carries down so the pack's bird is undressed too.
+  // Optional because a Worker deployed before the wardrobe sends none. Only "an object" is checked
+  // here: one guest's malformed outfit must not refuse the
   // whole export, so the pull checks each guest's shape itself and leaves a bad one undressed.
   outfits?: OutfitsByGenre;
 };

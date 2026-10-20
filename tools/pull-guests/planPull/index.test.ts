@@ -310,6 +310,19 @@ test("does leave a hand-dressed player alone when their guest never opened the w
   assert.deepEqual(result.outfitChanges, []);
 });
 
+test("does undress a player when their guest stripped the genre bare in the wardrobe", () => {
+  const playersFile = { players: [{ name: "Rob", team: "Iron Hens", outfits: ROB_METAL }] };
+  const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: { metal: {} } }]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", team: "Iron Hens", outfits: { metal: {} } }]);
+  assert.deepEqual(result.outfitChanges, [{ name: "Rob", from: ["metal"], to: [] }]);
+  assert.ok(describePlan(result).includes("  Rob: metal -> (bare)"));
+  assert.equal(result.playersChanged, true);
+
+  // The next pull finds the pack already bare and plans nothing.
+  assert.deepEqual(plan(result.players, [{ ...guest("g_rob", "Rob"), outfits: { metal: {} } }]).outfitChanges, []);
+});
+
 test("does plan no outfit change when the guest's outfits are already the player's", () => {
   const result = plan({ players: [{ name: "Rob", outfits: ROB_METAL }] }, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
 

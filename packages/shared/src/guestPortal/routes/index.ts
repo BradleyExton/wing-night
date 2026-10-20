@@ -38,6 +38,13 @@
 //   PUT  myTeam         body { teamName } (isTeamPickRequest) → 200 PortalTeamPicked
 //                       · 400 bad_request (a name the roster does not have) · 409 team_full
 //                       · 409 picks_closed. Tapping a tile is the save: no confirm.
+//   PUT  myOutfit       body { genre, outfit } (isOutfitRequest; at most OUTFIT_REQUEST_MAX_BYTES)
+//                       → 200 PortalOutfitSaved: replaces that genre's outfit, every other
+//                       genre's kept; `{}` strips the bird bare there and is kept as such, so
+//                       the pull undresses the pack too · 400 bad_request · 400 outfit_invalid
+//                       (parseOutfit refused it) · 409 no_team (no seated team, or not one of
+//                       that genre) · 413 too_large. Every tap in the wardrobe is a save. Picks
+//                       closing does not close the wardrobe (research §2.4).
 //   GET  resolveGuestAvatarRoute(guestId)  another guest's kept head as image/png, for the heads
 //                       on a team tile → 404 until there is one (the same bytes the TV shows)
 //   GET  adminTeams     → 200 AdminTeamBoard: the list plus the unseated
@@ -50,6 +57,7 @@
 export const PORTAL_API_ROUTES = {
   me: "/api/me",
   myTeam: "/api/me/team",
+  myOutfit: "/api/me/outfit",
   myAvatar: "/api/me/avatar",
   myAvatarPhoto: "/api/me/avatar/photo",
   myAvatarGenerate: "/api/me/avatar/generate",

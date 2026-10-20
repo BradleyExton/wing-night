@@ -39,7 +39,7 @@ import { findRosterTeam, readRoster, type PortalRoster } from "../roster/index.t
 import type { AdminContext, PortalRoute } from "../routeContext/index.ts";
 import { composeSignInMail } from "../signInMail/index.ts";
 import { mintPersonalLink, resolveLinkOrigin, resolveSignInUrl } from "../signInLinks/index.ts";
-import { readTeamBoard, writePicksClosed } from "../teamPicks/index.ts";
+import { parsePickRow, readTeamBoard, writePicksClosed } from "../teamPicks/index.ts";
 import { mintGuestId } from "../tokens/index.ts";
 
 // "Invite everyone" sends at most this many per request. Each invite is three D1 statements and
@@ -404,8 +404,10 @@ const readGuestHead = async ({ params, deps }: AdminContext): Promise<Response> 
 };
 
 // What `pnpm pack:pull` copies into the night pack: each guest's name, their kept head's hash
-// and size (for the pull to fetch from readGuestHead), and the team they picked. Selected column
-// by column so an address, a sign-in time or an outfit cannot ride along. A head whose PNG is
+// and size (for the pull to fetch from readGuestHead), the team they picked, and every genre's
+// outfit they built. Selected column by column so an address or a sign-in time cannot ride along.
+// The outfits go as stored, a bare-stripped genre's `{}` included (the pull's "cleared"), and go
+// even when the pick is orphaned: they are kept per genre, not per team. A head whose PNG is
 // missing from R2 exports as none, the same answer readGuestHead would give. A pick naming a
 // team the roster no longer has exports as none, as the board lists it: the night server refuses
 // to boot on a player whose team teams.json does not declare (seatPresetRosters), so an orphan
@@ -419,7 +421,7 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
 
   const { results } = await deps.db
     .prepare(
-      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash, p.team_name
+      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash, p.team_name, p.outfits_json
        FROM guests g
        LEFT JOIN avatar_attempts a ON a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL
          AND a.object_key IS NOT NULL AND a.head_hash IS NOT NULL
@@ -432,10 +434,15 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
       object_key: string | null;
       head_hash: string | null;
       team_name: string | null;
+      outfits_json: string | null;
     }>();
   const exported: AdminGuestExport[] = await Promise.all(
     results.map(async (row) => {
       const object = row.object_key === null ? null : await deps.bucket.head(row.object_key);
+      const pick =
+        row.team_name === null || row.outfits_json === null
+          ? null
+          : parsePickRow({ team_name: row.team_name, outfits_json: row.outfits_json });
 
       return {
         guestId: row.guest_id,
@@ -444,7 +451,8 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
           object === null || row.head_hash === null
             ? null
             : { sha256: row.head_hash, contentType: AVATAR_HEAD_TYPE, bytes: object.size },
-        team: row.team_name !== null && findRosterTeam(roster, row.team_name) !== undefined ? row.team_name : null
+        team: row.team_name !== null && findRosterTeam(roster, row.team_name) !== undefined ? row.team_name : null,
+        outfits: pick?.outfitsByGenre ?? {}
       };
     })
   );

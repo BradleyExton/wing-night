@@ -6,6 +6,7 @@ import {
   isAdminPicksState,
   isAdminTeamBoard,
   isPortalMe,
+  isPortalOutfitSaved,
   isPortalTeamList,
   isPortalTeamPicked,
   readPortalErrorCode
@@ -75,12 +76,22 @@ test("does read the team list when each team has its members and the genre and c
   assert.equal(isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], genre: null }] }), false);
   assert.equal(isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], members: [{ guestId: "g" }] }] }), false);
   assert.equal(isPortalTeamList({ ...teamList, seatCap: 1.5 }), false);
+  assert.equal(
+    isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], members: [{ ...member, outfit: { top: { item: "battle-vest-a" } } }] }] }),
+    true
+  );
+  assert.equal(
+    isPortalTeamList({ ...teamList, teams: [{ ...teamList.teams[0], members: [{ ...member, outfit: { top: "battle-vest-a" } }] }] }),
+    false
+  );
   assert.equal(isPortalTeamList({ ...teamList, picksClosed: undefined }), false);
 });
 
 test("does read a pick's answer and the admin board as the list plus the pick or the unseated", () => {
   assert.equal(isPortalTeamPicked({ team: { teamName: "Iron Hens", outfitsByGenre: {} }, teams: teamList }), true);
   assert.equal(isPortalTeamPicked({ team: null, teams: teamList }), false);
+  assert.equal(isPortalOutfitSaved({ team: { teamName: "Iron Hens", outfitsByGenre: { metal: {} } } }), true);
+  assert.equal(isPortalOutfitSaved({ team: null }), false);
   assert.equal(isAdminTeamBoard({ ...teamList, unseated: [member] }), true);
   assert.equal(isAdminTeamBoard({ ...teamList, unseated: [] }), true);
   assert.equal(isAdminTeamBoard(teamList), false);

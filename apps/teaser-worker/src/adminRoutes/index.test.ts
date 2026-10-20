@@ -24,6 +24,8 @@ import {
 import { mintEmailLink, mintPersonalLink } from "../signInLinks/index.ts";
 import { INVITE_ALL_BATCH_SIZE } from "./index.ts";
 
+
+const ROB_OUTFITS = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a", style: "gold" } } };
 const ADMIN_ROUTES: { method: string; path: string; body?: unknown }[] = [
   { method: "GET", path: "/api/admin/guests" },
   { method: "POST", path: "/api/admin/guests", body: { displayName: "Kim", email: null } },
@@ -385,12 +387,12 @@ test("does keep the row's outfits when the admin moves a guest", async () => {
   const portal = portalWithGuests();
 
   await pickTeam(portal, "g_rob", IRON_HENS);
-  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = '{\"metal\":{\"torso\":\"vest\"}}' WHERE guest_id = 'g_rob'").run();
+  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'").run(JSON.stringify(ROB_OUTFITS));
   await seatGuest(portal, "g_rob", MIRROR_BALLS);
 
   assert.deepEqual(
     { ...portal.db.raw.prepare("SELECT team_name, outfits_json FROM team_picks WHERE guest_id = 'g_rob'").get() },
-    { team_name: MIRROR_BALLS, outfits_json: '{"metal":{"torso":"vest"}}' }
+    { team_name: MIRROR_BALLS, outfits_json: JSON.stringify(ROB_OUTFITS) }
   );
 });
 
@@ -589,7 +591,7 @@ test("does let only an admin pick the style reference, and only from a guest wit
   );
 });
 
-test("does export only names, kept heads and picked teams when the pack pull reads the guest list", async () => {
+test("does export only names, kept heads, picked teams and outfits when the pack pull reads the guest list", async () => {
   const portal = portalWithGuests();
 
   portal.addGuest({ guestId: "g_ana", displayName: "ana", email: "ana@example.com" });
@@ -599,12 +601,15 @@ test("does export only names, kept heads and picked teams when the pack pull rea
   // Kim's try is recorded but the PNG never reached R2, so there is nothing to pull.
   await portal.bucket.delete(resolveHeadKey("g_kim"));
   await pickTeam(portal, "g_rob", IRON_HENS);
-  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = '{\"metal\":{\"torso\":\"vest\"}}' WHERE guest_id = 'g_rob'").run();
-  // Ana's pick names a team the pack has since renamed: the night server refuses to boot on a
-  // player whose team teams.json does not declare, so it must export as none.
   portal.db.raw
-    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_ana', 'Gone Team', '{}', 1)")
-    .run();
+    .prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'")
+    .run(JSON.stringify(ROB_OUTFITS));
+  // Ana's pick names a team the pack has since renamed: the night server refuses to boot on a
+  // player whose team teams.json does not declare, so it must export as none. Her outfits are
+  // kept per genre, not per team, so they still go — the disco one she stripped bare as `{}`.
+  portal.db.raw
+    .prepare("INSERT INTO team_picks (guest_id, team_name, outfits_json, updated_at) VALUES ('g_ana', 'Gone Team', ?, 1)")
+    .run(JSON.stringify({ disco: {} }));
 
   const response = await portal.request("GET", "/api/admin/export", { origin: null, headers: BEARER });
   const text = await response.text();
@@ -612,17 +617,18 @@ test("does export only names, kept heads and picked teams when the pack pull rea
 
   assert.equal(response.status, 200);
   assert.deepEqual(JSON.parse(text) as AdminGuestExport[], [
-    { guestId: "g_ana", displayName: "ana", head: null, team: null },
-    { guestId: "g_brad", displayName: "Brad", head: null, team: null },
-    { guestId: "g_kim", displayName: "Kim", head: null, team: null },
+    { guestId: "g_ana", displayName: "ana", head: null, team: null, outfits: { disco: {} } },
+    { guestId: "g_brad", displayName: "Brad", head: null, team: null, outfits: {} },
+    { guestId: "g_kim", displayName: "Kim", head: null, team: null, outfits: {} },
     {
       guestId: "g_rob",
       displayName: "Rob",
       head: { sha256: "a".repeat(64), contentType: "image/png", bytes: headBytes },
-      team: IRON_HENS
+      team: IRON_HENS,
+      outfits: ROB_OUTFITS
     }
   ]);
-  assert.doesNotMatch(text, /@|metal|vest|outfit|email|gone team/i);
+  assert.doesNotMatch(text, /@|email|gone team/i);
 
   const head = await portal.request("GET", "/api/admin/guests/g_rob/avatar", { origin: null, headers: BEARER });
 

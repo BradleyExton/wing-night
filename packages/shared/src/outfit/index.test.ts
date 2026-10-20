@@ -172,3 +172,9 @@ test("dresses a player in the outfit for their current team's genre only", () =>
 test("leaves a player bare when nothing they chose can still be worn", () => {
   assert.equal(resolvePlayerOutfit({ outfits: { metal: { top: { item: "cut-vest" } } } }, "metal"), undefined);
 });
+
+test("boots and draws a player bare when the guest stripped their genre's outfit to {}", () => {
+  assert.deepEqual(validateOutfitsByGenre({ metal: {} }), []);
+  assert.deepEqual(parseOutfit("metal", {}), {});
+  assert.equal(resolvePlayerOutfit({ outfits: { metal: {} } }, "metal"), undefined);
+});
