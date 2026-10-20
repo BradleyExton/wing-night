@@ -64,6 +64,9 @@ On branch `claude/gallant-cohen-b15972`, from `claude/wardrobe-gate1-art-pass`.
 - **Known edges.** On a `wing="none"` surface the Top paints under the separately drawn wing (FAPPY
   always, JOUST while a bird aims). The Top's second body layer starts its loop when it mounts, so a
   bird dressed mid-parade can run a frame out of step until its next pose change.
+  A Prop rides the wing's rig, so `wingFlip` mirrors it too: on the chicken dance's clap the Flying V
+  points forward across the chest. The harness's prop sweep predates the flip; run 5's face-crossing
+  sweep should take the flipped wing in.
 
 ## Rules every agent brief carries
 
