@@ -693,6 +693,83 @@ body {
   }
 }
 
+/* The wardrobe's lit Stages (the cast's Outfit/stage, ported from the outfit
+   harness's disco-show.js). Each item's styles.ts carries the animation as a
+   literal class, its delay folded in, and stands it still under reduced
+   motion; only the keyframes live here. The beat is 0.5s, the lobby's 120 bpm,
+   and every step is `step-end`: a lit tile switches, it never fades. The team
+   colour is the bird's own `currentColor`, so one set of keyframes serves
+   every team. */
+
+/* Lit floor a: white for a beat, team for a beat. */
+@keyframes outfit-lit-flip {
+  0% {
+    fill: theme(colors.text);
+  }
+  50% {
+    fill: currentColor;
+  }
+}
+
+/* Lit floor b: six beats, white on beats 0 and 3, so a panel and the one
+   opposite it burn together and the pair chases round the slab. */
+@keyframes outfit-lit-chase {
+  0% {
+    fill: theme(colors.text);
+  }
+  16.67% {
+    fill: currentColor;
+  }
+  50% {
+    fill: theme(colors.text);
+  }
+  66.67% {
+    fill: currentColor;
+  }
+  100% {
+    fill: currentColor;
+  }
+}
+
+/* Neon flames a: a tired sign, lit all loop but for two dips near its end. */
+@keyframes outfit-neon-buzz {
+  0%,
+  88%,
+  92%,
+  100% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  95% {
+    opacity: 0.6;
+  }
+}
+
+/* Neon flames b, four beats: both signs, the star alone, both, the flame
+   alone. The flame dims on beat 1 and the star on beat 3. */
+@keyframes outfit-neon-flame-beat {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes outfit-neon-star-beat {
+  0% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.35;
+  }
+}
+
 /* ---- Team identity kit (docs/team-identity.md) ---------------------------
    Wordmark treatments, ambient textures and entrance beats, ported from the
    phase 1 mockup (public/mockups/team-identity/kit.css). They live here rather

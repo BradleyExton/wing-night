@@ -6,6 +6,9 @@ import { GoGoBootsA } from "../boots/GoGoBootsA/index.js";
 import { GoGoBootsB } from "../boots/GoGoBootsB/index.js";
 import { PlatformTrainersA } from "../boots/PlatformTrainersA/index.js";
 import { PlatformTrainersB } from "../boots/PlatformTrainersB/index.js";
+import { PlatformsA } from "../boots/PlatformsA/index.js";
+import { RollerSkatesA } from "../boots/RollerSkatesA/index.js";
+import { RollerSkatesB } from "../boots/RollerSkatesB/index.js";
 import { SpikedBootsA } from "../boots/SpikedBootsA/index.js";
 import { AcousticGuitarA } from "../prop/AcousticGuitarA/index.js";
 import { AcousticGuitarB } from "../prop/AcousticGuitarB/index.js";
@@ -19,8 +22,11 @@ import { DrumsticksA } from "../prop/DrumsticksA/index.js";
 import { FlyingVA } from "../prop/FlyingVA/index.js";
 import { FlyingVB } from "../prop/FlyingVB/index.js";
 import { FlyingVC } from "../prop/FlyingVC/index.js";
+import { HandFanB } from "../prop/HandFanB/index.js";
 import { LassoB } from "../prop/LassoB/index.js";
 import { LassoC } from "../prop/LassoC/index.js";
+import { MirrorBallEggA } from "../prop/MirrorBallEggA/index.js";
+import { MirrorBallEggC } from "../prop/MirrorBallEggC/index.js";
 import { PomPomA } from "../prop/PomPomA/index.js";
 import { PomPomB } from "../prop/PomPomB/index.js";
 import { PomPomC } from "../prop/PomPomC/index.js";
@@ -30,14 +36,19 @@ import { StarMicC } from "../prop/StarMicC/index.js";
 import { UnionJackFlagA } from "../prop/UnionJackFlagA/index.js";
 import { UnionJackFlagB } from "../prop/UnionJackFlagB/index.js";
 import { UnionJackFlagC } from "../prop/UnionJackFlagC/index.js";
+import { VinylB } from "../prop/VinylB/index.js";
 import { FlameSleeveA } from "../sleeve/FlameSleeveA/index.js";
 import { FlameSleeveB } from "../sleeve/FlameSleeveB/index.js";
+import { FlareSleeveB } from "../sleeve/FlareSleeveB/index.js";
+import { FlareSleeveC } from "../sleeve/FlareSleeveC/index.js";
 import { FringeSleeveA } from "../sleeve/FringeSleeveA/index.js";
 import { FringeSleeveB } from "../sleeve/FringeSleeveB/index.js";
 import { LeatherSleeveA } from "../sleeve/LeatherSleeveA/index.js";
 import { LeatherSleeveB } from "../sleeve/LeatherSleeveB/index.js";
 import { PuffSleeveA } from "../sleeve/PuffSleeveA/index.js";
 import { PuffSleeveB } from "../sleeve/PuffSleeveB/index.js";
+import { SatinSleeveA } from "../sleeve/SatinSleeveA/index.js";
+import { SatinSleeveB } from "../sleeve/SatinSleeveB/index.js";
 import { StripeSleeveA } from "../sleeve/StripeSleeveA/index.js";
 import { StripeSleeveB } from "../sleeve/StripeSleeveB/index.js";
 import { SuedeSleeveA } from "../sleeve/SuedeSleeveA/index.js";
@@ -51,6 +62,10 @@ import { LavaDiscC } from "../stage/LavaDiscC/index.js";
 import { LedStarRiserA } from "../stage/LedStarRiserA/index.js";
 import { LedStarRiserB } from "../stage/LedStarRiserB/index.js";
 import { LedStarRiserC } from "../stage/LedStarRiserC/index.js";
+import { LitFloorA } from "../stage/LitFloorA/index.js";
+import { LitFloorB } from "../stage/LitFloorB/index.js";
+import { NeonFlamesA } from "../stage/NeonFlamesA/index.js";
+import { NeonFlamesB } from "../stage/NeonFlamesB/index.js";
 import { SawdustRingA } from "../stage/SawdustRingA/index.js";
 import { SawdustRingB } from "../stage/SawdustRingB/index.js";
 import { SawdustRingC } from "../stage/SawdustRingC/index.js";
@@ -59,6 +74,8 @@ import { SpotlightB } from "../stage/SpotlightB/index.js";
 import { BigBowA } from "../tail/BigBowA/index.js";
 import { BigBowB } from "../tail/BigBowB/index.js";
 import { ChainLoopB } from "../tail/ChainLoopB/index.js";
+import { FeatherBoaA } from "../tail/FeatherBoaA/index.js";
+import { FeatherBoaB } from "../tail/FeatherBoaB/index.js";
 import { LavaTipsA } from "../tail/LavaTipsA/index.js";
 import { LavaTipsB } from "../tail/LavaTipsB/index.js";
 import { RibbonStreamersA } from "../tail/RibbonStreamersA/index.js";
@@ -68,6 +85,7 @@ import { RopeCoilB } from "../tail/RopeCoilB/index.js";
 import { SpikedCuffB } from "../tail/SpikedCuffB/index.js";
 import { TailBandanaA } from "../tail/TailBandanaA/index.js";
 import { TailBandanaB } from "../tail/TailBandanaB/index.js";
+import { TinselA } from "../tail/TinselA/index.js";
 import { BandanaA } from "../top/BandanaA/index.js";
 import { BandanaB } from "../top/BandanaB/index.js";
 import { BandolierB } from "../top/BandolierB/index.js";
@@ -77,10 +95,14 @@ import { BikerJacketA } from "../top/BikerJacketA/index.js";
 import { BikerJacketB } from "../top/BikerJacketB/index.js";
 import { CropJacketA } from "../top/CropJacketA/index.js";
 import { CropJacketB } from "../top/CropJacketB/index.js";
+import { DaggerCollarB } from "../top/DaggerCollarB/index.js";
 import { FringedVestA } from "../top/FringedVestA/index.js";
 import { FringedVestB } from "../top/FringedVestB/index.js";
 import { LittleBlackDressA } from "../top/LittleBlackDressA/index.js";
 import { LittleBlackDressB } from "../top/LittleBlackDressB/index.js";
+import { OpenShirtB } from "../top/OpenShirtB/index.js";
+import { OpenShirtC } from "../top/OpenShirtC/index.js";
+import { SatinJacketA } from "../top/SatinJacketA/index.js";
 import { TracksuitTopA } from "../top/TracksuitTopA/index.js";
 import { TracksuitTopB } from "../top/TracksuitTopB/index.js";
 import { TrophyBuckleA } from "../top/TrophyBuckleA/index.js";
@@ -194,5 +216,29 @@ export const OUTFIT_DRAWINGS: Readonly<Partial<Record<string, OutfitDrawing>>> =
   "hay-bale-b": { slot: "stage", Drawing: HayBaleB },
   "sawdust-ring-a": { slot: "stage", Drawing: SawdustRingA },
   "sawdust-ring-b": { slot: "stage", Drawing: SawdustRingB },
-  "sawdust-ring-c": { slot: "stage", Drawing: SawdustRingC }
+  "sawdust-ring-c": { slot: "stage", Drawing: SawdustRingC },
+  // disco-kit
+  "open-shirt-b": { slot: "top", Drawing: OpenShirtB },
+  "open-shirt-c": { slot: "top", Drawing: OpenShirtC },
+  "dagger-collar-b": { slot: "top", Drawing: DaggerCollarB },
+  "satin-jacket-a": { slot: "top", Drawing: SatinJacketA },
+  "flare-sleeve-b": { slot: "sleeve", Drawing: FlareSleeveB },
+  "flare-sleeve-c": { slot: "sleeve", Drawing: FlareSleeveC },
+  "satin-sleeve-a": { slot: "sleeve", Drawing: SatinSleeveA },
+  "satin-sleeve-b": { slot: "sleeve", Drawing: SatinSleeveB },
+  "tinsel-a": { slot: "tail", Drawing: TinselA },
+  "feather-boa-a": { slot: "tail", Drawing: FeatherBoaA },
+  "feather-boa-b": { slot: "tail", Drawing: FeatherBoaB },
+  "platforms-a": { slot: "boots", Drawing: PlatformsA },
+  "roller-skates-a": { slot: "boots", Drawing: RollerSkatesA },
+  "roller-skates-b": { slot: "boots", Drawing: RollerSkatesB },
+  // disco-show
+  "mirror-ball-egg-a": { slot: "prop", Drawing: MirrorBallEggA },
+  "mirror-ball-egg-c": { slot: "prop", Drawing: MirrorBallEggC },
+  "hand-fan-b": { slot: "prop", Drawing: HandFanB },
+  "vinyl-b": { slot: "prop", Drawing: VinylB },
+  "lit-floor-a": { slot: "stage", Drawing: LitFloorA },
+  "lit-floor-b": { slot: "stage", Drawing: LitFloorB },
+  "neon-flames-a": { slot: "stage", Drawing: NeonFlamesA },
+  "neon-flames-b": { slot: "stage", Drawing: NeonFlamesB }
 };
