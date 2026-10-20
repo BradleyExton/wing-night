@@ -18,10 +18,14 @@ import { CordedMicA } from "../prop/CordedMicA/index.js";
 import { CordedMicB } from "../prop/CordedMicB/index.js";
 import { CornCobA } from "../prop/CornCobA/index.js";
 import { CornCobC } from "../prop/CornCobC/index.js";
+import { DrumstickA } from "../prop/DrumstickA/index.js";
+import { DrumstickB } from "../prop/DrumstickB/index.js";
 import { DrumsticksA } from "../prop/DrumsticksA/index.js";
 import { FlyingVA } from "../prop/FlyingVA/index.js";
 import { FlyingVB } from "../prop/FlyingVB/index.js";
 import { FlyingVC } from "../prop/FlyingVC/index.js";
+import { GoldenEggA } from "../prop/GoldenEggA/index.js";
+import { GoldenEggB } from "../prop/GoldenEggB/index.js";
 import { HandFanB } from "../prop/HandFanB/index.js";
 import { LassoB } from "../prop/LassoB/index.js";
 import { LassoC } from "../prop/LassoC/index.js";
@@ -55,6 +59,9 @@ import { SuedeSleeveA } from "../sleeve/SuedeSleeveA/index.js";
 import { SuedeSleeveB } from "../sleeve/SuedeSleeveB/index.js";
 import { BoltDiscA } from "../stage/BoltDiscA/index.js";
 import { BoltDiscB } from "../stage/BoltDiscB/index.js";
+import { EggNestA } from "../stage/EggNestA/index.js";
+import { EggNestB } from "../stage/EggNestB/index.js";
+import { EggNestC } from "../stage/EggNestC/index.js";
 import { HayBaleB } from "../stage/HayBaleB/index.js";
 import { LavaDiscA } from "../stage/LavaDiscA/index.js";
 import { LavaDiscB } from "../stage/LavaDiscB/index.js";
@@ -103,6 +110,8 @@ import { LittleBlackDressB } from "../top/LittleBlackDressB/index.js";
 import { OpenShirtB } from "../top/OpenShirtB/index.js";
 import { OpenShirtC } from "../top/OpenShirtC/index.js";
 import { SatinJacketA } from "../top/SatinJacketA/index.js";
+import { TeamSashA } from "../top/TeamSashA/index.js";
+import { TeamSashB } from "../top/TeamSashB/index.js";
 import { TracksuitTopA } from "../top/TracksuitTopA/index.js";
 import { TracksuitTopB } from "../top/TracksuitTopB/index.js";
 import { TrophyBuckleA } from "../top/TrophyBuckleA/index.js";
@@ -111,15 +120,13 @@ import { UnionJackDressA } from "../top/UnionJackDressA/index.js";
 import { UnionJackDressB } from "../top/UnionJackDressB/index.js";
 import { WesternYokeA } from "../top/WesternYokeA/index.js";
 import { WesternYokeB } from "../top/WesternYokeB/index.js";
+import { WingNightBibA } from "../top/WingNightBibA/index.js";
+import { WingNightBibB } from "../top/WingNightBibB/index.js";
 
-// Every item the cast can draw, by its catalogue id (`OUTFIT_ITEMS`). An item
-// the catalogue lists and this does not is simply not drawn — the bird wears
-// the rest — which is what lets the catalogue run ahead of the port.
-//
-// Run 2 ported one finished item per slot, all from the metal rail so one bird
-// in the sample pack can wear the lot; run 3 ports every other kept item, each
-// pixel-checked against its harness drawing, until a test requiring a drawing
-// for every catalogue item passes.
+// Every item the cast can draw, by its catalogue id (`OUTFIT_ITEMS`), in the
+// catalogue's order, rail by rail. Each is equal path for path to its harness
+// drawing (run 3). A test holds the two lists in step; an id with no entry
+// here (a hand-edited pack) is simply not drawn, and the bird wears the rest.
 export const OUTFIT_DRAWINGS: Readonly<Partial<Record<string, OutfitDrawing>>> = {
   // metal-kit
   "battle-vest-a": { slot: "top", Drawing: BattleVestA },
@@ -240,5 +247,17 @@ export const OUTFIT_DRAWINGS: Readonly<Partial<Record<string, OutfitDrawing>>> =
   "lit-floor-a": { slot: "stage", Drawing: LitFloorA },
   "lit-floor-b": { slot: "stage", Drawing: LitFloorB },
   "neon-flames-a": { slot: "stage", Drawing: NeonFlamesA },
-  "neon-flames-b": { slot: "stage", Drawing: NeonFlamesB }
+  "neon-flames-b": { slot: "stage", Drawing: NeonFlamesB },
+  // shared
+  "wing-night-bib-a": { slot: "top", Drawing: WingNightBibA },
+  "wing-night-bib-b": { slot: "top", Drawing: WingNightBibB },
+  "team-sash-a": { slot: "top", Drawing: TeamSashA },
+  "team-sash-b": { slot: "top", Drawing: TeamSashB },
+  "golden-egg-a": { slot: "prop", Drawing: GoldenEggA },
+  "golden-egg-b": { slot: "prop", Drawing: GoldenEggB },
+  "drumstick-a": { slot: "prop", Drawing: DrumstickA },
+  "drumstick-b": { slot: "prop", Drawing: DrumstickB },
+  "egg-nest-a": { slot: "stage", Drawing: EggNestA },
+  "egg-nest-b": { slot: "stage", Drawing: EggNestB },
+  "egg-nest-c": { slot: "stage", Drawing: EggNestC }
 };

@@ -159,7 +159,7 @@ test("does draw only items the catalogue lists, each in the catalogue's slot", (
   }
 });
 
-test("does draw every catalogue item", { todo: "run 3 ports the other kept items" }, () => {
+test("does draw every catalogue item", () => {
   const undrawn = OUTFIT_ITEMS.filter((item) => item.slot !== "move" && OUTFIT_DRAWINGS[item.id] === undefined);
 
   assert.equal(undrawn.length, 0, `${undrawn.length} kept items have no drawing yet, from ${undrawn[0]?.id ?? "none"}`);
