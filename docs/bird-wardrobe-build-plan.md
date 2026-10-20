@@ -68,6 +68,42 @@ On branch `claude/gallant-cohen-b15972`, from `claude/wardrobe-gate1-art-pass`.
   points forward across the chest. The harness's prop sweep predates the flip; run 5's face-crossing
   sweep should take the flipped wing in.
 
+## Run 3: what landed (2026-10-20)
+
+On branch `claude/objective-napier-8ad040`, from run 2's `claude/gallant-cohen-b15972`.
+
+- **Every kept item is drawn.** The other 117 ported, one commit per rail; `OUTFIT_DRAWINGS` holds
+  all 123 in catalogue order and "does draw every catalogue item" is a real test now. Builders an
+  item shares with its rail sit in `Outfit/paths/<unit>` (metalKit, metalShow, popKit, popShow,
+  countryKit, countryShow, discoKit, sharedRail); fixed geometry is written out.
+- **Checked against the harness, case by case.** Each item's `draw(ctx)` against the cast's markup
+  on every body it is worn on (shared: all four), every catalogue style, both heads, both legs:
+  every shape in order (d strings exactly, composed transforms, resolved clips) and its paint mapped
+  to tokens, animations included (timing, delays, reduced motion, keyframe bodies). All 123 match.
+  The script is not in the repo; it is `check-outfit.mts` in the run's shared notes folder.
+- **The item context carries `silhouette`.** Shared items place themselves per body from the
+  harness's per-silhouette tables.
+- **The Prop sweep measures what shows.** `Outfit/propSweep` walks the outline (curves, arcs and
+  straight edges sampled, clips honoured) the way the harness's `samplePoints` did, and the test now
+  sweeps every prop on every body, style and head. Run 2's read of path vertices padded by the
+  2-unit ink failed 13 kept props by a unit or two at the head box; on the shape's own edge, the
+  line Gate 1 judged, all pass. The Moves' extremes are still run 5's.
+- **Disco's lit Stages animate in the cast.** Their keyframes (`outfit-*`) sit with the cast's in
+  `apps/client/src/index.css`, one set for every team through `currentColor`.
+- **Known edges.**
+  - Pop items are drawn on the harness's stock bird (round body, fan tail). A pop player whose name
+    picks the tall or wide body or the plume tail wears the Tops clipped to their own body, but
+    puff-sleeve a paints a stock-shaped wing over theirs, and the bows and streamers sit on the
+    fan's tips.
+  - wing-night-bib b's sauce is ink on the spiky body and the team colour elsewhere: the harness
+    measured the team colour against white (only chrome fails), which an item cannot see. A chrome
+    team on another body would get a faint splat.
+  - Two harness quirks are kept as the browser drew them: satin-jacket a's star patch is round
+    (the harness wrote its join twice; the first wins), and pom-pom a's far pom is white mixed
+    70% over ink (`color-mix` of the two tokens, its only non-token colour).
+  - battle-vest a, combat-boots a and flying-v a keep their own copies of geometry their rail's
+    `paths` module now also builds.
+
 ## Rules every agent brief carries
 
 - **Process hygiene.** Stop only processes you started, by the PID you captured. Never `pkill`,
