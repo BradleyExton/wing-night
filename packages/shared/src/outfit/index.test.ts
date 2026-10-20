@@ -10,6 +10,7 @@ import {
   parseOutfit,
   resolveOutfitRail,
   resolveOutfitSlots,
+  resolvePlayerOutfit,
   resolveWornOutfit,
   validateOutfit,
   validateOutfitsByGenre
@@ -157,4 +158,17 @@ test("reports a pack outfit map's bad genre, slot and choice by path", () => {
     ["Metal", "pop.Top", "pop.sleeve", "pop.tail.style"]
   );
   assert.deepEqual(pathsOf(validateOutfitsByGenre([])), [""]);
+});
+
+test("dresses a player in the outfit for their current team's genre only", () => {
+  const player = { outfits: { metal: { top: { item: "battle-vest-a" } }, pop: { top: { item: "crop-jacket-b" } } } };
+
+  assert.deepEqual(resolvePlayerOutfit(player, "metal"), { top: { item: "battle-vest-a", style: "ink" } });
+  assert.equal(resolvePlayerOutfit(player, "disco"), undefined);
+  assert.equal(resolvePlayerOutfit(player, null), undefined);
+  assert.equal(resolvePlayerOutfit({}, "metal"), undefined);
+});
+
+test("leaves a player bare when nothing they chose can still be worn", () => {
+  assert.equal(resolvePlayerOutfit({ outfits: { metal: { top: { item: "cut-vest" } } } }, "metal"), undefined);
 });

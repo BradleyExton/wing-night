@@ -47,6 +47,7 @@ export {
   parseOutfit,
   resolveOutfitRail,
   resolveOutfitSlots,
+  resolvePlayerOutfit,
   resolveWornOutfit,
   validateOutfit,
   validateOutfitsByGenre

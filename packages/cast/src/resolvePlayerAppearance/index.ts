@@ -1,4 +1,10 @@
-import { CHARACTER_DANCES, resolveContentAssetSrc, type CharacterDance, type Player } from "@wingnight/shared";
+import {
+  CHARACTER_DANCES,
+  resolveContentAssetSrc,
+  type CharacterDance,
+  type Outfit,
+  type Player
+} from "@wingnight/shared";
 
 import { hashName } from "../hashName/index.js";
 
@@ -27,7 +33,18 @@ export type CharacterAppearance = {
   tail: CharacterTail;
   dance: CharacterDance;
   avatarSrc?: string;
+  // What the bird wears (the wardrobe, `packages/shared/src/outfit`), already
+  // read for the genre of the team it is standing with — a surface resolves it
+  // with `resolvePlayerOutfit(player, theme.genre)` and hands it in, because
+  // the cast knows nothing about seating. Absent is a bare bird, drawn exactly
+  // as it always was.
+  outfit?: Outfit;
 };
+
+// Who the bird is: the player's name, their head, and what they wear for the
+// team they are with tonight (null and undefined are both bare: a minigame's
+// figure carries null on the wire).
+export type CharacterAppearanceSource = Pick<Player, "name" | "avatarSrc"> & { outfit?: Outfit | null };
 
 // `serverOrigin` is INJECTED rather than read in here, the same seam
 // `resolveAnthemSrc` uses: client tests run under `tsx --test` with no DOM and
@@ -36,7 +53,7 @@ export type CharacterAppearance = {
 // an effect), and a player whose head cannot be addressed yet simply wears the
 // drawn one for that paint — the cast is never missing from the lobby.
 export const resolvePlayerAppearance = (
-  player: Pick<Player, "name" | "avatarSrc">,
+  player: CharacterAppearanceSource,
   serverOrigin: string | null = null
 ): CharacterAppearance => {
   const hash = hashName(player.name);
@@ -47,8 +64,12 @@ export const resolvePlayerAppearance = (
   const tail = CHARACTER_TAILS[(hash >>> 16) % CHARACTER_TAILS.length];
   const dance = CHARACTER_DANCES[(hash >>> 24) % CHARACTER_DANCES.length];
 
+  const outfit = player.outfit === null || player.outfit === undefined || Object.keys(player.outfit).length === 0
+    ? {}
+    : { outfit: player.outfit };
+
   if (player.avatarSrc === undefined) {
-    return { body, comb, tail, dance };
+    return { body, comb, tail, dance, ...outfit };
   }
 
   // The roster writes pack-relative paths (`avatars/rob.png`), which live in the
@@ -57,8 +78,8 @@ export const resolvePlayerAppearance = (
   const avatarSrc = resolveContentAssetSrc(player.avatarSrc, serverOrigin);
 
   if (avatarSrc === null) {
-    return { body, comb, tail, dance };
+    return { body, comb, tail, dance, ...outfit };
   }
 
-  return { body, comb, tail, dance, avatarSrc };
+  return { body, comb, tail, dance, avatarSrc, ...outfit };
 };

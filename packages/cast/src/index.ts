@@ -82,6 +82,7 @@ export {
   CHARACTER_TAILS,
   resolvePlayerAppearance,
   type CharacterAppearance,
+  type CharacterAppearanceSource,
   type CharacterBody,
   type CharacterComb,
   type CharacterDance,

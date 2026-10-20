@@ -32,6 +32,7 @@ import {
   type Outfit,
   type OutfitChoice,
   type OutfitItem,
+  type OutfitsByGenre,
   type OutfitSlot,
   type OutfitStyle
 } from "./types.ts";
@@ -187,6 +188,25 @@ export const resolveWornOutfit = (
   }
 
   return worn;
+};
+
+/**
+ * What a player wears on a team of this genre: the outfit they built for it,
+ * read tolerantly, or undefined when they are bare there (or the surface does
+ * not know the team). Every surface that draws a player's bird calls this with
+ * the CURRENT team's genre and puts the result on `CharacterAppearance.outfit`.
+ */
+export const resolvePlayerOutfit = (
+  player: { outfits?: OutfitsByGenre },
+  genre: GenreKey | null | undefined
+): Outfit | undefined => {
+  if (genre === null || genre === undefined) {
+    return undefined;
+  }
+
+  const worn = resolveWornOutfit(genre, player.outfits?.[genre]);
+
+  return Object.keys(worn).length === 0 ? undefined : worn;
 };
 
 // The pack's shape, per choice: an item id and maybe a style. Membership is

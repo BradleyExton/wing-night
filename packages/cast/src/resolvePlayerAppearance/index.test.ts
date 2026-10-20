@@ -75,3 +75,16 @@ test("does omit the avatar key when the player has none", () => {
 
   assert.equal("avatarSrc" in appearance, false);
 });
+
+test("does carry the outfit a surface resolved onto the appearance", () => {
+  const outfit = { top: { item: "battle-vest-a", style: "ink" as const } };
+
+  assert.deepEqual(resolvePlayerAppearance({ name: "Rob", outfit }).outfit, outfit);
+  assert.deepEqual(resolvePlayerAppearance({ name: "Rob", avatarSrc: "avatars/rob.png", outfit }, "http://tv:3000").outfit, outfit);
+});
+
+test("does leave a bare bird with no outfit key at all when it wears nothing", () => {
+  for (const outfit of [undefined, null, {}]) {
+    assert.ok(!("outfit" in resolvePlayerAppearance({ name: "Rob", outfit })));
+  }
+});
