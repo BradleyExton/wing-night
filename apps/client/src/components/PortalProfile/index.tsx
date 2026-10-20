@@ -1,23 +1,27 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { resolveThemeTeam, type PortalAvatarStatus } from "@wingnight/shared/guestPortal";
+import { PORTAL_API_ROUTES, resolveThemeTeam, type PortalAvatarStatus } from "@wingnight/shared/guestPortal";
 
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { usePortalMe } from "../../utils/usePortalMe";
 import { usePortalTeams } from "../../utils/usePortalTeams";
 import * as shellStyles from "../PortalShell/styles";
 import { PortalShell, type PortalShellLink } from "../PortalShell";
+import { resolveGenreOutfit } from "../PortalWardrobe/wardrobeState";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { AvatarStudio } from "./AvatarStudio";
 import { portalProfileCopy } from "./copy";
 import { TeamPickCard } from "./TeamPickCard";
 import { useTeamPick } from "./useTeamPick";
+import { YourBirdCard } from "./YourBirdCard";
 import * as styles from "./styles";
 
 const NO_THEMES = new Map<string, never>();
 
-// /me: a signed-in guest's page — their head, then their team. The team list and the pick in
-// flight sit here, above both cards, because the studio's bird dresses as the picked team the
-// moment a tile is tapped. Without a session it sends them to sign in.
+// /me: a signed-in guest's page — their head, their team, then their bird. The team list and the
+// pick in flight sit here, above the cards, because every bird on the page dresses as the picked
+// team the moment a tile is tapped: its kit, and the outfit the guest built for its genre — a
+// costume change they watch (docs/research/bird-wardrobe.md §2.4). Without a session it sends them
+// to sign in.
 export const PortalProfile = (): JSX.Element => {
   const { state, update, signOut } = usePortalMe();
   const teams = usePortalTeams(state.kind === "ready");
@@ -44,6 +48,7 @@ export const PortalProfile = (): JSX.Element => {
   const shownTeam =
     teams.state.kind === "ready" ? teams.state.teams.teams.find((team) => team.name === pick.shownPick) : undefined;
   const shownTheme = shownTeam === undefined ? undefined : themeById.get(shownTeam.id);
+  const shownOutfit = shownTheme === undefined ? {} : resolveGenreOutfit(me?.team?.outfitsByGenre, shownTheme.genre);
 
   if (me === null) {
     return (
@@ -68,8 +73,20 @@ export const PortalProfile = (): JSX.Element => {
       onSignOut={(): void => void signOut()}
     >
       <div className={styles.cards}>
-        <AvatarStudio displayName={me.displayName} avatar={me.avatar} theme={shownTheme} onAvatar={handleAvatar} />
+        <AvatarStudio
+          displayName={me.displayName}
+          avatar={me.avatar}
+          theme={shownTheme}
+          outfit={shownOutfit}
+          onAvatar={handleAvatar}
+        />
         <TeamPickCard teams={teams.state} pick={pick} themeById={themeById} />
+        <YourBirdCard
+          displayName={me.displayName}
+          headSrc={me.avatar.headHash === null ? null : `${PORTAL_API_ROUTES.myAvatar}?v=${me.avatar.headHash}`}
+          theme={shownTheme}
+          outfit={shownOutfit}
+        />
       </div>
     </PortalShell>
   );

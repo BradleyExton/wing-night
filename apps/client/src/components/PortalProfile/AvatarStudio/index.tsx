@@ -1,4 +1,4 @@
-import type { TeamTheme } from "@wingnight/shared";
+import type { Outfit, TeamTheme } from "@wingnight/shared";
 import { PORTAL_API_ROUTES, type PortalAvatarStatus } from "@wingnight/shared/guestPortal";
 
 import { PortalHeadBird } from "../../PortalHeadBird";
@@ -14,12 +14,14 @@ type AvatarStudioProps = {
   // The picked team's kit, so the bird under the head is dressed as the TV will dress it. It
   // repaints the moment a tile is tapped (PortalProfile's optimistic pick), before the save lands.
   theme?: TeamTheme;
+  // What the bird wears on that team (its genre's outfit), so a team switch is a costume change.
+  outfit?: Outfit;
   onAvatar: (next: PortalAvatarStatus) => void;
 };
 
 // The guest's head, made on their phone: a photo in, Gemini's paint keyed in the browser, the
 // head previewed on their bird, kept or tried again — five tries in all, counted by the portal.
-export const AvatarStudio = ({ displayName, avatar, theme, onAvatar }: AvatarStudioProps): JSX.Element => {
+export const AvatarStudio = ({ displayName, avatar, theme, outfit, onAvatar }: AvatarStudioProps): JSX.Element => {
   const studio = useAvatarStudio(avatar, onAvatar);
   const { phase } = studio;
   const preview = phase.kind === "preview" || phase.kind === "accepting" ? phase : null;
@@ -97,6 +99,7 @@ export const AvatarStudio = ({ displayName, avatar, theme, onAvatar }: AvatarStu
         name={displayName}
         headSrc={preview?.previewSrc ?? keptHeadSrc}
         theme={theme}
+        outfit={outfit}
         size="large"
         label={birdLabel}
       />

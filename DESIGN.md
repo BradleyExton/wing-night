@@ -882,7 +882,27 @@ scroll: it is a form a guest fills in, not a show, so §2.2's no-scroll rule is 
     heads on birds, and "3 of 4 seats" in the score face. The picked tile is ringed `primary`; a
     full tile is dimmed with "Full"; once picks are closed the card says "Teams are set." and the
     tiles are inert. A tap saves the pick, and the bird in the studio above repaints in that
-    team's kit.
+    team's kit and in the outfit the guest built for that team's genre — a costume change. The
+    members on a tile wear their outfits too (kit only: a row of Stages reads as puddles). *Your
+    bird*, third: the dressed bird small on its stage beside one line in the show's voice of what
+    it has on ("Battle vest, leather sleeve and Flying V." / "Bare. The silhouette's doing all the
+    work."), and **Open the wardrobe**. Before a team: "Pick a team to open its wardrobe."
+-   **`/me/wardrobe`** (mockup `mockups/cast/wardrobe-picker.html`; research
+    `docs/research/bird-wardrobe.md` §2.5) — a page of its own so the phone's back button leaves
+    it; the team's name is the eyebrow over "Dress for the parade". From the top: the stage card
+    (the bird large with its photo head, idle, on its Stage, in team colour; tap it to play its
+    Move; a *TV size* pill swaps it for a dark strip of the bird at 130px, blurred as from the
+    couch, and 76px kit only, as in a game), the status line, and a sideways row of 🎲 **Dress
+    me** (solid primary) then the team's Looks (glass, the worn one ringed). Then the rail: a tab
+    per slot the genre has (no Boots on country), a `primary` dot on each filled one, sticking to
+    the top of the screen over `bg` while the grid scrolls; a kit-or-showpiece line; a three-across
+    grid of square tiles, **None** first, each tile the guest's own bird wearing that item, cropped
+    square to the slot's region (a Top or Sleeve tile without the Prop across it), "All teams" on
+    a shared item, the worn tile ringed `primary`; and, when the worn item has more than one
+    style, a row of round swatches in the style's own paint. Every tap saves at once, no Save
+    button; the status line names what was tapped ("Flying V.", "Top off."). Last, *Your team in
+    the parade*: every teammate who has picked, dancing on a steady beat in what they wear now,
+    and the line that changes reach the TV at Brad's last pull.
 -   **`/admin`** — "The guest list.": the guest table (name, email, sign-in / head / team / tries
     status and its actions — invite, link, reset tries), Add a guest, the head gallery (three
     across, the style reference ringed in `primary`), and the team board: the "Picks are open /

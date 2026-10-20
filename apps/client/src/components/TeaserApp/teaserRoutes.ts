@@ -9,6 +9,8 @@ export const TEASER_ROUTES = {
   // The guest portal's pages, behind a sign-in (apps/teaser-worker). The link a guest is sent
   // (`/s/<token>`) is the Worker's own page, and it lands here.
   me: PORTAL_HOME_PATH,
+  // The bird's wardrobe, a page of its own so a phone's back button leaves it for /me.
+  wardrobe: `${PORTAL_HOME_PATH}/wardrobe`,
   admin: "/admin",
   signIn: "/signin"
 } as const;

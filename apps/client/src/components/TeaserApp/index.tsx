@@ -18,6 +18,10 @@ const PortalProfile = lazy(() =>
   import("../PortalProfile").then((module) => ({ default: module.PortalProfile }))
 );
 
+const PortalWardrobe = lazy(() =>
+  import("../PortalWardrobe").then((module) => ({ default: module.PortalWardrobe }))
+);
+
 const PortalAdmin = lazy(() =>
   import("../PortalAdmin").then((module) => ({ default: module.PortalAdmin }))
 );
@@ -43,6 +47,10 @@ export const TeaserApp = (): JSX.Element => {
 
     if (path === TEASER_ROUTES.me) {
       return <PortalProfile />;
+    }
+
+    if (path === TEASER_ROUTES.wardrobe) {
+      return <PortalWardrobe />;
     }
 
     if (path === TEASER_ROUTES.admin) {

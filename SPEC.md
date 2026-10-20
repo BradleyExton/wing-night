@@ -134,15 +134,24 @@ separate deployable from the party app and shares nothing with it at runtime.
   ceil(guests ÷ teams), recomputed on every read, and a full team cannot be picked. Brad can move
   anyone (over the cap if he wants) and close picks, after which a guest sees their team but can
   no longer change it.
+- **Bird wardrobe** (`/me/wardrobe`, docs/research/bird-wardrobe.md). Once on a team, the guest
+  dresses their bird from that team's genre rail plus a shared one, one item per slot (Top,
+  Sleeve, Tail, Boots — none on country — Prop, Stage, Move), with the team's Looks and a random
+  "Dress me". Every tap saves; outfits are kept per genre, so switching team and back restores
+  the one built there, and a guest's bird is bare until they dress it. Teammates see each other
+  dressed. Closing picks leaves the wardrobe open, but only what the last pull copies reaches
+  the TV.
 - **Admin** (`/admin`, Brad's admin session only). The guest list with sign-in, head, team and
   tries status; add, edit, invite, invite all, mint a link, reset tries; the head gallery; the
   team board (every team's members in seating order plus the unseated, each movable) under the
   "Picks are open / closed" switch.
-- **Into the night pack, one way.** `pnpm pack:pull` copies every guest's name, kept head and
-  picked team from the portal into `~/wing-night-content` (`local/players.json`,
+- **Into the night pack, one way.** `pnpm pack:pull` copies every guest's name, kept head,
+  picked team and outfits from the portal into `~/wing-night-content` (`local/players.json`,
   `local/assets/avatars/`), adding new guests unseated and never renaming or removing a player.
   A pick lands on the player's `team` and wins over whatever `players.json` had; a guest with no
-  pick leaves their player's seat alone. Email addresses never leave the portal.
+  pick leaves their player's seat alone. A guest who has dressed (or stripped) their bird
+  replaces the player's whole `outfits`, every genre; one who never opened the wardrobe leaves
+  them alone. Email addresses never leave the portal.
 
 The party itself stays local and offline: nothing on the night depends on the internet or on the
 portal. GEO's map tiles degrade to a visible graticule with a note, and RECREATE's live forgery

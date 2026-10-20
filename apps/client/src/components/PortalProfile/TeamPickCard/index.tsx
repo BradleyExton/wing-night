@@ -109,6 +109,7 @@ export const TeamPickCard = ({ teams, pick, themeById }: TeamPickCardProps): JSX
                           name={member.displayName}
                           headSrc={resolveMemberHeadSrc(member)}
                           theme={theme}
+                          outfit={member.outfit}
                           size="tiny"
                           label={teamPickCardCopy.memberBirdLabel(member.displayName)}
                         />

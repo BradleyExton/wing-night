@@ -104,6 +104,50 @@ On branch `claude/objective-napier-8ad040`, from run 2's `claude/gallant-cohen-b
   - battle-vest a, combat-boots a and flying-v a keep their own copies of geometry their rail's
     `paths` module now also builds.
 
+## Run 4: what landed (2026-10-20)
+
+On branch `claude/affectionate-raman-154b58`, from run 3's `claude/objective-napier-8ad040`. Not
+deployed: the Worker change needs `pnpm teaser:deploy`, and no D1 migration (`outfits_json` was
+already in 0005).
+
+- **`PUT /api/me/outfit { genre, outfit }`.** Read strictly for that genre (`parseOutfit`; 400
+  `outfit_invalid`), body capped at 2 KB (`OUTFIT_REQUEST_MAX_BYTES`, 413), and refused with 409
+  `no_team` unless the guest is seated on a roster team of that genre — a page left open across a
+  team switch is told, not obeyed. One statement sets just that genre's key in `outfits_json`
+  (`json_set`), only while the row still names the team it checked. Picks closing leaves the
+  wardrobe open (research §2.4); open question 7 is still Brad's.
+- **"Cleared" is `{}` for the genre.** A guest who strips a genre bare stores `{ metal: {} }`.
+  The export sends every genre as stored (an orphaned pick's outfits too, since they are per
+  genre), and the pull's whole-map replace treats that as a dressed map: the pack's bird goes
+  bare. A guest who never opened the wardrobe still exports `{}` and leaves the pack alone. The
+  dry run says `Rob: metal -> (bare)`. Unit-tested in the Worker, the pull and the outfit
+  readers, and end to end in `tests/e2e-portal/wardrobe.spec.ts` (UI → export → `planPull`).
+- **`TeamPick.outfitsByGenre` is `OutfitsByGenre`** (the team pick's string draft is gone), and
+  `PortalTeamMember.outfit` carries each member's outfit for their team's genre, read tolerantly.
+- **`/me`.** `PortalHeadBird` takes an `outfit` (showpieces on, except in a row): the studio bird,
+  the members on the team tiles and the new *Your bird* card all wear it, so a team tap is a
+  costume change. The card is third; before a team it says "Pick a team to open its wardrobe."
+- **`/me/wardrobe`** (`PortalWardrobe`): the stage (tap plays the Move; TV size shows 130px
+  blurred and 76px kit only), the status line, Dress me and the Looks, the rail (sticky tabs, no
+  Boots on country, None first, three across), style swatches, and the team dancing to the beat
+  clock with no music. Every tap saves through `useOutfitSave`: optimistic like `useTeamPick`, and
+  serial — a tap while a save flies replaces whatever was waiting, and a refusal puts the stored
+  outfit back. The pure parts (summary, dice, a tap, a swatch, which Look is on, the crops) are
+  `PortalWardrobe/wardrobeState`, tested.
+- **Tiles are your own bird, cropped.** `OUTFIT_SLOT_CROPS` started from the mockup's and was
+  widened to the cast's items as drawn, checked on the spiky, preener and broody bodies (pop's
+  stock bird was not in the e2e roster). Every window is square, because a wide one letterboxes
+  and the letterbox shows the bird around it. Top and Sleeve tiles draw without the Prop, which
+  otherwise hides the garment being tried.
+- **Known edges, for run 5.**
+  - A photo head pokes into the right edge of the Prop and Tail tiles; the crops are one set for
+    every body, not per silhouette.
+  - Brad's admin "Unseat" deletes the pick's row, outfits and all; reseating keeps them.
+  - The whole-map replace still loses a genre Brad dressed by hand that the guest never touched
+    (run 2's open question); a per-genre merge would fix it and keep "cleared" working.
+  - Move tiles loop by re-keying the figure every 2.6 s; a Move playing on the stage is not tied
+    to a beat.
+
 ## Rules every agent brief carries
 
 - **Process hygiene.** Stop only processes you started, by the PID you captured. Never `pkill`,

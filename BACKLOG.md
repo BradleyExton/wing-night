@@ -481,12 +481,9 @@ lists above; nothing here repeats them.
 - **TRIVIA on the phones** — majority vote, partial credit and the night pack's missing
   `trivia.json` (choices come from the sample pack's eight) are under "Answers on the phones"
   above.
-- **Wardrobe (milestones 2–4 of `docs/guest-portal-team-pick-plan.md`).** The team pick is
-  milestone 1. Still to build: the harness round where Brad picks each genre's rail on the 76px
-  row (no app code), the outfit vocabulary in `packages/shared/src/outfit` drawn by
-  `CharacterFigure` in the `body` part and carried on `Player.outfit` through the loader, the
-  pull and the teaser roster, and finally the wardrobe card on `/me` with its route and admin
-  export.
+- **Wardrobe** (`docs/bird-wardrobe-build-plan.md`). Gate 1, the art pass and runs 2–4 are built
+  on branches (run 4, the portal picker, on `claude/affectionate-raman-154b58`); still to come:
+  run 5's polish audit, then Gate 2 (feel test, `pnpm teaser:deploy`, a real `pack:pull`).
 
 ## Team identity (genre theming)
 
