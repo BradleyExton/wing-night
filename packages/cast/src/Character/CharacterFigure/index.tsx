@@ -4,6 +4,8 @@ import type { CharacterAppearance, CharacterDance } from "../../resolvePlayerApp
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { CharacterHead } from "../CharacterHead/index.js";
+import { resolveCharacterMoveClassName, type CharacterMovePlay } from "../moves/index.js";
+import * as moveStyles from "../moves/styles.js";
 import { isOutfitSlotDrawn, OutfitLayer } from "../Outfit/index.js";
 import {
   CHARACTER_WING_PATH,
@@ -58,6 +60,11 @@ export type CharacterFigureProps = {
   // wing to a surface that beats it: the lobby parade hops its birds, and a
   // stage must stay on the floor while the bird leaves it.
   stage?: "drawn" | "none";
+  // A Move to play (`CHARACTER_MOVES`, the wardrobe's showpiece motion): one
+  // bar, once, in place of the pose, and back to it after. The surface decides
+  // when — the parade every few bars, the intro lineup once — and plays it
+  // again by clearing it and setting it back (or by keying the figure).
+  move?: CharacterMovePlay;
 };
 
 export const CHARACTER_WING_ROOT = CHARACTER_PIVOTS.wing;
@@ -209,7 +216,8 @@ export const CharacterFigure = ({
   silhouette,
   dance,
   showpieces = false,
-  stage = "drawn"
+  stage = "drawn",
+  move
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const shapes = resolveCharacterShapes({ ...appearance, silhouette });
@@ -226,10 +234,14 @@ export const CharacterFigure = ({
   // A team with a dance of its own moves together; otherwise the step is the
   // player's, so a mixed floor stays mixed.
   const danced = dance ?? appearance.dance;
+  // A Move takes every part for its bar and has no jig: it is one flourish,
+  // drawn and timed as a whole.
   const rig: CharacterRig =
-    pose === "dance"
-      ? { pose: styles.dances[danced], jig: styles.danceJigs[danced] }
-      : { pose: styles.poses[pose], jig: {} };
+    move !== undefined
+      ? { pose: moveStyles.moveParts, jig: {} }
+      : pose === "dance"
+        ? { pose: styles.dances[danced], jig: styles.danceJigs[danced] }
+        : { pose: styles.poses[pose], jig: {} };
   // Riding is the one pose that redraws anything: a crouch is a bent knee, and
   // no turn of a straight shank bends one. Everything above the knees sinks by
   // the shape's crouch; the legs are drawn from the sunk hips down to the
@@ -253,11 +265,13 @@ export const CharacterFigure = ({
       data-character-tail={appearance.tail}
       data-character-pose={pose}
       data-character-silhouette={silhouette}
+      data-character-move={move}
+      className={move === undefined ? undefined : resolveCharacterMoveClassName(move)}
     >
       {/* The Stage is ground, not bird: under everything and out of the rig,
           so it neither bobs nor leans with the pose. */}
       {showpieces && stage === "drawn" && <OutfitLayer slot="stage" outfit={outfit} context={outfitContext} />}
-      <Stance className={styles.stances[pose]}>
+      <Stance className={move === undefined ? styles.stances[pose] : undefined}>
         <Part part="tail" rig={rig} drop={crouch}>
           <path className={ink} d={shapes.tail} />
           <OutfitLayer slot="tail" outfit={outfit} context={outfitContext} />

@@ -72,6 +72,17 @@ export {
   CharacterRagdollFigure,
   type CharacterRagdollFigureProps
 } from "./Character/CharacterRagdollFigure/index.js";
+// The Moves, one-bar flourishes a bird on show plays (`move` on the figure),
+// and the keyframes they need, which moves.css holds.
+export {
+  CHARACTER_MOVES,
+  resolveCharacterMoveClassName,
+  resolveCharacterMovePartTransform,
+  resolveCharacterMovesCss,
+  type CharacterMove,
+  type CharacterMovePlay,
+  type CharacterMovePose
+} from "./Character/moves/index.js";
 // How loose one bird is: a class of custom properties that scatter its
 // footwork, its bounce and the moment it lands the room's beat.
 export {

@@ -3,7 +3,12 @@ import type { CharacterApparel } from "../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../resolveTeamSilhouette/index.js";
 import type { CharacterDance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterPose } from "./geometry/index.js";
-import { CharacterFigure, CharacterStageFigure, CharacterWingFigure } from "./CharacterFigure/index.js";
+import {
+  CharacterFigure,
+  CharacterStageFigure,
+  CharacterWingFigure,
+  type CharacterFigureProps
+} from "./CharacterFigure/index.js";
 import { isOutfitSlotDrawn } from "./Outfit/index.js";
 import * as styles from "./styles.js";
 
@@ -26,6 +31,8 @@ export type CharacterProps = {
   // ground with `stage="none"` (`CharacterStage`).
   showpieces?: boolean;
   stage?: "drawn" | "none";
+  // A Move to play once, in place of the pose (`CharacterFigure`'s `move`).
+  move?: CharacterFigureProps["move"];
 };
 
 export const Character = ({
@@ -37,7 +44,8 @@ export const Character = ({
   silhouette,
   dance,
   showpieces,
-  stage
+  stage,
+  move
 }: CharacterProps): JSX.Element => {
   return (
     <svg
@@ -53,6 +61,7 @@ export const Character = ({
         dance={dance}
         showpieces={showpieces}
         stage={stage}
+        move={move}
       />
     </svg>
   );

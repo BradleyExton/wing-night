@@ -4,6 +4,8 @@ import "leaflet/dist/leaflet.css";
 // The keyframes packages/surface's style tokens name. The package ships them
 // because it declares them; see packages/surface/src/keyframes.css.
 import "@wingnight/surface/keyframes.css";
+// The keyframes the cast's Moves name (packages/cast/src/moves.css, generated).
+import "@wingnight/cast/moves.css";
 import "./index.css";
 
 const container = document.getElementById("root");

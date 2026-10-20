@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client";
 
 import { TeaserApp } from "./components/TeaserApp";
 import "@wingnight/surface/keyframes.css";
+import "@wingnight/cast/moves.css";
 import "./index.css";
 
 // The online teaser's entry (vite.teaser.config.ts). The party app's is main.tsx, and nothing
