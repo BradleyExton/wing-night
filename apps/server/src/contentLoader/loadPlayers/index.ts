@@ -28,21 +28,19 @@ const parsePlayersEntries = (
   return parsedContent.players;
 };
 
+// `outfits` is carried as written, cut items and all: the surfaces undress
+// what the catalogue no longer has (`resolveWornOutfit`), and the config
+// wizard's write-back must not lose a guest's choice just because tonight's
+// catalogue is smaller. `warnDroppedOutfitChoices` says what will not be drawn.
 const buildPlayer = (entry: PlayersContentEntry, index: number): Player => {
   const normalizedName = entry.name.trim();
   const normalizedAvatarSrc = entry.avatarSrc?.trim();
 
-  if (!normalizedAvatarSrc) {
-    return {
-      id: `player-${index + 1}`,
-      name: normalizedName
-    };
-  }
-
   return {
     id: `player-${index + 1}`,
     name: normalizedName,
-    avatarSrc: normalizedAvatarSrc
+    ...(normalizedAvatarSrc ? { avatarSrc: normalizedAvatarSrc } : {}),
+    ...(entry.outfits === undefined ? {} : { outfits: entry.outfits })
   };
 };
 

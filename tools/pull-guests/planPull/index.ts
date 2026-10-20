@@ -16,6 +16,11 @@
 // the Worker's export only carries a pick that names a team its roster still has (a renamed team
 // orphans its picks, and an orphan exports as no pick), and the server refuses to boot on a
 // player seated on a team teams.json does not declare — so the name is trusted, not checked twice.
+//
+// Outfits come down the same way: a guest who has dressed their bird REPLACES the player's whole
+// `outfits` map (every genre, so a reseat keeps them dressed), and a guest who never opened the
+// wardrobe (no outfits, or an empty map) leaves whatever players.json has — which is how a bird
+// Brad dressed by hand survives a pull.
 import { slugifyName } from "../../../packages/avatar-head/src/index.ts";
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
 
@@ -76,6 +81,13 @@ export type TeamChange = {
   to: string;
 };
 
+// A guest's outfits replacing their player's: the genres dressed before and after.
+export type OutfitChange = {
+  name: string;
+  from: string[];
+  to: string[];
+};
+
 // A guest whose portal name no longer matches their player's: the player keeps theirs.
 export type NameNote = {
   name: string;
@@ -88,6 +100,7 @@ export type PullPlan = {
   addedPlayers: string[];
   avatarChanges: AvatarChange[];
   teamChanges: TeamChange[];
+  outfitChanges: OutfitChange[];
   nameNotes: NameNote[];
   downloads: HeadDownload[];
   playersChanged: boolean;
@@ -126,6 +139,12 @@ export const readAvatarManifest = (value: unknown, filePath: string): AvatarMani
     ...(value.onlineGuests === undefined ? {} : { onlineGuests: value.onlineGuests })
   };
 };
+
+// Outfits are plain JSON both sides (the export's and players.json's), so key order is the only
+// difference that is not a change, and the pull writes the export's order.
+const isSameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+const dressedGenres = (outfits: unknown): string[] => (isRecord(outfits) ? Object.keys(outfits).sort() : []);
 
 export const resolveHeadFileName = (slug: string, sha256: string): string =>
   `${slug}-${sha256.slice(0, HEAD_HASH_PREFIX_LENGTH)}.png`;
@@ -233,6 +252,7 @@ export const planPull = ({
   const addedPlayers: string[] = [];
   const avatarChanges: AvatarChange[] = [];
   const teamChanges: TeamChange[] = [];
+  const outfitChanges: OutfitChange[] = [];
   const nameNotes: NameNote[] = [];
   const downloads: HeadDownload[] = [];
   let playersChanged = false;
@@ -265,6 +285,18 @@ export const planPull = ({
     if (guest.team !== null && player.team !== guest.team) {
       teamChanges.push({ name: player.name, from: typeof player.team === "string" ? player.team : null, to: guest.team });
       player = { ...player, team: guest.team };
+      players[index] = player;
+      playersChanged = true;
+    }
+
+    // A dressed guest replaces every outfit; an undressed one leaves the pack's alone.
+    if (
+      guest.outfits !== undefined &&
+      Object.keys(guest.outfits).length > 0 &&
+      !isSameJson(player.outfits, guest.outfits)
+    ) {
+      outfitChanges.push({ name: player.name, from: dressedGenres(player.outfits), to: dressedGenres(guest.outfits) });
+      player = { ...player, outfits: guest.outfits };
       players[index] = player;
       playersChanged = true;
     }
@@ -313,6 +345,7 @@ export const planPull = ({
     addedPlayers,
     avatarChanges,
     teamChanges,
+    outfitChanges,
     nameNotes,
     downloads,
     playersChanged,
@@ -351,6 +384,10 @@ export const describePlan = (plan: PullPlan): string[] => {
     ...plan.avatarChanges.map((change) => `  ${change.name}: ${change.from ?? "(none)"} -> ${change.to}`),
     `Team changes (${plan.teamChanges.length}):`,
     ...plan.teamChanges.map((change) => `  ${change.name}: ${change.from ?? "(unseated)"} -> ${change.to}`),
+    `Outfit changes (${plan.outfitChanges.length}):`,
+    ...plan.outfitChanges.map(
+      (change) => `  ${change.name}: ${change.from.join(", ") || "(bare)"} -> ${change.to.join(", ")}`
+    ),
     `Files to write (${writes.length}):`,
     ...writes.map((write) => `  ${write}${sizeByWrite.get(write) ?? ""}`)
   ];

@@ -39,7 +39,8 @@ const toPlayersContentEntries = (
     return {
       name: player.name,
       ...(player.avatarSrc === undefined ? {} : { avatarSrc: player.avatarSrc }),
-      ...(teamName === undefined ? {} : { team: teamName })
+      ...(teamName === undefined ? {} : { team: teamName }),
+      ...(player.outfits === undefined ? {} : { outfits: player.outfits })
     };
   });
 };

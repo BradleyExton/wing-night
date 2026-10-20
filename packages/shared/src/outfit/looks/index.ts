@@ -5,7 +5,7 @@
 // only where rule 8 needs one: a Prop contrasts with the Sleeve behind it.
 //
 // Every Look must pass `parseOutfit` for its genre, which a test holds.
-import type { OutfitGenre, OutfitLook } from "../types.js";
+import type { OutfitGenre, OutfitLook } from "../types.ts";
 
 export const OUTFIT_LOOKS: Record<OutfitGenre, readonly OutfitLook[]> = {
   metal: [

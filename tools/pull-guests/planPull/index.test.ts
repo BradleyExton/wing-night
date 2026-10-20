@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
+import type { OutfitsByGenre } from "../../../packages/shared/src/outfit/index.ts";
 import {
   describePlan,
   listPlannedWrites,
@@ -167,6 +168,7 @@ test("does describe added players, avatar changes and files with sizes when ther
     "Avatar changes (1):",
     "  Rob: avatars/rob.png -> avatars/rob-1a2b3c4d.png",
     "Team changes (0):",
+    "Outfit changes (0):",
     "Files to write (3):",
     "  local/assets/avatars/rob-1a2b3c4d.png (100 bytes)",
     "  local/avatar-sources/manifest.json",
@@ -264,6 +266,7 @@ test("does list team changes in the dry-run description when picks land", () => 
     "  Rob: Metal -> Disco",
     "  Alex: (unseated) -> Metal",
     "  Kim: (unseated) -> Pop",
+    "Outfit changes (0):",
     "Files to write (2):",
     "  local/avatar-sources/manifest.json",
     "  local/players.json"
@@ -280,4 +283,41 @@ test("does match an accented guest to a plain-spelled player when the names fold
     { name: "Jos", team: "Metal" },
     { name: "José", avatarSrc: "avatars/jose-ffee0011.png" }
   ]);
+});
+
+const ROB_METAL: OutfitsByGenre = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a", style: "gold" } } };
+
+test("does replace a player's whole outfits map with a dressed guest's", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: { pop: { top: { item: "crop-jacket-a" } } } }] };
+  const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: ROB_METAL }]);
+  assert.deepEqual(result.outfitChanges, [{ name: "Rob", from: ["pop"], to: ["metal"] }]);
+  assert.equal(result.playersChanged, true);
+});
+
+test("does dress an added player in their guest's outfits", () => {
+  const result = plan({ players: [] }, [{ ...guest("g_kim", "Kim"), outfits: ROB_METAL }]);
+
+  assert.deepEqual(result.players.players, [{ name: "Kim", outfits: ROB_METAL }]);
+});
+
+test("does leave a hand-dressed player alone when their guest never opened the wardrobe", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: ROB_METAL }, { name: "Ada", outfits: ROB_METAL }] };
+  const result = plan(playersFile, [guest("g_rob", "Rob"), { ...guest("g_ada", "Ada"), outfits: {} }]);
+
+  assert.deepEqual(result.players.players, playersFile.players);
+  assert.deepEqual(result.outfitChanges, []);
+});
+
+test("does plan no outfit change when the guest's outfits are already the player's", () => {
+  const result = plan({ players: [{ name: "Rob", outfits: ROB_METAL }] }, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
+
+  assert.deepEqual(result.outfitChanges, []);
+});
+
+test("does list outfit changes in the dry-run description", () => {
+  const result = plan({ players: [{ name: "Rob" }] }, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
+
+  assert.ok(describePlan(result).includes("  Rob: (bare) -> metal"));
 });

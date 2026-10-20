@@ -1,4 +1,4 @@
-import type { GenreKey } from "../teamTheme/index.js";
+import type { GenreKey } from "../teamTheme/index.ts";
 
 // The wardrobe's vocabulary (docs/research/bird-wardrobe.md §2.1, §2.7). It
 // lives in shared because four packages read it: the server's loader, the

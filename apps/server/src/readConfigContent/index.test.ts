@@ -117,3 +117,23 @@ test("does not drop prompts tagged with players who are off tonight's roster", (
     ["d-1"]
   );
 });
+
+test("does carry a player's outfits back out to the wizard, cut items and all", () => {
+  const contentRoot = createContentRoot();
+  const outfits = {
+    metal: { top: { item: "battle-vest-a" }, prop: { item: "cut-long-ago", style: "gold" } },
+    pop: { boots: { item: "go-go-boots-b", style: "ink" } }
+  };
+
+  writeValidContentTree(contentRoot, "sample", "Sample");
+  writeContentFile(
+    contentRoot,
+    "sample/players.json",
+    JSON.stringify({ players: [{ name: "Rob", outfits }, { name: "Ada" }] })
+  );
+
+  const result = readConfigContent({ contentRootDir: contentRoot });
+
+  assert.ok(result.ok);
+  assert.deepEqual(result.content.players, [{ name: "Rob", outfits }, { name: "Ada" }]);
+});

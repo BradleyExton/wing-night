@@ -33,3 +33,19 @@ test("does refuse the export when a guest is missing its id, name, head or team 
   assert.equal(isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: "" }]), false);
   assert.equal(isAdminGuestExportList({ guests: [] }), false);
 });
+
+test("does read a guest's outfits whatever items they name when the shape is right", () => {
+  const outfits = { metal: { top: { item: "battle-vest-a" } }, pop: { tail: { item: "cut-since" } } };
+
+  assert.equal(isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits }]), true);
+});
+
+test("does refuse a guest's outfits when they are not genre -> slot -> choice", () => {
+  for (const outfits of [[], { metal: { hat: { item: "x" } } }, { metal: { top: "battle-vest-a" } }]) {
+    assert.equal(
+      isAdminGuestExportList([{ guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits }]),
+      false,
+      JSON.stringify(outfits)
+    );
+  }
+});

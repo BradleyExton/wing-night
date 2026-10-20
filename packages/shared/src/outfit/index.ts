@@ -17,10 +17,14 @@
 // that is a bare string fails the boot with a path. Only catalogue membership
 // is left to the tolerant reader, because that is the part that changes under
 // a guest after they chose.
-import { isNonEmptyString, isRecord } from "../guards/index.js";
-import { prefixIssuePaths, type ValidationIssue } from "../content/validationIssue/index.js";
-import { GENRE_KEYS, type GenreKey } from "../teamTheme/index.js";
-import { OUTFIT_ITEMS } from "./catalogue/index.js";
+//
+// Imports carry the `.ts` suffix, like ../guestPortal's export and routes,
+// because `pnpm pack:pull` reads a guest's outfits through this module under
+// plain `node`, whose type stripping resolves no `.js` alias.
+import { isNonEmptyString, isRecord } from "../guards/index.ts";
+import { prefixIssuePaths, type ValidationIssue } from "../content/validationIssue/index.ts";
+import { GENRE_KEYS, type GenreKey } from "../teamTheme/index.ts";
+import { OUTFIT_ITEMS } from "./catalogue/index.ts";
 import {
   OUTFIT_GENRES,
   OUTFIT_SLOTS,
@@ -30,11 +34,11 @@ import {
   type OutfitItem,
   type OutfitSlot,
   type OutfitStyle
-} from "./types.js";
+} from "./types.ts";
 
-export * from "./types.js";
-export { OUTFIT_ITEMS } from "./catalogue/index.js";
-export { OUTFIT_LOOKS } from "./looks/index.js";
+export * from "./types.ts";
+export { OUTFIT_ITEMS } from "./catalogue/index.ts";
+export { OUTFIT_LOOKS } from "./looks/index.ts";
 
 const ITEMS_BY_ID: ReadonlyMap<string, OutfitItem> = new Map(OUTFIT_ITEMS.map((item) => [item.id, item]));
 

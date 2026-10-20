@@ -98,3 +98,24 @@ test("throws when both local and sample players content files are missing", () =
     /Missing players content file/
   );
 });
+
+test("does carry a player's outfits onto the player as written", () => {
+  const contentRoot = createContentRoot();
+  const outfits = { metal: { top: { item: "battle-vest-a" } }, disco: { tail: { item: "no-longer-made" } } };
+
+  writeContentFile(contentRoot, "local/players.json", JSON.stringify({ players: [{ name: "Rob", outfits }] }));
+
+  assert.deepEqual(loadPlayers({ contentRootDir: contentRoot }), [{ id: "player-1", name: "Rob", outfits }]);
+});
+
+test("does refuse a players file whose outfits are the wrong shape", () => {
+  const contentRoot = createContentRoot();
+
+  writeContentFile(
+    contentRoot,
+    "local/players.json",
+    JSON.stringify({ players: [{ name: "Rob", outfits: { metal: { Top: "battle-vest-a" } } }] })
+  );
+
+  assert.throws(() => loadPlayers({ contentRootDir: contentRoot }), /Invalid players content/);
+});

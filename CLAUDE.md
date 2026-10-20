@@ -66,9 +66,15 @@ own seeded root. The server logs the root it resolved at boot as `server:content
 
 Guests, the heads they made and the team they picked on wingnight.tv come down with
 `pnpm pack:pull` (`--dry-run` first to see the diff): one-way, it adds guests as players, writes a
-pick onto the player's `team` (a guest with no pick leaves it alone), never renames or removes a
+pick onto the player's `team` (a guest with no pick leaves it alone), replaces the player's
+`outfits` with a dressed guest's (an undressed guest leaves them alone), never renames or removes a
 player, and backs up `players.json` and the avatar manifest beside themselves before it writes.
 Nothing else comes down.
+
+A bird's outfit is `outfits` on a player in `players.json`, kept per genre and drawn for the
+player's current team: `"outfits": { "metal": { "top": { "item": "battle-vest-a" }, "sleeve":
+{ "item": "flame-sleeve-b", "style": "ink" } } }`. Item ids are the catalogue's
+(`packages/shared/src/outfit`); an id it does not know is skipped with a boot warning, not an error.
 
 Anything the pack does not carry — `gameConfig.json`, the minigame prompt banks — falls back to the
 repo's committed `content/sample/`, so the pack only holds what a party actually customises.

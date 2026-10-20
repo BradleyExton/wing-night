@@ -120,3 +120,17 @@ test("rejects a team that is present and not a string", () => {
     ["team"]
   );
 });
+
+test("does accept a player's outfits whatever items they name", () => {
+  const content = {
+    players: [{ name: "Rob", outfits: { metal: { top: { item: "battle-vest-a" } }, pop: { tail: { item: "gone" } } } }]
+  };
+
+  assert.deepEqual(validatePlayersContentFile(content), []);
+});
+
+test("does report a malformed outfit under the player's outfits path", () => {
+  const content = { players: [{ name: "Rob", outfits: { metal: { top: { item: "battle-vest-a", style: "pink" } } } }] };
+
+  assert.deepEqual(pathsOf(validatePlayersContentFile(content)), ["players[0].outfits.metal.top.style"]);
+});

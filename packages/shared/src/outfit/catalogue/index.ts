@@ -12,7 +12,7 @@
 // `styles` is the drawing's own list, first the default. Gold never leads, and
 // it is absent wherever Gate 1 found it failing (the bandolier, the pom-pom,
 // the mirror-ball egg, every country item).
-import type { OutfitItem, OutfitRail, OutfitSlot, OutfitStyle } from "../types.js";
+import type { OutfitItem, OutfitRail, OutfitSlot, OutfitStyle } from "../types.ts";
 
 const item = (
   id: string,

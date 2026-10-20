@@ -8,6 +8,7 @@ import { loadMinigameContent } from "./loadMinigameContent/index.js";
 import { loadPlayerEntries, toPlayers } from "./loadPlayers/index.js";
 import { loadTeams } from "./loadTeams/index.js";
 import { seatPresetRosters } from "./seatPresetRosters/index.js";
+import { warnDroppedOutfitChoices } from "./warnDroppedOutfitChoices/index.js";
 
 type LoadContentOptions = {
   contentRootDir?: string;
@@ -54,6 +55,8 @@ export const loadContent = (
   options: LoadContentOptions = {}
 ): LoadedContent => {
   const content = loadPackContent(options);
+
+  warnDroppedOutfitChoices({ players: content.players });
 
   // Applied HERE, at the one place that has both the roster and the prompt
   // banks, so every consumer downstream — room state, the socket payloads, every

@@ -1,4 +1,5 @@
 import { isNonEmptyString, isRecord } from "../../guards/index.js";
+import { validateOutfitsByGenre, type OutfitsByGenre } from "../../outfit/index.js";
 import {
   prefixIssuePaths,
   type ValidationIssue
@@ -14,6 +15,10 @@ export type PlayersContentEntry = {
   // team; that check needs both files and therefore lives in
   // `content/rosterAssignment`, not here.
   team?: string;
+  // The bird's outfits, genre -> slot -> { item, style? } (`Player.outfits`).
+  // Written by hand or by `pnpm pack:pull`. The shape is checked here; an item
+  // the catalogue no longer has is not an error, it is undressed at draw time.
+  outfits?: OutfitsByGenre;
 };
 
 export type PlayersContentFile = {
@@ -47,6 +52,10 @@ export const validatePlayersContentEntry = (
       path: "team",
       message: "must be a non-empty string when present"
     });
+  }
+
+  if ("outfits" in value) {
+    issues.push(...prefixIssuePaths(validateOutfitsByGenre(value.outfits), "outfits"));
   }
 
   return issues;
