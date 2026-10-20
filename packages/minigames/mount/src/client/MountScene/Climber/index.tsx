@@ -20,10 +20,12 @@ export type ClimberHandle = {
 // ones the paint loop set.
 const REST = resolveCharacterRagdollRest();
 
-// The figure draws the tail on the body's transform under a layer name of its own.
+// The figure draws the tail and the outfit's Top on the body's transform, each under a layer
+// name of its own. A layer missing here would stand frozen at rest while the bird tumbles.
 const PART_OF_LAYER: Record<string, CharacterRagdollPart> = {
   wingFar: "wingFar",
   tail: "body",
+  outfit: "body",
   legFar: "legFar",
   body: "body",
   legNear: "legNear",

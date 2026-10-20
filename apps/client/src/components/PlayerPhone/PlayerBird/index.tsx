@@ -1,5 +1,5 @@
 import { Character, UNSEATED_CHARACTER_FILL_CLASS_NAME, resolvePlayerAppearance } from "@wingnight/cast";
-import type { Player, TeamTheme } from "@wingnight/shared";
+import { resolvePlayerOutfit, type Player, type TeamTheme } from "@wingnight/shared";
 
 import * as styles from "./styles";
 
@@ -18,7 +18,12 @@ export const PlayerBird = ({ player, teamTheme, serverOrigin, size }: PlayerBird
   return (
     <span className={size === "hero" ? styles.hero : styles.tile} aria-hidden>
       <Character
-        appearance={resolvePlayerAppearance(player, serverOrigin)}
+        appearance={resolvePlayerAppearance(
+          { ...player, outfit: resolvePlayerOutfit(player, teamTheme?.genre) },
+          serverOrigin
+        )}
+        // A guest's own phone shows their bird on show, Prop and Stage too.
+        showpieces
         apparel={teamTheme?.apparel}
         silhouette={teamTheme?.silhouette}
         dance={teamTheme?.dance}

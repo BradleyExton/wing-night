@@ -6,9 +6,13 @@
 export {
   CHARACTER_WING_ORIGIN_CLASS_NAME,
   Character,
+  CharacterStage,
   CharacterWing,
   type CharacterProps
 } from "./Character/index.js";
+// Whether the cast can draw what a bird has on in one slot — a surface that
+// lays a Stage on its own ground asks before giving up its own shadow.
+export { isOutfitSlotDrawn } from "./Character/Outfit/index.js";
 // The bird's own ink, for a surface that draws one of its parts on a layer of
 // its own (JOUST turns the shooter's wing toward the band).
 export { silhouette as CHARACTER_SILHOUETTE_CLASS_NAME } from "./Character/styles.js";
@@ -18,6 +22,7 @@ export {
   CHARACTER_WING_PATH,
   CHARACTER_WING_ROOT,
   CharacterFigure,
+  CharacterWingFigure,
   resolveCharacterRideStance,
   resolveCharacterWingPath,
   type CharacterFigureProps,

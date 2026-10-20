@@ -1,4 +1,4 @@
-import type { Player, Team, TeamTheme } from "@wingnight/shared";
+import type { GenreKey, Player, Team, TeamTheme } from "@wingnight/shared";
 import type { CharacterApparel, CharacterDance, CharacterSilhouette } from "@wingnight/cast";
 
 import { resolveTeamTheme } from "../../../../../../utils/resolveTeamTheme";
@@ -15,6 +15,10 @@ export type ParadeGroup = {
   apparel: CharacterApparel | undefined;
   silhouette: CharacterSilhouette | undefined;
   dance: CharacterDance | undefined;
+  // Whose wardrobe the group wears: a player's outfit is kept per genre, and
+  // the parade draws the one for the team they are standing with. `null` for
+  // the unseated group, who parade bare.
+  genre: GenreKey | null;
   // `null` means the unseated group: the caller paints it in its own muted fill.
   fillClassName: string | null;
 };
@@ -53,6 +57,7 @@ export const resolveParadeGroups = (
       apparel: theme.apparel,
       silhouette: theme.silhouette,
       dance: theme.dance,
+      genre: theme.genre,
       fillClassName: theme.colorVariant.characterFillClassName
     });
   }
@@ -66,6 +71,7 @@ export const resolveParadeGroups = (
       apparel: undefined,
       silhouette: undefined,
       dance: undefined,
+      genre: null,
       fillClassName: null
     });
   }

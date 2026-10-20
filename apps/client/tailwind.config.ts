@@ -70,6 +70,10 @@ const config: Config = {
         success: "#22c55e",
         danger: "#dc2626",
         gold: "#fbbf24",
+        // The wardrobe's one accent (docs/bird-wardrobe-gate-1.md, "Gold"): a duller, browner gold
+        // than `gold`, so a guest's gold Flying V never reads as the room's winner colour. Only the
+        // cast's outfit items paint with it, and only as an optional style, never an item's first.
+        wardrobeGold: "#d4a72c",
         // The eight identity accents (docs/team-identity.md, "Colour"). They
         // have to separate from EACH OTHER and from the reserved semantics
         // above: a team the room reads as `gold` looks like it is winning,

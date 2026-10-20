@@ -3,7 +3,8 @@ import type { CharacterApparel } from "../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../resolveTeamSilhouette/index.js";
 import type { CharacterDance } from "../resolvePlayerAppearance/index.js";
 import type { CharacterPose } from "./geometry/index.js";
-import { CharacterFigure, resolveCharacterWingPath } from "./CharacterFigure/index.js";
+import { CharacterFigure, CharacterStageFigure, CharacterWingFigure } from "./CharacterFigure/index.js";
+import { isOutfitSlotDrawn } from "./Outfit/index.js";
 import * as styles from "./styles.js";
 
 // A hen, drawn facing RIGHT in an 80×72 box; surfaces that need it to face
@@ -20,6 +21,11 @@ export type CharacterProps = {
   pose?: CharacterPose;
   silhouette?: CharacterSilhouette;
   dance?: CharacterDance;
+  // Draw the outfit's Prop and Stage too: only where the bird is on show
+  // (`CharacterFigure`'s `showpieces`), and the Stage left to a surface's own
+  // ground with `stage="none"` (`CharacterStage`).
+  showpieces?: boolean;
+  stage?: "drawn" | "none";
 };
 
 export const Character = ({
@@ -29,7 +35,9 @@ export const Character = ({
   wing,
   pose,
   silhouette,
-  dance
+  dance,
+  showpieces,
+  stage
 }: CharacterProps): JSX.Element => {
   return (
     <svg
@@ -43,7 +51,31 @@ export const Character = ({
         pose={pose}
         silhouette={silhouette}
         dance={dance}
+        showpieces={showpieces}
+        stage={stage}
       />
+    </svg>
+  );
+};
+
+// The outfit's Stage alone, in an `<svg>` the same box as the bird's, for a
+// surface that hops the bird off its ground (`stage="none"` on the bird): lay
+// the two boxes over each other and the stage stays on the floor. Nothing at
+// all when the bird has no Stage on.
+// Pass the bird's own `fillClassName` and `silhouette`: a team-coloured stage
+// is the wearer's colour, and a stage may follow the body it stands under.
+export const CharacterStage = ({
+  appearance,
+  fillClassName,
+  silhouette
+}: Pick<CharacterProps, "appearance" | "fillClassName" | "silhouette">): JSX.Element | null => {
+  if (!isOutfitSlotDrawn(appearance.outfit, "stage")) {
+    return null;
+  }
+
+  return (
+    <svg className={`${styles.svg} ${fillClassName ?? styles.defaultFill}`} viewBox="0 0 80 72" data-character-stage>
+      <CharacterStageFigure appearance={appearance} silhouette={silhouette} />
     </svg>
   );
 };
@@ -57,18 +89,22 @@ export const CHARACTER_WING_ORIGIN_CLASS_NAME = styles.wingOrigin;
 // bird with `wing="none"` and beats this one over it: rotate the element
 // holding it about the shoulder (`CHARACTER_WING_ORIGIN_CLASS_NAME` on a box
 // the bird's size does it) and the hen flaps without the rest of it repainting.
-// Pass the bird's `silhouette` too, or a spiky bird flaps the stock wing.
+// Pass the bird's `silhouette` too, or a spiky bird flaps the stock wing, and
+// its `appearance`, or a dressed bird flaps a bare one (the Sleeve is on it).
 export const CharacterWing = ({
+  appearance,
   fillClassName,
   silhouette
-}: Pick<CharacterProps, "fillClassName" | "silhouette">): JSX.Element => {
+}: Pick<CharacterProps, "fillClassName" | "silhouette"> & {
+  appearance?: CharacterAppearance;
+}): JSX.Element => {
   return (
     <svg
       className={`${styles.svg} ${styles.wingOrigin} ${fillClassName ?? styles.defaultFill}`}
       viewBox="0 0 80 72"
       data-character-wing
     >
-      <path className={styles.silhouette} d={resolveCharacterWingPath(silhouette)} />
+      <CharacterWingFigure appearance={appearance} silhouette={silhouette} />
     </svg>
   );
 };

@@ -4,7 +4,13 @@ import type { CharacterAppearance } from "../../resolvePlayerAppearance/index.js
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { CharacterHead } from "../CharacterHead/index.js";
-import { CHARACTER_PIVOTS, type CharacterPivot } from "../geometry/index.js";
+import {
+  CHARACTER_PIVOTS,
+  COSTUME_HEAD_ANCHORS,
+  DRAWN_HEAD_ANCHORS,
+  type CharacterPivot
+} from "../geometry/index.js";
+import { isOutfitSlotDrawn, OutfitLayer } from "../Outfit/index.js";
 import type { CharacterRagdollPart, CharacterRagdollTransforms } from "../ragdoll/index.js";
 import { legPath, resolveCharacterShapes, thighPath } from "../shapes/index.js";
 import * as styles from "./styles.js";
@@ -42,8 +48,10 @@ const DRAWN_ABOUT: Record<CharacterRagdollPart, CharacterPivot> = {
 // A part on its transform: the outer translate puts the joint where the sim
 // says, the rotate turns it about that joint, and the inner translate puts the
 // drawing's own pivot on the joint. `layer` names what is drawn when it is not
-// the part itself, which is only the tail: it rides on the body's transform
-// but is drawn behind the far leg, as the rig draws it.
+// the part itself: the tail rides on the body's transform but is drawn behind
+// the far leg, as the rig draws it, and the outfit's Top (`outfit`) rides it
+// too but is drawn over the near wing. A sim that paints transforms per layer
+// name maps both back to `body` (MOUNT's `PART_OF_LAYER`).
 const RagdollPart = ({
   part,
   layer = part,
@@ -51,7 +59,7 @@ const RagdollPart = ({
   children
 }: {
   part: CharacterRagdollPart;
-  layer?: CharacterRagdollPart | "tail";
+  layer?: CharacterRagdollPart | "tail" | "outfit";
   transforms: CharacterRagdollTransforms;
   children: ReactNode;
 }): JSX.Element => {
@@ -76,6 +84,13 @@ export const CharacterRagdollFigure = ({
   const shapes = resolveCharacterShapes({ ...appearance, silhouette });
   // Spikes need a mitered join, as on the posed figure.
   const ink = shapes.mitered ? styles.silhouetteMitered : styles.silhouette;
+  // The kit only (Top, Sleeve on both wings, Tail, Boots): a ragdoll is
+  // always in a game, and its wings spin freely, so a Prop would cross the face.
+  const { outfit } = appearance;
+  const outfitContext = {
+    shapes,
+    head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS
+  };
 
   // Back to front, the rig's own order with the far wing behind it all.
   return (
@@ -89,13 +104,21 @@ export const CharacterRagdollFigure = ({
     >
       <RagdollPart part="wingFar" transforms={transforms}>
         <path className={ink} d={shapes.wing} data-character-wing="far" />
+        <OutfitLayer slot="sleeve" outfit={outfit} context={outfitContext} side="far" />
       </RagdollPart>
       <RagdollPart part="body" layer="tail" transforms={transforms}>
         <path className={ink} d={shapes.tail} />
+        <OutfitLayer slot="tail" outfit={outfit} context={outfitContext} />
       </RagdollPart>
       <RagdollPart part="legFar" transforms={transforms}>
         <g className={styles.legFar}>
           <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legFar)} />
+          <OutfitLayer
+            slot="boots"
+            outfit={outfit}
+            context={{ ...outfitContext, leg: { ...CHARACTER_PIVOTS.legFar, far: true } }}
+            side="far"
+          />
         </g>
       </RagdollPart>
       <RagdollPart part="body" transforms={transforms}>
@@ -105,10 +128,22 @@ export const CharacterRagdollFigure = ({
       <RagdollPart part="legNear" transforms={transforms}>
         <path className={ink} d={thighPath(CHARACTER_PIVOTS.legNear)} />
         <path className={styles.legs} d={legPath(CHARACTER_PIVOTS.legNear)} />
+        <OutfitLayer
+          slot="boots"
+          outfit={outfit}
+          context={{ ...outfitContext, leg: { ...CHARACTER_PIVOTS.legNear, far: false } }}
+          side="near"
+        />
       </RagdollPart>
       <RagdollPart part="wingNear" transforms={transforms}>
         <path className={ink} d={shapes.wing} data-character-wing />
+        <OutfitLayer slot="sleeve" outfit={outfit} context={outfitContext} side="near" />
       </RagdollPart>
+      {isOutfitSlotDrawn(outfit, "top") && (
+        <RagdollPart part="body" layer="outfit" transforms={transforms}>
+          <OutfitLayer slot="top" outfit={outfit} context={outfitContext} />
+        </RagdollPart>
+      )}
       <RagdollPart part="head" transforms={transforms}>
         <path className={ink} d={shapes.neck} />
         <CharacterHead appearance={appearance} apparel={apparel} combPath={shapes.comb} ink={ink} haloId={haloId} />

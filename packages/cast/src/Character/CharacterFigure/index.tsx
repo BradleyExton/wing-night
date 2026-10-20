@@ -4,6 +4,7 @@ import type { CharacterAppearance, CharacterDance } from "../../resolvePlayerApp
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { CharacterHead } from "../CharacterHead/index.js";
+import { isOutfitSlotDrawn, OutfitLayer } from "../Outfit/index.js";
 import {
   CHARACTER_WING_PATH,
   legPath,
@@ -18,6 +19,8 @@ import {
   CHARACTER_PIVOTS,
   CHARACTER_RIDE_STANCE,
   CHARACTER_STANCE_PIVOT,
+  COSTUME_HEAD_ANCHORS,
+  DRAWN_HEAD_ANCHORS,
   type CharacterPart,
   type CharacterPose
 } from "../geometry/index.js";
@@ -43,6 +46,18 @@ export type CharacterFigureProps = {
   // The team's move on the beat (`resolveTeamDance`), which overrides the
   // player's own when the genre has one.
   dance?: CharacterDance;
+  // Whether the bird is on show, which is what draws the outfit's Prop and
+  // Stage (docs/research/bird-wardrobe.md §2.1): the lobby parade, the intro
+  // lineup, the player's phone and the portal opt in. A game never does — a
+  // prop in a lane reads as a weapon that does nothing, and a game owns its
+  // ground — so it is off unless asked. The kit (Top, Sleeve, Tail, Boots)
+  // is drawn either way.
+  showpieces?: boolean;
+  // `none` leaves the Stage off a bird on show, for a surface that lays it on
+  // a ground of its own (`CharacterStage`), the way `wing="none"` leaves the
+  // wing to a surface that beats it: the lobby parade hops its birds, and a
+  // stage must stay on the floor while the bird leaves it.
+  stage?: "drawn" | "none";
 };
 
 export const CHARACTER_WING_ROOT = CHARACTER_PIVOTS.wing;
@@ -125,16 +140,84 @@ const Stance = ({ className, children }: { className: string | undefined; childr
   );
 };
 
+/**
+ * The Stage alone, in the bird's 80×72 box, for a surface that draws the bird
+ * with `stage="none"` and lays this under it on its own ground. Nothing when
+ * the outfit has no Stage the cast can draw.
+ */
+export const CharacterStageFigure = ({
+  appearance,
+  silhouette
+}: {
+  appearance: CharacterAppearance;
+  silhouette?: CharacterSilhouette;
+}): JSX.Element | null => {
+  if (!isOutfitSlotDrawn(appearance.outfit, "stage")) {
+    return null;
+  }
+
+  const shapes = resolveCharacterShapes({ ...appearance, silhouette });
+
+  return (
+    <OutfitLayer
+      slot="stage"
+      outfit={appearance.outfit}
+      context={{ shapes, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
+    />
+  );
+};
+
+/**
+ * The wing alone, as the figure draws it — its path and the Sleeve on it — for
+ * a surface that draws the bird with `wing="none"` and turns a wing of its own
+ * over it (FAPPY's beat, JOUST's reach for the band). In the bird's 80×72 box
+ * with the shoulder at `CHARACTER_WING_ROOT`; the surface does the turning.
+ * Without an `appearance` it is the bare wing.
+ */
+export const CharacterWingFigure = ({
+  appearance,
+  silhouette
+}: {
+  appearance?: CharacterAppearance;
+  silhouette?: CharacterSilhouette;
+}): JSX.Element => {
+  const wingPath = resolveCharacterWingPath(silhouette);
+
+  if (appearance?.outfit === undefined) {
+    return <path className={styles.silhouette} d={wingPath} />;
+  }
+
+  const shapes = resolveCharacterShapes({ ...appearance, silhouette });
+
+  return (
+    <g>
+      <path className={styles.silhouette} d={wingPath} />
+      <OutfitLayer
+        slot="sleeve"
+        outfit={appearance.outfit}
+        context={{ shapes, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
+      />
+    </g>
+  );
+};
+
 export const CharacterFigure = ({
   appearance,
   apparel,
   wing = "drawn",
   pose = "still",
   silhouette,
-  dance
+  dance,
+  showpieces = false,
+  stage = "drawn"
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const shapes = resolveCharacterShapes({ ...appearance, silhouette });
+  const { outfit } = appearance;
+  const outfitContext = {
+    shapes,
+    head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS
+  };
   // Spikes need a mitered join: the house 2-unit ROUND join blunts every point
   // by a unit, which at 76px is the whole point gone.
   const ink = shapes.mitered ? styles.silhouetteMitered : styles.silhouette;
@@ -158,6 +241,10 @@ export const CharacterFigure = ({
   const crouch = riding ? resolveCharacterRideStance({ body: appearance.body, silhouette }).crouch : 0;
   const hipNear = { x: CHARACTER_PIVOTS.legNear.x, y: CHARACTER_PIVOTS.legNear.y + crouch };
   const hipFar = { x: CHARACTER_PIVOTS.legFar.x, y: CHARACTER_PIVOTS.legFar.y + crouch };
+  // Boots are drawn round a straight leg; the ride crouch redraws the legs
+  // bent, and a boot would hang off the shin. On the board the bird rides in
+  // its socks.
+  const booted = !riding;
 
   return (
     <g
@@ -167,9 +254,13 @@ export const CharacterFigure = ({
       data-character-pose={pose}
       data-character-silhouette={silhouette}
     >
+      {/* The Stage is ground, not bird: under everything and out of the rig,
+          so it neither bobs nor leans with the pose. */}
+      {showpieces && stage === "drawn" && <OutfitLayer slot="stage" outfit={outfit} context={outfitContext} />}
       <Stance className={styles.stances[pose]}>
         <Part part="tail" rig={rig} drop={crouch}>
           <path className={ink} d={shapes.tail} />
+          <OutfitLayer slot="tail" outfit={outfit} context={outfitContext} />
         </Part>
         <Part part="legFar" rig={rig}>
           <g className={styles.legFar}>
@@ -177,6 +268,14 @@ export const CharacterFigure = ({
               className={styles.legs}
               d={riding ? rideLegPath(hipFar, CHARACTER_RIDE_STANCE.frontFootX) : legPath(CHARACTER_PIVOTS.legFar)}
             />
+            {booted && (
+              <OutfitLayer
+                slot="boots"
+                outfit={outfit}
+                context={{ ...outfitContext, leg: { ...CHARACTER_PIVOTS.legFar, far: true } }}
+                side="far"
+              />
+            )}
           </g>
         </Part>
         <Part part="body" rig={rig} drop={crouch}>
@@ -189,10 +288,34 @@ export const CharacterFigure = ({
             className={styles.legs}
             d={riding ? rideLegPath(hipNear, CHARACTER_RIDE_STANCE.backFootX) : legPath(CHARACTER_PIVOTS.legNear)}
           />
+          {booted && (
+            <OutfitLayer
+              slot="boots"
+              outfit={outfit}
+              context={{ ...outfitContext, leg: { ...CHARACTER_PIVOTS.legNear, far: false } }}
+              side="near"
+            />
+          )}
         </Part>
         {wing === "drawn" && (
           <Part part="wing" rig={rig} drop={crouch}>
             <path className={ink} d={shapes.wing} data-character-wing />
+            <OutfitLayer slot="sleeve" outfit={outfit} context={outfitContext} />
+          </Part>
+        )}
+        {/* The Top paints OVER the wing (it was judged that way, a slung belt
+            crosses it) but rides the body's bob, not the wing's beat: a second
+            layer on the body's own rig, between the wing and the head. */}
+        {isOutfitSlotDrawn(outfit, "top") && (
+          <Part part="body" rig={rig} drop={crouch}>
+            <OutfitLayer slot="top" outfit={outfit} context={outfitContext} />
+          </Part>
+        )}
+        {/* The Prop is held at the wing and turns with it, over the Top as the
+            harness drew it: a second layer on the wing's rig. */}
+        {showpieces && wing === "drawn" && isOutfitSlotDrawn(outfit, "prop") && (
+          <Part part="wing" rig={rig} drop={crouch}>
+            <OutfitLayer slot="prop" outfit={outfit} context={outfitContext} />
           </Part>
         )}
         <Part part="head" rig={rig} drop={crouch}>

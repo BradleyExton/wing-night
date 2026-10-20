@@ -1,5 +1,5 @@
 import { Character, resolvePlayerAppearance } from "@wingnight/cast";
-import type { Player, TeamTheme } from "@wingnight/shared";
+import { resolvePlayerOutfit, type Player, type TeamTheme } from "@wingnight/shared";
 
 import { useServerOrigin } from "../../utils/useServerOrigin";
 import * as styles from "./styles";
@@ -31,7 +31,12 @@ export const TeamLineup = ({ players, theme, sizeClassName }: TeamLineupProps): 
       {players.map((player) => (
         <span key={player.id} className={styles.member} data-lineup-member={player.id}>
           <Character
-            appearance={resolvePlayerAppearance(player, serverOrigin)}
+            appearance={resolvePlayerAppearance(
+              { ...player, outfit: resolvePlayerOutfit(player, theme.genre) },
+              serverOrigin
+            )}
+            // The intro lineup is the room's best look at a bird: on show.
+            showpieces
             apparel={theme.apparel}
             silhouette={theme.silhouette}
             dance={theme.dance}

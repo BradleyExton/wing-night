@@ -85,6 +85,11 @@ const shadowBase =
 
 export const shadow = shadowBase;
 
+// A worn Stage (the wardrobe's showpiece) in the pool's place: the bird's own
+// 80x72 box laid exactly over the bird's, so the stage's coordinates are the
+// bird's, and it carries the member's mirror the way the pool does.
+export const stage = "pointer-events-none absolute inset-0 block h-full";
+
 // Dancing, it answers the bird's own bounce on the bird's own clock
 // (`--cast-jive-*` from the cast's groove, set on the member) — the same
 // variables `cast-jive` itself reads, so the two can never fall out of step.

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import type { Player, Team, TeamTheme } from "@wingnight/shared";
+import { resolvePlayerOutfit, type Player, type Team, type TeamTheme } from "@wingnight/shared";
 
 import {
   Character,
+  CharacterStage,
+  isOutfitSlotDrawn,
   resolveCharacterGrooveClassName,
   resolvePlayerAppearance,
   type CharacterPose
@@ -134,31 +136,53 @@ export const CastParade = ({
       data-cast-group={group.id}
       data-cast-side={side}
     >
-      {group.players.map((player) => (
+      {group.players.map((player) => {
+        const appearance = resolvePlayerAppearance(
+          { ...player, outfit: resolvePlayerOutfit(player, group.genre) },
+          serverOrigin
+        );
+
         // The bird's own groove rides on the member as custom properties and
         // inherits all the way down into the drawing: its footwork tempo, how
         // late it lands the beat, where in its bounce it is. Nothing here is
         // random — the groove is the player's name, so Brad dances Brad's
         // dance every night — but the floor never draws one groove, which is
         // what makes it look like a party and not a drill.
-        <span
-          key={player.id}
-          className={`${resolveMemberClassName(side, frame.phase)} ${resolveCharacterGrooveClassName(player.name)}`}
-          data-cast-member={player.id}
-        >
-          <span className={resolveShadowClassName(frame.phase)} />
-          <span className={resolveJiveClassName(frame.phase)}>
-            <Character
-              appearance={resolvePlayerAppearance(player, serverOrigin)}
-              apparel={group.apparel}
-              silhouette={group.silhouette}
-              dance={group.dance}
-              fillClassName={group.fillClassName ?? styles.unassignedFill}
-              pose={resolvePose(frame.phase)}
-            />
+        //
+        // A worn Stage takes the shadow pool's place, on the member and
+        // outside the jive, so the bird hops off its stage and lands on it.
+        return (
+          <span
+            key={player.id}
+            className={`${resolveMemberClassName(side, frame.phase)} ${resolveCharacterGrooveClassName(player.name)}`}
+            data-cast-member={player.id}
+          >
+            {isOutfitSlotDrawn(appearance.outfit, "stage") ? (
+              <span className={styles.stage}>
+                <CharacterStage
+                  appearance={appearance}
+                  fillClassName={group.fillClassName ?? styles.unassignedFill}
+                  silhouette={group.silhouette}
+                />
+              </span>
+            ) : (
+              <span className={resolveShadowClassName(frame.phase)} />
+            )}
+            <span className={resolveJiveClassName(frame.phase)}>
+              <Character
+                appearance={appearance}
+                showpieces
+                stage="none"
+                apparel={group.apparel}
+                silhouette={group.silhouette}
+                dance={group.dance}
+                fillClassName={group.fillClassName ?? styles.unassignedFill}
+                pose={resolvePose(frame.phase)}
+              />
+            </span>
           </span>
-        </span>
-      ))}
+        );
+      })}
     </span>
   );
 
