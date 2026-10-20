@@ -8,7 +8,8 @@ const FIGURE = {
   name: "Alex",
   avatarSrc: "avatars/alex.png",
   teamId: "team-a",
-  genre: "Metal"
+  genre: "Metal",
+  outfit: null
 };
 
 test("does dress the player's own hen in their team's colour and shape when the block has a player", () => {

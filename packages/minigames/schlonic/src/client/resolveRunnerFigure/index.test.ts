@@ -8,7 +8,8 @@ const FIGURE = {
   name: "Alex",
   avatarSrc: "avatars/alex.png",
   teamId: "team-a",
-  genre: "Metal"
+  genre: "Metal",
+  outfit: null
 };
 
 test("runs the player's own hen, in their team's colour and their team's shape", () => {

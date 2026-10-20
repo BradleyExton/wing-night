@@ -1,4 +1,5 @@
 import {
+  isCastPlayerFigure,
   isFiniteNumber,
   isNonNegativeInteger,
   isNumberRecord,
@@ -51,14 +52,7 @@ const isFigureOrNull = (value: unknown): value is BrawlPlayerFigure | null => {
     return true;
   }
 
-  return (
-    isRecord(value) &&
-    typeof value.playerId === "string" &&
-    typeof value.name === "string" &&
-    (value.avatarSrc === null || typeof value.avatarSrc === "string") &&
-    (value.teamId === null || typeof value.teamId === "string") &&
-    (value.genre === null || typeof value.genre === "string")
-  );
+  return isCastPlayerFigure(value);
 };
 
 const isInput = (value: unknown): value is BrawlInput => {

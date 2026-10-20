@@ -6,7 +6,7 @@ import { resolveLegBird } from "./index.js";
 
 test("does dress the figure's bird in their head, the team colour and the team's own shape", () => {
   const bird = resolveLegBird({
-    figure: { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country" },
+    figure: { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country", outfit: null },
     activeTurnTeamId: "team-alpha",
     serverOrigin: "http://127.0.0.1:3000"
   });

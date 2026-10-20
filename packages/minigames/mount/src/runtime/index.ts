@@ -1,5 +1,5 @@
 import type { MountPile, MountPlayerFigure, Player, Team } from "@wingnight/shared";
-import { addMountHen, createMountPile, resolveMountClimbTicks, runMountClimb } from "@wingnight/shared";
+import { addMountHen, createMountPile, resolveMountClimbTicks, runMountClimb, toCastPlayerFigure } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
@@ -17,15 +17,7 @@ import { resolveMountPoints, resolveShareBanked } from "./scoring/index.js";
 import type { MountRuntimeClimb, MountRuntimeState } from "./types/index.js";
 import { clonePile, resolveMountPhase, toMountDisplayView, toMountHostView } from "./views/index.js";
 
-const toFigure = (player: Player, team: Team): MountPlayerFigure => {
-  return {
-    playerId: player.id,
-    name: player.name,
-    avatarSrc: player.avatarSrc ?? null,
-    teamId: team.id,
-    genre: team.genre ?? null
-  };
-};
+const toFigure = (player: Player, team: Team | undefined): MountPlayerFigure => toCastPlayerFigure(player, team);
 
 // The active team's seating, as the figures the surfaces name, BRAWL's `resolveTeamFigures`. Only
 // players the roster still lists count; an id with no player behind it is skipped.
@@ -65,10 +57,7 @@ const resolveFigures = (
     const team = player === undefined ? undefined : teams.find((entry) => entry.playerIds.includes(player.id));
 
     if (player !== undefined) {
-      figures[player.id] =
-        team === undefined
-          ? { playerId: player.id, name: player.name, avatarSrc: player.avatarSrc ?? null, teamId: null, genre: null }
-          : toFigure(player, team);
+      figures[player.id] = toFigure(player, team);
     }
   }
 

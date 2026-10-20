@@ -7,9 +7,9 @@ import type { FappyMinigameDisplayView, FappyMinigameLeg, FappyPlayerFigure } fr
 import { displayFappySurfaceCopy } from "./copy.js";
 import { DisplayFappySurface } from "./index.js";
 
-const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco" };
-const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "disco" };
-const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "disco" };
+const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "disco", outfit: null };
+const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "disco", outfit: null };
+const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "disco", outfit: null };
 const T0 = 1_700_000_000_000;
 
 const createLeg = (overrides: Partial<FappyMinigameLeg> = {}): FappyMinigameLeg => {

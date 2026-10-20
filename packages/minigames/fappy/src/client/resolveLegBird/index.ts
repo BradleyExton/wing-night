@@ -43,7 +43,7 @@ export const resolveLegBird = ({ figure, activeTurnTeamId, serverOrigin }: Resol
   return {
     playerName: figure.name,
     appearance: resolvePlayerAppearance(
-      { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined },
+      { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined, outfit: figure.outfit },
       serverOrigin
     ),
     apparel: resolveTeamApparel({ genre: figure.genre ?? undefined }),

@@ -233,6 +233,9 @@ const validateOutfitShape = (value: unknown): ValidationIssue[] => {
   });
 };
 
+/** Whether a value has an outfit's shape (slot -> { item, style? }), whatever its items. */
+export const isOutfit = (value: unknown): value is Outfit => validateOutfitShape(value).length === 0;
+
 /** Strict on shape, for players.json's `outfits`: genre -> slot -> { item, style? }. */
 export const validateOutfitsByGenre = (value: unknown): ValidationIssue[] => {
   if (!isRecord(value)) {

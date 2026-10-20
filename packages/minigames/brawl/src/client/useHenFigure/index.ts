@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { BrawlPlayerFigure } from "@wingnight/shared";
+import type { Outfit, BrawlPlayerFigure } from "@wingnight/shared";
 
 import { resolveHenFigure, type HenFigure } from "../resolveHenFigure/index.js";
 
@@ -22,12 +22,14 @@ export const useHenFigure = ({ figure, activeTurnTeamId, serverOrigin }: UseHenF
   const avatarSrc = figure?.avatarSrc ?? null;
   const teamId = figure?.teamId ?? null;
   const genre = figure?.genre ?? null;
+  // The outfit is an object, fresh on every echo: the memo keys on what is worn, not on which copy.
+  const outfitKey = JSON.stringify(figure?.outfit ?? null);
 
   return useMemo(() => {
     return resolveHenFigure({
-      figure: playerId === null || name === null ? null : { playerId, name, avatarSrc, teamId, genre },
+      figure: playerId === null || name === null ? null : { playerId, name, avatarSrc, teamId, genre, outfit: JSON.parse(outfitKey) as Outfit | null },
       activeTurnTeamId,
       serverOrigin
     });
-  }, [playerId, name, avatarSrc, teamId, genre, activeTurnTeamId, serverOrigin]);
+  }, [playerId, name, avatarSrc, teamId, genre, outfitKey, activeTurnTeamId, serverOrigin]);
 };

@@ -11,7 +11,8 @@ const figure = (name: string, avatarSrc: string | null): FappyPlayerFigure => ({
   name,
   avatarSrc,
   teamId: "team-alpha",
-  genre: "country"
+  genre: "country",
+  outfit: null
 });
 
 const leg = (overrides: Partial<FappyMinigameLeg>): FappyMinigameLeg => ({

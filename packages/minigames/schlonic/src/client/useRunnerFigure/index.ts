@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { SchlonicPlayerFigure } from "@wingnight/shared";
+import type { Outfit, SchlonicPlayerFigure } from "@wingnight/shared";
 
 import { resolveRunnerFigure, type RunnerFigure } from "../resolveRunnerFigure/index.js";
 
@@ -26,15 +26,17 @@ export const useRunnerFigure = ({
   const avatarSrc = figure?.avatarSrc ?? null;
   const teamId = figure?.teamId ?? null;
   const genre = figure?.genre ?? null;
+  // The outfit is an object, fresh on every echo: the memo keys on what is worn, not on which copy.
+  const outfitKey = JSON.stringify(figure?.outfit ?? null);
 
   return useMemo(() => {
     return resolveRunnerFigure({
       figure:
         playerId === null || name === null
           ? null
-          : { playerId, name, avatarSrc, teamId, genre },
+          : { playerId, name, avatarSrc, teamId, genre, outfit: JSON.parse(outfitKey) as Outfit | null },
       activeTurnTeamId,
       serverOrigin
     });
-  }, [playerId, name, avatarSrc, teamId, genre, activeTurnTeamId, serverOrigin]);
+  }, [playerId, name, avatarSrc, teamId, genre, outfitKey, activeTurnTeamId, serverOrigin]);
 };

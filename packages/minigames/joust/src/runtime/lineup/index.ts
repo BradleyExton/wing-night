@@ -1,5 +1,5 @@
 import type { JoustPerch, JoustPlayerFigure, Player, Team } from "@wingnight/shared";
-import { resolveJoustPinPerchIndex, resolveJoustRackSlots } from "@wingnight/shared";
+import { resolveJoustPinPerchIndex, resolveJoustRackSlots, toCastPlayerFigure } from "@wingnight/shared";
 
 export type JoustRosterInput = {
   players: Player[];
@@ -23,17 +23,7 @@ export type JoustStandingPin = JoustPlayerFigure & {
   y: number;
 };
 
-const toFigure = (player: Player, team: Team | undefined): JoustPlayerFigure => {
-  return {
-    playerId: player.id,
-    name: player.name,
-    // Pack-relative as authored; the surface that draws the head resolves it against the server
-    // origin, because the client and server are always separate origins.
-    avatarSrc: player.avatarSrc ?? null,
-    teamId: team?.id ?? null,
-    genre: team?.genre ?? null
-  };
-};
+const toFigure = (player: Player, team: Team | undefined): JoustPlayerFigure => toCastPlayerFigure(player, team);
 
 /**
  * Splits the room into the two sides of a JOUST turn: the shooting team behind the slingshot, and

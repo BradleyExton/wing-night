@@ -5,7 +5,7 @@ import { resolveHenFigure } from "./index.js";
 
 test("does dress the hen as the player when the climb has one", () => {
   const hen = resolveHenFigure(
-    { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "Country" },
+    { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "Country", outfit: null },
     null,
     "http://10.0.0.2:3000"
   );

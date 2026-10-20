@@ -35,7 +35,13 @@ export * from "./schlonic/index.js";
 export * from "./brawl/index.js";
 export * from "./mount/index.js";
 export {
+  isCastPlayerFigure,
+  toCastPlayerFigure,
+  type CastPlayerFigure
+} from "./castPlayerFigure/index.js";
+export {
   findOutfitItem,
+  isOutfit,
   isOutfitItemOnRail,
   OUTFIT_GENRES,
   OUTFIT_ITEMS,

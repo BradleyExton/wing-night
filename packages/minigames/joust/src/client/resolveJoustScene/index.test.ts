@@ -22,7 +22,7 @@ import { JOUST_TRAIL_FRAMES, resolveJoustScene, type JoustSceneInput } from "./i
 const PERCHES = [{ x: 54, y: 78, width: 102 }];
 const ARENA = { id: "arena-1", name: "Open Range", perches: PERCHES, obstacles: [] };
 const LINEUP: JoustPlayerFigure[] = [
-  { playerId: "p1", name: "Rosie", avatarSrc: null, teamId: "team-2", genre: null }
+  { playerId: "p1", name: "Rosie", avatarSrc: null, teamId: "team-2", genre: null, outfit: null }
 ];
 const SLACK = { x: 0, y: 0 };
 
@@ -128,9 +128,9 @@ const TOWER_PERCHES = [
 ];
 const TOWER_ARENA = { id: "arena-2", name: "The Lookout", perches: TOWER_PERCHES, obstacles: [] };
 const TOWER_LINEUP: JoustPlayerFigure[] = [
-  { playerId: "p1", name: "Rosie", avatarSrc: null, teamId: "team-2", genre: null },
-  { playerId: "p2", name: "Darren", avatarSrc: null, teamId: "team-2", genre: null },
-  { playerId: "p3", name: "Sarah", avatarSrc: null, teamId: "team-2", genre: null }
+  { playerId: "p1", name: "Rosie", avatarSrc: null, teamId: "team-2", genre: null, outfit: null },
+  { playerId: "p2", name: "Darren", avatarSrc: null, teamId: "team-2", genre: null, outfit: null },
+  { playerId: "p3", name: "Sarah", avatarSrc: null, teamId: "team-2", genre: null, outfit: null }
 ];
 
 test("does stand a tower's legs in the rest pose and lay it out as rubble once it is down", () => {

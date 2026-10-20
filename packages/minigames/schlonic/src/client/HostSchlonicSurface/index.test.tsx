@@ -15,14 +15,16 @@ const ALEX: SchlonicPlayerFigure = {
   name: "Alex",
   avatarSrc: "avatars/alex.png",
   teamId: "team-alpha",
-  genre: "country"
+  genre: "country",
+  outfit: null
 };
 const MORGAN: SchlonicPlayerFigure = {
   playerId: "p-2",
   name: "Morgan",
   avatarSrc: null,
   teamId: "team-alpha",
-  genre: "country"
+  genre: "country",
+  outfit: null
 };
 const teamNameByTeamId = new Map([["team-alpha", "Team Alpha"]]);
 
@@ -299,7 +301,7 @@ test("draws nothing of its own for another game's view", () => {
 // number to beat. A leg that team skipped leaves this leg with nobody to race, but the number
 // stays.
 test("puts the leg to beat in the zone and the turn to beat in the chrome once the round has one", () => {
-  const dan = { playerId: "p-9", name: "Dan", avatarSrc: null, teamId: "team-beta", genre: null };
+  const dan = { playerId: "p-9", name: "Dan", avatarSrc: null, teamId: "team-beta", genre: null, outfit: null };
   const bestTurn = {
     teamId: "team-beta",
     teamName: "Team Beta",

@@ -1,4 +1,5 @@
 import {
+  isCastPlayerFigure,
   MOUNT_LIMBS,
   MOUNT_PARTICLES,
   MOUNT_WORLD,
@@ -104,16 +105,7 @@ export const isMountPile = (value: unknown): value is MountPile => {
   );
 };
 
-const isFigure = (value: unknown): value is MountPlayerFigure => {
-  return (
-    isRecord(value) &&
-    typeof value.playerId === "string" &&
-    typeof value.name === "string" &&
-    isStringOrNull(value.avatarSrc) &&
-    isStringOrNull(value.teamId) &&
-    isStringOrNull(value.genre)
-  );
-};
+const isFigure = (value: unknown): value is MountPlayerFigure => isCastPlayerFigure(value);
 
 const isResultOrNull = (value: unknown): value is MountMinigameClimbResult | null => {
   if (value === null) {

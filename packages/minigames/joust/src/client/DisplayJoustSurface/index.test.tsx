@@ -40,14 +40,14 @@ const ARENA = {
 };
 
 const LINEUP: JoustPlayerFigure[] = [
-  { playerId: "p4", name: "Rosie", avatarSrc: "avatars/rosie.png", teamId: "team-2", genre: "disco" },
-  { playerId: "p5", name: "Darren", avatarSrc: null, teamId: "team-2", genre: "disco" },
-  { playerId: "p6", name: "Sarah", avatarSrc: null, teamId: "team-2", genre: "disco" }
+  { playerId: "p4", name: "Rosie", avatarSrc: "avatars/rosie.png", teamId: "team-2", genre: "disco", outfit: null },
+  { playerId: "p5", name: "Darren", avatarSrc: null, teamId: "team-2", genre: "disco", outfit: null },
+  { playerId: "p6", name: "Sarah", avatarSrc: null, teamId: "team-2", genre: "disco", outfit: null }
 ];
 
 const TEAMMATES: JoustPlayerFigure[] = [
-  { playerId: "p1", name: "Alex", avatarSrc: null, teamId: "team-1", genre: "metal" },
-  { playerId: "p2", name: "Caitlin", avatarSrc: null, teamId: "team-1", genre: "metal" }
+  { playerId: "p1", name: "Alex", avatarSrc: null, teamId: "team-1", genre: "metal", outfit: null },
+  { playerId: "p2", name: "Caitlin", avatarSrc: null, teamId: "team-1", genre: "metal", outfit: null }
 ];
 
 const restFrame = resolveJoustRestFrame(

@@ -10,7 +10,8 @@ const figure = (name: string): JoustPlayerFigure => ({
   name,
   avatarSrc: null,
   teamId: "team-alpha",
-  genre: null
+  genre: null,
+  outfit: null
 });
 
 const TEAM = [figure("Alex"), figure("Caitlin"), figure("Dan")];

@@ -105,7 +105,7 @@ const ArenaHenFigure = ({
   wingAimAt = null
 }: ArenaHenProps): JSX.Element => {
   const appearance = resolvePlayerAppearance(
-    { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined },
+    { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined, outfit: figure.outfit },
     serverOrigin
   );
   const silhouette = resolveTeamSilhouette({ genre: figure.genre ?? undefined });
@@ -141,6 +141,11 @@ const ArenaHenFigure = ({
   );
 };
 
+// The outfit arrives as a fresh object on every echo, like the pin it stands on, so it is compared
+// by what is worn rather than by reference.
+const isSameOutfit = (a: JoustPlayerFigure["outfit"], b: JoustPlayerFigure["outfit"]): boolean =>
+  a === b || JSON.stringify(a) === JSON.stringify(b);
+
 const isSameVec = (a: JoustVec2 | null, b: JoustVec2 | null): boolean =>
   a === b || (a !== null && b !== null && a.x === b.x && a.y === b.y);
 
@@ -154,6 +159,7 @@ export const ArenaHen = memo(ArenaHenFigure, (previous, next): boolean => {
     previous.figure.avatarSrc === next.figure.avatarSrc &&
     previous.figure.teamId === next.figure.teamId &&
     previous.figure.genre === next.figure.genre &&
+    isSameOutfit(previous.figure.outfit, next.figure.outfit) &&
     isSameVec(previous.foot, next.foot) &&
     isSameVec(previous.head, next.head) &&
     previous.serverOrigin === next.serverOrigin &&

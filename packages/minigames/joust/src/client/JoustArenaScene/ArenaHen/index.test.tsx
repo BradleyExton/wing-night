@@ -24,7 +24,8 @@ const FIGURE: JoustPlayerFigure = {
   name: "Rosie",
   avatarSrc: "avatars/rosie.png",
   teamId: "team-molten",
-  genre: "Metal"
+  genre: "Metal",
+  outfit: null
 };
 
 const render = (props: Partial<Parameters<typeof ArenaHen>[0]> = {}): string =>

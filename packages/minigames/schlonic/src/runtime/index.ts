@@ -1,5 +1,5 @@
 import type { Player, SchlonicBestTurn, SchlonicPlayerFigure, Team } from "@wingnight/shared";
-import { runSchlonicRun } from "@wingnight/shared";
+import { runSchlonicRun, toCastPlayerFigure } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
@@ -30,13 +30,7 @@ const resolveTeamFigures = (
     return player === undefined
       ? []
       : [
-          {
-            playerId: player.id,
-            name: player.name,
-            avatarSrc: player.avatarSrc ?? null,
-            teamId: team.id,
-            genre: team.genre ?? null
-          }
+          toCastPlayerFigure(player, team)
         ];
   });
 };

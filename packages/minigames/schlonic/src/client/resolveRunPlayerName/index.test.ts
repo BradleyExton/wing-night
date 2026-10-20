@@ -10,7 +10,8 @@ const ALEX: SchlonicPlayerFigure = {
   name: "Alex",
   avatarSrc: null,
   teamId: "team-alpha",
-  genre: "country"
+  genre: "country",
+  outfit: null
 };
 
 const run = (player: SchlonicPlayerFigure | null): SchlonicMinigameRun => ({

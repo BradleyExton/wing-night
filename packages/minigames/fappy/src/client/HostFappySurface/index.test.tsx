@@ -6,9 +6,9 @@ import type { FappyMinigameHostView, FappyMinigameLeg, FappyPlayerFigure } from 
 
 import { HostFappySurface } from "./index.js";
 
-const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country" };
-const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "country" };
-const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "country" };
+const ALEX: FappyPlayerFigure = { playerId: "p-1", name: "Alex", avatarSrc: "avatars/alex.png", teamId: "team-alpha", genre: "country", outfit: null };
+const MORGAN: FappyPlayerFigure = { playerId: "p-2", name: "Morgan", avatarSrc: null, teamId: "team-alpha", genre: "country", outfit: null };
+const DAN: FappyPlayerFigure = { playerId: "p-3", name: "Dan B", avatarSrc: null, teamId: "team-alpha", genre: "country", outfit: null };
 const teamNameByTeamId = new Map([
   ["team-alpha", "Team Alpha"],
   ["team-beta", "Team Beta"]

@@ -13,7 +13,8 @@ const ALEX: BrawlPlayerFigure = {
   name: "Alex",
   avatarSrc: null,
   teamId: "team-alpha",
-  genre: "country"
+  genre: "country",
+  outfit: null
 };
 const MORGAN: BrawlPlayerFigure = { ...ALEX, playerId: "p-2", name: "Morgan" };
 const COURSE_SEED = 20261001;

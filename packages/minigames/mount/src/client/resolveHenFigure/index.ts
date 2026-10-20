@@ -50,7 +50,10 @@ export const resolveHenFigure = (
 
   return {
     playerName: figure.name,
-    appearance: resolvePlayerAppearance({ name: figure.name, avatarSrc: figure.avatarSrc ?? undefined }, serverOrigin),
+    appearance: resolvePlayerAppearance(
+      { name: figure.name, avatarSrc: figure.avatarSrc ?? undefined, outfit: figure.outfit },
+      serverOrigin
+    ),
     apparel: resolveTeamApparel({ genre: figure.genre ?? undefined }),
     silhouette: resolveTeamSilhouette({ genre: figure.genre ?? undefined }),
     fillClassName: resolveCharacterFillClassName(figure.teamId ?? fallbackTeamId)

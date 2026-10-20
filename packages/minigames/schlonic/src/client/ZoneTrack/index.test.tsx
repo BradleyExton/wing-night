@@ -14,7 +14,8 @@ const ALEX: SchlonicPlayerFigure = {
   name: "Alex",
   avatarSrc: "avatars/alex.png",
   teamId: "team-alpha",
-  genre: "metal"
+  genre: "metal",
+  outfit: null
 };
 
 const createRun = (overrides: Partial<SchlonicMinigameRun>): SchlonicMinigameRun => ({

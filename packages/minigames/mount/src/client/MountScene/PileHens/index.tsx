@@ -45,7 +45,10 @@ const PileHensLayer = ({ pile, figures, serverOrigin }: PileHensProps): JSX.Elem
 
 const resolveFiguresKey = (figures: Record<string, MountPlayerFigure>): string => {
   return Object.values(figures)
-    .map((figure) => `${figure.playerId}:${figure.name}:${figure.avatarSrc ?? ""}:${figure.teamId ?? ""}:${figure.genre ?? ""}`)
+    .map(
+      (figure) =>
+        `${figure.playerId}:${figure.name}:${figure.avatarSrc ?? ""}:${figure.teamId ?? ""}:${figure.genre ?? ""}:${JSON.stringify(figure.outfit)}`
+    )
     .sort()
     .join("|");
 };

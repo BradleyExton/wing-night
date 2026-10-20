@@ -142,7 +142,8 @@ test("does hand the legs to the roster in seating order and cycle a short one", 
     name: "Alex",
     avatarSrc: "avatars/alex.png",
     teamId: "team-alpha",
-    genre: "country"
+    genre: "country",
+    outfit: null
   });
   assert.equal(view.legs[1]?.player?.avatarSrc, null);
   assert.equal(view.pendingPointsByTeamId["team-alpha"], 2);

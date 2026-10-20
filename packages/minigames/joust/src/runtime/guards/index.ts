@@ -1,4 +1,5 @@
 import {
+  isCastPlayerFigure,
   isFiniteNumber,
   isNonNegativeInteger,
   isNumberRecord,
@@ -25,14 +26,7 @@ const isIndexArray = (value: unknown): value is number[] => {
   return Array.isArray(value) && value.every(isNonNegativeInteger);
 };
 
-const isPlayerFigure = (value: unknown): boolean => {
-  return (
-    isRecord(value) &&
-    typeof value.playerId === "string" &&
-    typeof value.name === "string" &&
-    (value.avatarSrc === null || typeof value.avatarSrc === "string")
-  );
-};
+const isPlayerFigure = (value: unknown): boolean => isCastPlayerFigure(value);
 
 const isShotResult = (value: unknown): boolean => {
   return (

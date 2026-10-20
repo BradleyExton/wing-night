@@ -1,5 +1,5 @@
 import type { BrawlBestTurn, BrawlInput, BrawlPlayerFigure, Player, Team } from "@wingnight/shared";
-import { resolveBrawlStartHearts, runBrawlRun } from "@wingnight/shared";
+import { resolveBrawlStartHearts, runBrawlRun, toCastPlayerFigure } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult,
@@ -38,13 +38,7 @@ const resolveTeamFigures = (
     return player === undefined
       ? []
       : [
-          {
-            playerId: player.id,
-            name: player.name,
-            avatarSrc: player.avatarSrc ?? null,
-            teamId: team.id,
-            genre: team.genre ?? null
-          }
+          toCastPlayerFigure(player, team)
         ];
   });
 };

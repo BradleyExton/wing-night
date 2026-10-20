@@ -1,6 +1,19 @@
 {
   "players": [
-    { "name": "Alex", "team": "Molten Metal" },
+    {
+      "name": "Alex",
+      "team": "Molten Metal",
+      "outfits": {
+        "metal": {
+          "top": { "item": "battle-vest-a" },
+          "sleeve": { "item": "flame-sleeve-a" },
+          "tail": { "item": "chain-loop-b" },
+          "boots": { "item": "combat-boots-a" },
+          "prop": { "item": "flying-v-a", "style": "white" },
+          "stage": { "item": "lava-disc-a" }
+        }
+      }
+    },
     { "name": "Caitlin", "team": "Molten Metal" },
     { "name": "Dan", "team": "Molten Metal" },
     { "name": "Rosie", "team": "Molten Metal" },

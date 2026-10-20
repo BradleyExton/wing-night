@@ -1,3 +1,4 @@
+import type { CastPlayerFigure } from "../castPlayerFigure/index.js";
 import type { DrawingPrompt } from "../content/drawing/index.js";
 import type { GameConfigFile } from "../content/gameConfig/index.js";
 import type { GameConfigRound } from "../content/gameConfig/index.js";
@@ -365,13 +366,7 @@ export type JoustPhase = "aiming" | "resolved" | "done";
 // against the server origin, because the client and server are always separate origins. `teamId`
 // and `genre` are the bird's colour and its apparel — carried as the data they are, so the
 // runtime never has to name a UI class.
-export type JoustPlayerFigure = {
-  playerId: string;
-  name: string;
-  avatarSrc: string | null;
-  teamId: string | null;
-  genre: string | null;
-};
+export type JoustPlayerFigure = CastPlayerFigure;
 
 export type JoustShotResult = {
   shotNumber: number;
@@ -501,13 +496,7 @@ export type FappyLegRunResult = {
 // One player as the cast bird needs them drawn (the JOUST convention):
 // `avatarSrc` stays pack-relative and the surface resolves it against the
 // server origin; team id and genre are the bird's colour and apparel.
-export type FappyPlayerFigure = {
-  playerId: string;
-  name: string;
-  avatarSrc: string | null;
-  teamId: string | null;
-  genre: string | null;
-};
+export type FappyPlayerFigure = CastPlayerFigure;
 
 export type FappyMinigameLeg = {
   legIndex: number;
@@ -572,13 +561,7 @@ export type SchlonicRunResult = {
 // One player as the runner needs them named (the JOUST convention): `avatarSrc` stays
 // pack-relative and the surface resolves it against the server origin; team id and genre are
 // the schlong's colour and the crowd's apparel.
-export type SchlonicPlayerFigure = {
-  playerId: string;
-  name: string;
-  avatarSrc: string | null;
-  teamId: string | null;
-  genre: string | null;
-};
+export type SchlonicPlayerFigure = CastPlayerFigure;
 
 // One player's run at their leg of the street. There is no second attempt: a run ends at the
 // leg's post or it ends where it went wrong, and either way the tablet moves on to the next
@@ -657,13 +640,7 @@ export type BrawlBlockResult = {
 // One player as the brawler needs them named, SCHLONIC's twin: `avatarSrc` stays pack-relative
 // and the surface resolves it against the server origin; team id and genre are the hen's colour
 // and silhouette.
-export type BrawlPlayerFigure = {
-  playerId: string;
-  name: string;
-  avatarSrc: string | null;
-  teamId: string | null;
-  genre: string | null;
-};
+export type BrawlPlayerFigure = CastPlayerFigure;
 
 // One player's block of the street. There is no second attempt: a block ends at the handoff, in
 // the bay, or at the bell, and either way the tablet moves on to the next teammate. The input log
@@ -733,13 +710,7 @@ export type MountMinigameClimbResult = {
 // One player as the climber needs them named, BRAWL's twin: `avatarSrc` stays pack-relative and
 // the surface resolves it against the server origin; team id and genre are the hen's colour and
 // silhouette.
-export type MountPlayerFigure = {
-  playerId: string;
-  name: string;
-  avatarSrc: string | null;
-  teamId: string | null;
-  genre: string | null;
-};
+export type MountPlayerFigure = CastPlayerFigure;
 
 // One player's climb. There is no second attempt: a climb ends on a mount or at its clock, its hen
 // joins the pile where it stopped, and the tablet moves on to the next teammate.

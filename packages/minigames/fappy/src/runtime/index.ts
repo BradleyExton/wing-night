@@ -1,5 +1,5 @@
 import type { FappyPlayerFigure, Player, Team } from "@wingnight/shared";
-import { runFappyLeg } from "@wingnight/shared";
+import { runFappyLeg, toCastPlayerFigure } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionResult
@@ -42,13 +42,7 @@ const resolveTeamFigures = (
     return player === undefined
       ? []
       : [
-          {
-            playerId: player.id,
-            name: player.name,
-            avatarSrc: player.avatarSrc ?? null,
-            teamId: team.id,
-            genre: team.genre ?? null
-          }
+          toCastPlayerFigure(player, team)
         ];
   });
 };
