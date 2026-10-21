@@ -106,9 +106,9 @@ On branch `claude/objective-napier-8ad040`, from run 2's `claude/gallant-cohen-b
 
 ## Run 4: what landed (2026-10-20)
 
-On branch `claude/affectionate-raman-154b58`, from run 3's `claude/objective-napier-8ad040`. Not
-deployed: the Worker change needs `pnpm teaser:deploy`, and no D1 migration (`outfits_json` was
-already in 0005).
+On main since 2026-10-20 (6edac63a, a fast-forward that brought runs 2 and 3 and the Gate 1 art pass
+with it). Not deployed: the Worker change goes live with the next `pnpm teaser:deploy`, and needs no
+D1 migration (`outfits_json` was already in 0005).
 
 - **`PUT /api/me/outfit { genre, outfit }`.** Read strictly for that genre (`parseOutfit`; 400
   `outfit_invalid`), body capped at 2 KB (`OUTFIT_REQUEST_MAX_BYTES`, 413), and refused with 409
