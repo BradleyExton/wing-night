@@ -16,7 +16,7 @@ in `CLAUDE.md` passes and the screenshots are in hand.
 |---|---|---|---|
 | 0 | before run 1 | Answer the open questions. **Done 2026-10-14: defaults.** | — |
 | 1 | after run 1 | Open `mockups/cast/outfit-gallery.html` and keep or cut every candidate at 76px. Paste the cut list back. Decide on gold. **Cuts done 2026-10-20: [bird-wardrobe-gate-1.md](bird-wardrobe-gate-1.md), gold kept where it reads.** | ~30 min |
-| 2 | after run 5 | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. | ~30 min |
+| 2 | after run 5 (done 2026-10-25) | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. | ~30 min |
 
 ## Runs
 
@@ -147,6 +147,58 @@ D1 migration (`outfits_json` was already in 0005).
     (run 2's open question); a per-genre merge would fix it and keep "cleared" working.
   - Move tiles loop by re-keying the figure every 2.6 s; a Move playing on the stage is not tied
     to a beat.
+
+## Run 5: what landed (2026-10-25)
+
+Five agents, one per slice, each in its own worktree; merged and committed by the orchestrating
+session (63d49e2d..c8e742b2). Screenshots in `docs/screenshots/wardrobe/run-5/`.
+
+- **Parade and lineup.** Moves are scheduled (`apps/client/src/utils/resolveCastMoves`, beats
+  from `useRoomBeat`, which reads the display's `data-beat` and never touches the audio graph):
+  every 8 bars on a bar the bird's name picks, one bar in place of the pose (a pop bird's bounce
+  too), the Bump answered by the bird behind, and the intro lineup waving each seat's Move once,
+  a beat apart. Every genre's Props landed across a neighbour, not just metal: members now space
+  by margin (looser next to a showpiece), each face paints over the back of the bird in front,
+  and the row stands about 10 bird units off the floor so Stages and dips are not clipped. The
+  dance is 17 s (was 14) so eight bars fit at 120 bpm. Full kit measured no slower than bare
+  with four page copies on the GPU.
+- **Cast.** The Prop sweep runs every prop on every body, style and head through the four
+  poses, the four dances and every Move frame (wingFlip and the Bump's answer included). On a
+  flipped wing the Prop is parked on the body (`--cast-move-prop`), which cleared 29 prop/genre
+  offenders on the chicken dance's clap and heart-point; golden-egg a moved off the face and the
+  floor. corn-cob a is redrawn (gold cobs in white husks) and reads as corn; pop's bows and
+  streamers tie to the plume's tips; a Top put on mid-parade takes the body's loop start times
+  (`CharacterFigure/bodyLoops`). The harness follows the two redrawn items; `check-outfit` is
+  123 ok. A part's jig and pose layers are keyed, so a jig coming or going no longer slides the
+  part in from the wrong transform (the parade also keys the bird on its Move).
+- **Games.** `layer` on `CharacterFigure` (`whole` / `underWing` / `overWing`): FAPPY's beat and
+  JOUST's aim turn their wing between the two slices, so the Top paints over it as on the rig.
+  `CharacterWingFigure` (now its own module) takes the silhouette's mitered join. The Mount
+  ragdoll, the pile, BRAWL and Dunlop Dash were checked in full kit and needed nothing.
+- **Portal.** The portal e2e roster has a pop team and a spec walks `/me` and `/me/wardrobe` in
+  every genre at 390x844. Rail tabs, the TV-size pill, swatches and the shell's top links reach
+  44px; photo heads no longer clip or sit under the pill (the stage bird is 208px tall at 844px,
+  was about 256). `OUTFIT_SLOT_CROPS` is per body, and kit and Prop tiles draw the bird without
+  its head; Stage and Move tiles keep it. A tapped Move starts on the next beat; Move tiles loop
+  on the clock.
+- **Data.** Unseat keeps the row and empties its team name (`UNSEATED_TEAM_NAME`, read back as
+  no pick everywhere), so outfits survive it; no migration. The export still sends an unseated
+  guest's outfits, as it does an orphan's (Brad: keep it, 2026-10-25). `pack:pull` merges per genre: each genre the guest
+  carries replaces the player's, the rest are kept; the dry run reads
+  `Rob: disco (none) -> dressed, metal dressed -> (bare); keeps pop`. Run 2's whole-map replace
+  and run 4's two data edges are gone.
+- **Open calls for Brad, at Gate 2.**
+  - The parade's lift (about 18px at 1080p) and the 17 s dance.
+  - Headless kit tiles in the wardrobe, and the smaller stage bird (or move the pill instead).
+  - corn-cob a's gold is 1.3:1 against country orange; the ink outline carries the edge.
+  - heart-point jabs with an empty wing now that the Prop parks.
+  - Some Tops (battle-vest a most) are drawn only where the chest shows beside the wing at rest,
+    so a raised wing (JOUST's aim, FAPPY's downbeat) shows bare body.
+  - JOUST's lane birds are about 40px on the tablet; kit barely reads there.
+  - sporty-hop's jump leaves the Move tile for a moment; team-sash a/b overhang the tall stock
+    body's back a little more than on round.
+- **Not covered by e2e.** No sample-pack player wears a Move, so no Playwright spec sees one
+  play; giving one sample player a Move would (sample round 1 drives five specs, so check them).
 
 ## Rules every agent brief carries
 

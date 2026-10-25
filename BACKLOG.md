@@ -481,9 +481,10 @@ lists above; nothing here repeats them.
 - **TRIVIA on the phones** — majority vote, partial credit and the night pack's missing
   `trivia.json` (choices come from the sample pack's eight) are under "Answers on the phones"
   above.
-- **Wardrobe** (`docs/bird-wardrobe-build-plan.md`). Gate 1, the art pass and runs 2–4 are on
-  main (2026-10-20, 6edac63a), not yet deployed to wingnight.tv; still to come: run 5's polish
-  audit, then Gate 2 (feel test, `pnpm teaser:deploy`, a real `pack:pull`).
+- **Wardrobe** (`docs/bird-wardrobe-build-plan.md`). Gate 1, the art pass and runs 2–5 are
+  done (run 5's polish audit 2026-10-25), not yet deployed to wingnight.tv; still to come:
+  Gate 2 (feel test, `pnpm teaser:deploy`, a real `pack:pull`) and the open calls listed under
+  "Run 5: what landed".
 
 ## Team identity (genre theming)
 
