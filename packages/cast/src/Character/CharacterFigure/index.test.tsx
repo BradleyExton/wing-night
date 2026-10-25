@@ -216,3 +216,65 @@ test("does draw the still hen byte for byte as it always has when it wears a cos
 
   assert.equal(withoutHaloIds(html), withoutHaloIds(STILL_SPIKY_COSTUME_WITH_MEDALLION));
 });
+
+// A surface that beats the wing on a layer of its own draws the bird in two slices around it, so
+// the stack still reads as the rig's: the Top and the head paint over the wing, the body under it.
+const dressedAppearance = {
+  ...drawnAppearance,
+  outfit: {
+    top: { item: "battle-vest-a" },
+    sleeve: { item: "flame-sleeve-a" },
+    tail: { item: "chain-loop-b" },
+    boots: { item: "combat-boots-a" }
+  }
+} as const;
+
+const slotsIn = (html: string): string[] =>
+  [...html.matchAll(/data-outfit-slot="([a-z]+)"/g)].map((match) => match[1] ?? "");
+
+const partsIn = (html: string): string[] =>
+  [...html.matchAll(/data-character-part="([a-zA-Z]+)"/g)].map((match) => match[1] ?? "");
+
+test("does draw the tail, legs and body and none of what covers the wing in the slice under it", () => {
+  const html = renderToStaticMarkup(<Character appearance={dressedAppearance} silhouette="spiky" layer="underWing" />);
+
+  assert.deepEqual(partsIn(html), ["tail", "legFar", "body", "legNear"]);
+  assert.deepEqual(slotsIn(html), ["tail", "boots", "boots"]);
+  assert.match(html, /data-character-layer="underWing"/);
+});
+
+test("does draw the Top then the head and nothing under the wing in the slice over it", () => {
+  const html = renderToStaticMarkup(<Character appearance={dressedAppearance} silhouette="spiky" layer="overWing" />);
+
+  assert.deepEqual(partsIn(html), ["body", "head"]);
+  assert.deepEqual(slotsIn(html), ["top"]);
+  assert.doesNotMatch(html, /data-character-wing/);
+});
+
+test("does draw the whole stack once between the two slices, wing aside", () => {
+  const whole = renderToStaticMarkup(<Character appearance={dressedAppearance} silhouette="spiky" />);
+  const under = renderToStaticMarkup(<Character appearance={dressedAppearance} silhouette="spiky" layer="underWing" />);
+  const over = renderToStaticMarkup(<Character appearance={dressedAppearance} silhouette="spiky" layer="overWing" />);
+
+  assert.deepEqual(
+    [...partsIn(under), ...partsIn(over)],
+    partsIn(whole).filter((part) => part !== "wing")
+  );
+  assert.deepEqual(
+    [...slotsIn(under), ...slotsIn(over)],
+    slotsIn(whole).filter((slot) => slot !== "sleeve")
+  );
+});
+
+test("does leave the showpieces' Prop off both slices and the Stage on the one under the wing", () => {
+  const outfit = { ...dressedAppearance.outfit, prop: { item: "flying-v-a" }, stage: { item: "lava-disc-a" } };
+  const under = renderToStaticMarkup(
+    <Character appearance={{ ...dressedAppearance, outfit }} silhouette="spiky" layer="underWing" showpieces />
+  );
+  const over = renderToStaticMarkup(
+    <Character appearance={{ ...dressedAppearance, outfit }} silhouette="spiky" layer="overWing" showpieces />
+  );
+
+  assert.deepEqual(slotsIn(under), ["stage", "tail", "boots", "boots"]);
+  assert.deepEqual(slotsIn(over), ["top"]);
+});

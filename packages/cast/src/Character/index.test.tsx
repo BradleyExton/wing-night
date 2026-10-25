@@ -619,3 +619,13 @@ test("does keep the brawler's poses static so a surface swaps them per frame", (
     assert.doesNotMatch(html, /animation:|data-character-jig/, `${pose} loops nothing`);
   }
 });
+
+test("does keep a spiky wing's feather points mitered on the wing's own layer, as on the rig", () => {
+  const rig = renderToStaticMarkup(<Character appearance={drawn} silhouette="spiky" />);
+  const layer = renderToStaticMarkup(<CharacterWing silhouette="spiky" />);
+  const rigWing = /<path class="([^"]+)"[^>]*data-character-wing/.exec(rig)?.[1];
+
+  assert.ok(rigWing?.includes("miter"));
+  assert.match(layer, new RegExp(`<path class="${rigWing?.replace(/[[\]:]/g, "\\$&")}"`));
+  assert.doesNotMatch(renderToStaticMarkup(<CharacterWing />), /miter/);
+});

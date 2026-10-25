@@ -23,6 +23,9 @@ export type CharacterProps = {
   apparel?: CharacterApparel;
   fillClassName?: string;
   wing?: "drawn" | "none";
+  // One slice of the bird, for a surface that beats `CharacterWing` between
+  // an `underWing` box and an `overWing` box (`CharacterFigure`'s `layer`).
+  layer?: CharacterFigureProps["layer"];
   pose?: CharacterPose;
   silhouette?: CharacterSilhouette;
   dance?: CharacterDance;
@@ -40,6 +43,7 @@ export const Character = ({
   apparel,
   fillClassName,
   wing,
+  layer,
   pose,
   silhouette,
   dance,
@@ -56,6 +60,7 @@ export const Character = ({
         appearance={appearance}
         apparel={apparel}
         wing={wing}
+        layer={layer}
         pose={pose}
         silhouette={silhouette}
         dance={dance}
@@ -95,9 +100,11 @@ export const CharacterStage = ({
 export const CHARACTER_WING_ORIGIN_CLASS_NAME = styles.wingOrigin;
 
 // The wing alone, in the same box as the bird, for a surface that draws the
-// bird with `wing="none"` and beats this one over it: rotate the element
-// holding it about the shoulder (`CHARACTER_WING_ORIGIN_CLASS_NAME` on a box
-// the bird's size does it) and the hen flaps without the rest of it repainting.
+// bird in two slices (`layer="underWing"` under it, `layer="overWing"` over
+// it, so the Top and head still cover it) and beats this one between them:
+// rotate the element holding it about the shoulder
+// (`CHARACTER_WING_ORIGIN_CLASS_NAME` on a box the bird's size does it) and the
+// hen flaps without the rest of it repainting.
 // Pass the bird's `silhouette` too, or a spiky bird flaps the stock wing, and
 // its `appearance`, or a dressed bird flaps a bare one (the Sleeve is on it).
 export const CharacterWing = ({

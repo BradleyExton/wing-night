@@ -9,9 +9,10 @@ export type BirdSpriteRefs = {
   wing: HTMLDivElement | null;
 };
 
-// A cast hen in an HTML box the scene moves with a transform, drawn without
-// its wing, and the wing on a box of its own over it. The loop turns the
-// wing box about the shoulder to beat it; the hen underneath never repaints,
+// A cast hen in an HTML box the scene moves with a transform, drawn in two
+// slices with the wing on a box of its own between them: the body under it,
+// the Top and head over it, as the cast's own rig stacks them. The loop turns
+// the wing box about the shoulder to beat it; neither slice ever repaints,
 // so a costume head's halo filter is rasterised once and composited. `pose`
 // is the cast's: the flyer tucks its legs (`fly`), the waiter stands (`idle`).
 export const BirdSprite = forwardRef<
@@ -47,7 +48,7 @@ export const BirdSprite = forwardRef<
         apparel={bird.apparel}
         silhouette={bird.silhouette}
         fillClassName={bird.fillClassName}
-        wing="none"
+        layer="underWing"
         pose={pose}
       />
       <div
@@ -58,6 +59,16 @@ export const BirdSprite = forwardRef<
         className={`${styles.wingBox} ${CHARACTER_WING_ORIGIN_CLASS_NAME}`}
       >
         <CharacterWing appearance={bird.appearance} fillClassName={bird.fillClassName} silhouette={bird.silhouette} />
+      </div>
+      <div className={styles.overWingBox}>
+        <Character
+          appearance={bird.appearance}
+          apparel={bird.apparel}
+          silhouette={bird.silhouette}
+          fillClassName={bird.fillClassName}
+          layer="overWing"
+          pose={pose}
+        />
       </div>
     </div>
   );

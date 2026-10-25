@@ -109,6 +109,7 @@ const ArenaHenFigure = ({
     serverOrigin
   );
   const silhouette = resolveTeamSilhouette({ genre: figure.genre ?? undefined });
+  const apparel = resolveTeamApparel({ genre: figure.genre ?? undefined });
   const upright = resolveUpright(foot, head);
 
   return (
@@ -123,18 +124,29 @@ const ArenaHenFigure = ({
       >
         <CharacterFigure
           appearance={appearance}
-          apparel={resolveTeamApparel({ genre: figure.genre ?? undefined })}
+          apparel={apparel}
           silhouette={silhouette}
           pose={pose}
-          wing={wingAimAt === null ? "drawn" : "none"}
+          layer={wingAimAt === null ? "whole" : "underWing"}
         />
+        {/* The aim wing goes between the bird's two slices, so the Top and the head still paint
+            over it as they do over the rig's own wing. */}
         {wingAimAt !== null && (
-          <g
-            transform={`rotate(${resolveWingTurnDeg(foot, upright, facing, wingAimAt).toFixed(1)} ${CHARACTER_WING_ROOT.x} ${CHARACTER_WING_ROOT.y})`}
-            data-joust-wing
-          >
-            <CharacterWingFigure appearance={appearance} silhouette={silhouette} />
-          </g>
+          <>
+            <g
+              transform={`rotate(${resolveWingTurnDeg(foot, upright, facing, wingAimAt).toFixed(1)} ${CHARACTER_WING_ROOT.x} ${CHARACTER_WING_ROOT.y})`}
+              data-joust-wing
+            >
+              <CharacterWingFigure appearance={appearance} silhouette={silhouette} />
+            </g>
+            <CharacterFigure
+              appearance={appearance}
+              apparel={apparel}
+              silhouette={silhouette}
+              pose={pose}
+              layer="overWing"
+            />
+          </>
         )}
       </g>
     </g>

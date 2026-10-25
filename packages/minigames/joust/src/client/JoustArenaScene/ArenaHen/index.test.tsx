@@ -180,3 +180,24 @@ test("does mark a bird felled on an earlier shot as spent without losing who it 
   assert.match(html, /class="text-team[A-H] opacity-50"/);
   assert.match(html, /Rosie/);
 });
+
+// The rig paints the Top over its wing; a shooter's aim wing goes between the figure's two slices
+// so a dressed bird still wears its Top over the wing it reaches with, and its head over both.
+test("does keep a dressed shooter's Top and head over the wing it reaches with", () => {
+  const html = render({
+    figure: {
+      ...FIGURE,
+      outfit: { top: { item: "battle-vest-a" }, sleeve: { item: "flame-sleeve-a" } }
+    },
+    facing: 1,
+    wingAimAt: { x: 60, y: 76.4 - 6 }
+  });
+  const wing = html.indexOf("data-joust-wing");
+  const sleeve = html.indexOf('data-outfit-slot="sleeve"');
+  const top = html.indexOf('data-outfit-slot="top"');
+  const head = html.indexOf('data-character-part="head"');
+
+  assert.ok(wing > 0 && wing < sleeve && sleeve < top && top < head);
+  assert.equal(html.match(/data-outfit-slot="top"/g)?.length, 1);
+  assert.equal(html.match(/data-character-part="head"/g)?.length, 1);
+});

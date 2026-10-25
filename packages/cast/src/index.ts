@@ -25,6 +25,7 @@ export {
   CharacterWingFigure,
   resolveCharacterRideStance,
   resolveCharacterWingPath,
+  type CharacterFigureLayer,
   type CharacterFigureProps,
   type CharacterRideStance
 } from "./Character/CharacterFigure/index.js";
