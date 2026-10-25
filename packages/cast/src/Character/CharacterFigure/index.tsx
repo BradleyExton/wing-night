@@ -120,8 +120,11 @@ const Part = ({
   const pivot = CHARACTER_PIVOTS[part];
   const jigClassName = rig.jig[part];
 
+  // Keyed, so a jig coming or going (a dance starting, a Move handing back)
+  // remounts the layers instead of React reusing the jig's node as the pose's
+  // and the pose's transition sliding the part from the wrong transform.
   const posed = (
-    <g data-character-part={part} className={rig.pose[part]}>
+    <g key="posed" data-character-part={part} className={rig.pose[part]}>
       <g transform={`translate(${-pivot.x} ${-pivot.y})`}>{children}</g>
     </g>
   );
@@ -131,7 +134,7 @@ const Part = ({
       {jigClassName === undefined ? (
         posed
       ) : (
-        <g data-character-jig={part} className={jigClassName}>
+        <g key="jig" data-character-jig={part} className={jigClassName}>
           {posed}
         </g>
       )}
