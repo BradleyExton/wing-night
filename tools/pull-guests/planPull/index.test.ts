@@ -287,13 +287,55 @@ test("does match an accented guest to a plain-spelled player when the names fold
 
 const ROB_METAL: OutfitsByGenre = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a", style: "gold" } } };
 
-test("does replace a player's whole outfits map with a dressed guest's", () => {
-  const playersFile = { players: [{ name: "Rob", outfits: { pop: { top: { item: "crop-jacket-a" } } } }] };
+const ROB_POP = { pop: { top: { item: "crop-jacket-a" } } };
+
+test("does keep a genre Brad dressed by hand when the guest's outfits do not carry it", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: ROB_POP }] };
   const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
 
-  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: ROB_METAL }]);
-  assert.deepEqual(result.outfitChanges, [{ name: "Rob", from: ["pop"], to: ["metal"] }]);
+  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: { ...ROB_POP, ...ROB_METAL } }]);
+  assert.deepEqual(result.outfitChanges, [
+    { name: "Rob", genres: [{ genre: "metal", from: "none", to: "dressed" }], kept: ["pop"] }
+  ]);
+  assert.ok(describePlan(result).includes("  Rob: metal (none) -> dressed; keeps pop"));
   assert.equal(result.playersChanged, true);
+});
+
+test("does replace every genre the guest carries, and only those, when the guest dressed several", () => {
+  const playersFile = {
+    players: [
+      {
+        name: "Rob",
+        outfits: { ...ROB_POP, metal: { top: { item: "battle-vest-b" } }, country: {}, disco: { tail: { item: "tinsel-a" } } }
+      }
+    ]
+  };
+  const guestOutfits: OutfitsByGenre = { ...ROB_METAL, country: { top: { item: "fringed-vest-a" } }, disco: {} };
+  const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: guestOutfits }]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: { ...ROB_POP, ...guestOutfits } }]);
+  assert.deepEqual(result.outfitChanges, [
+    {
+      name: "Rob",
+      genres: [
+        { genre: "country", from: "bare", to: "dressed" },
+        { genre: "disco", from: "dressed", to: "bare" },
+        { genre: "metal", from: "dressed", to: "dressed" }
+      ],
+      kept: ["pop"]
+    }
+  ]);
+  assert.ok(
+    describePlan(result).includes("  Rob: country (bare) -> dressed, disco dressed -> (bare), metal dressed -> restyled; keeps pop")
+  );
+});
+
+test("does list only the genres that differ when the guest carries one the player already wears", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: { ...ROB_METAL, disco: { tail: { item: "tinsel-a" } } } }] };
+  const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: { ...ROB_METAL, disco: {} } }]);
+
+  assert.deepEqual(result.outfitChanges, [{ name: "Rob", genres: [{ genre: "disco", from: "dressed", to: "bare" }], kept: [] }]);
+  assert.ok(describePlan(result).includes("  Rob: disco dressed -> (bare)"));
 });
 
 test("does dress an added player in their guest's outfits", () => {
@@ -315,8 +357,8 @@ test("does undress a player when their guest stripped the genre bare in the ward
   const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: { metal: {} } }]);
 
   assert.deepEqual(result.players.players, [{ name: "Rob", team: "Iron Hens", outfits: { metal: {} } }]);
-  assert.deepEqual(result.outfitChanges, [{ name: "Rob", from: ["metal"], to: [] }]);
-  assert.ok(describePlan(result).includes("  Rob: metal -> (bare)"));
+  assert.deepEqual(result.outfitChanges, [{ name: "Rob", genres: [{ genre: "metal", from: "dressed", to: "bare" }], kept: [] }]);
+  assert.ok(describePlan(result).includes("  Rob: metal dressed -> (bare)"));
   assert.equal(result.playersChanged, true);
 
   // The next pull finds the pack already bare and plans nothing.
@@ -332,7 +374,15 @@ test("does plan no outfit change when the guest's outfits are already the player
 test("does list outfit changes in the dry-run description", () => {
   const result = plan({ players: [{ name: "Rob" }] }, [{ ...guest("g_rob", "Rob"), outfits: ROB_METAL }]);
 
-  assert.ok(describePlan(result).includes("  Rob: (bare) -> metal"));
+  assert.ok(describePlan(result).includes("  Rob: metal (none) -> dressed"));
+});
+
+test("does record a stripped genre the pack never had, so the bird stays bare there", () => {
+  const playersFile = { players: [{ name: "Rob", outfits: ROB_POP }] };
+  const result = plan(playersFile, [{ ...guest("g_rob", "Rob"), outfits: { metal: {} } }]);
+
+  assert.deepEqual(result.players.players, [{ name: "Rob", outfits: { ...ROB_POP, metal: {} } }]);
+  assert.ok(describePlan(result).includes("  Rob: metal (none) -> (bare); keeps pop"));
 });
 
 test("does leave a player's outfits alone and say so when their guest's outfits are malformed", () => {

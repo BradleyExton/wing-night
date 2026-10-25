@@ -17,13 +17,14 @@
 // orphans its picks, and an orphan exports as no pick), and the server refuses to boot on a
 // player seated on a team teams.json does not declare — so the name is trusted, not checked twice.
 //
-// Outfits come down the same way: a guest who has dressed their bird REPLACES the player's whole
-// `outfits` map (every genre, so a reseat keeps them dressed), and a guest who never opened the
-// wardrobe (no outfits, or an empty map) leaves whatever players.json has — which is how a bird
-// Brad dressed by hand survives a pull. A genre the guest dressed and then stripped bare comes as
-// an empty outfit (`{ metal: {} }`), which is a dressed map like any other: it replaces the
-// player's, and their bird goes to the party bare. That is the one way a guest undresses a bird
-// the pack already has.
+// Outfits are merged genre by genre: every genre the guest's map carries REPLACES that genre on
+// the player (all of them, not just the picked team's, so a reseat keeps them dressed), and every
+// genre it does not carry is left as players.json has it — which is how a genre Brad dressed by
+// hand survives a guest who never touched it. A guest who never opened the wardrobe (no outfits,
+// or an empty map) carries no genre, so leaves the player alone. A genre the guest dressed and
+// then stripped bare comes as an empty outfit (`{ metal: {} }`), which replaces the player's like
+// any other, and that bird goes to the party bare there. That is the one way a guest undresses a
+// bird the pack already has.
 import { slugifyName } from "../../../packages/avatar-head/src/index.ts";
 import type { AdminGuestExport } from "../../../packages/shared/src/guestPortal/export/index.ts";
 import { validateOutfitsByGenre } from "../../../packages/shared/src/outfit/index.ts";
@@ -85,11 +86,23 @@ export type TeamChange = {
   to: string;
 };
 
-// A guest's outfits replacing their player's: the genres dressed before and after.
+// What a player wears in one genre: `none` when the map has no key for it (never dressed),
+// `bare` for an empty outfit (stripped), `dressed` for at least one slot.
+export type OutfitState = "none" | "bare" | "dressed";
+
+// One genre the guest's map carries that differs from the player's, and so replaces it.
+export type OutfitGenreChange = {
+  genre: string;
+  from: OutfitState;
+  to: Exclude<OutfitState, "none">;
+};
+
+// A guest's outfits merged into their player's: each genre replaced, in genre order, and the
+// genres the player stays dressed in because the guest's map does not carry them.
 export type OutfitChange = {
   name: string;
-  from: string[];
-  to: string[];
+  genres: OutfitGenreChange[];
+  kept: string[];
 };
 
 // A guest whose outfits are not genre -> slot -> { item, style? }: they are not pulled, and the
@@ -156,14 +169,49 @@ export const readAvatarManifest = (value: unknown, filePath: string): AvatarMani
 // difference that is not a change, and the pull writes the export's order.
 const isSameJson = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-// The genres a bird is actually dressed for: one stripped bare (`{}`) is no outfit to list.
-const dressedGenres = (outfits: unknown): string[] =>
-  isRecord(outfits)
-    ? Object.entries(outfits)
-        .filter(([, outfit]) => isRecord(outfit) && Object.keys(outfit).length > 0)
-        .map(([genre]) => genre)
-        .sort()
-    : [];
+const resolveOutfitState = (outfit: unknown): OutfitState => {
+  if (!isRecord(outfit)) {
+    return "none";
+  }
+
+  return Object.keys(outfit).length === 0 ? "bare" : "dressed";
+};
+
+// The guest's genres merged over the player's, or null when no genre the guest carries differs
+// from the player's. The player's own keys keep their place; a genre new to them goes after.
+const mergeOutfits = (
+  playerOutfits: unknown,
+  guestOutfits: Record<string, unknown>
+): { outfits: Record<string, unknown>; genres: OutfitGenreChange[]; kept: string[] } | null => {
+  const current = isRecord(playerOutfits) ? playerOutfits : {};
+  const genres = Object.keys(guestOutfits)
+    .filter((genre) => !isSameJson(current[genre], guestOutfits[genre]))
+    .sort()
+    .map((genre): OutfitGenreChange => ({
+      genre,
+      from: resolveOutfitState(current[genre]),
+      to: resolveOutfitState(guestOutfits[genre]) === "dressed" ? "dressed" : "bare"
+    }));
+
+  if (genres.length === 0) {
+    return null;
+  }
+
+  const kept = Object.keys(current)
+    .filter((genre) => !(genre in guestOutfits) && resolveOutfitState(current[genre]) === "dressed")
+    .sort();
+
+  return { outfits: { ...current, ...guestOutfits }, genres, kept };
+};
+
+// One genre's line in the dry run: `metal (none) -> dressed`, `pop dressed -> (bare)`, and a
+// genre dressed both sides, whose items changed, `disco dressed -> restyled`.
+const describeOutfitGenre = ({ genre, from, to }: OutfitGenreChange): string => {
+  const fromLabel = from === "dressed" ? "dressed" : `(${from})`;
+  const toLabel = to === "bare" ? "(bare)" : from === "dressed" ? "restyled" : "dressed";
+
+  return `${genre} ${fromLabel} -> ${toLabel}`;
+};
 
 export const resolveHeadFileName = (slug: string, sha256: string): string =>
   `${slug}-${sha256.slice(0, HEAD_HASH_PREFIX_LENGTH)}.png`;
@@ -309,19 +357,17 @@ export const planPull = ({
       playersChanged = true;
     }
 
-    // A dressed guest replaces every outfit; an undressed one leaves the pack's alone, and so does
-    // one whose outfits the night server would refuse to boot on.
+    // Each genre the guest carries replaces the player's; the rest stay. An undressed guest
+    // carries none, and one whose outfits the night server would refuse to boot on is not pulled.
     const outfitIssue = guest.outfits === undefined ? undefined : validateOutfitsByGenre(guest.outfits)[0];
+    const merge =
+      guest.outfits === undefined || outfitIssue !== undefined ? null : mergeOutfits(player.outfits, guest.outfits);
 
     if (outfitIssue !== undefined) {
       outfitNotes.push({ name: player.name, problem: `outfits.${outfitIssue.path} ${outfitIssue.message}` });
-    } else if (
-      guest.outfits !== undefined &&
-      Object.keys(guest.outfits).length > 0 &&
-      !isSameJson(player.outfits, guest.outfits)
-    ) {
-      outfitChanges.push({ name: player.name, from: dressedGenres(player.outfits), to: dressedGenres(guest.outfits) });
-      player = { ...player, outfits: guest.outfits };
+    } else if (merge !== null) {
+      outfitChanges.push({ name: player.name, genres: merge.genres, kept: merge.kept });
+      player = { ...player, outfits: merge.outfits };
       players[index] = player;
       playersChanged = true;
     }
@@ -413,7 +459,9 @@ export const describePlan = (plan: PullPlan): string[] => {
     ...plan.teamChanges.map((change) => `  ${change.name}: ${change.from ?? "(unseated)"} -> ${change.to}`),
     `Outfit changes (${plan.outfitChanges.length}):`,
     ...plan.outfitChanges.map(
-      (change) => `  ${change.name}: ${change.from.join(", ") || "(bare)"} -> ${change.to.join(", ") || "(bare)"}`
+      (change) =>
+        `  ${change.name}: ${change.genres.map(describeOutfitGenre).join(", ")}` +
+        (change.kept.length === 0 ? "" : `; keeps ${change.kept.join(", ")}`)
     ),
     `Files to write (${writes.length}):`,
     ...writes.map((write) => `  ${write}${sizeByWrite.get(write) ?? ""}`)

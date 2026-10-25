@@ -39,7 +39,13 @@ import { findRosterTeam, readRoster, type PortalRoster } from "../roster/index.t
 import type { AdminContext, PortalRoute } from "../routeContext/index.ts";
 import { composeSignInMail } from "../signInMail/index.ts";
 import { mintPersonalLink, resolveLinkOrigin, resolveSignInUrl } from "../signInLinks/index.ts";
-import { parsePickRow, readTeamBoard, writePicksClosed } from "../teamPicks/index.ts";
+import {
+  SEATED_TEAM_NAME_SQL,
+  UNSEATED_TEAM_NAME,
+  parseOutfitsJson,
+  readTeamBoard,
+  writePicksClosed
+} from "../teamPicks/index.ts";
 import { mintGuestId } from "../tokens/index.ts";
 
 // "Invite everyone" sends at most this many per request. Each invite is three D1 statements and
@@ -76,8 +82,9 @@ const GUEST_STATUS_SELECT = `
       WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status IN ('painting', 'painted')) AS tries_spent,
     (SELECT COUNT(*) FROM avatar_attempts a
       WHERE a.guest_id = g.guest_id AND a.reset_at IS NULL AND a.status = 'failed') AS tries_failed,
-    -- The pick as stored; withRosterTeam checks it against the roster before it leaves.
-    (SELECT p.team_name FROM team_picks p WHERE p.guest_id = g.guest_id) AS team
+    -- The pick as stored, an unseated row as none; withRosterTeam checks it against the roster
+    -- before it leaves.
+    (SELECT ${SEATED_TEAM_NAME_SQL} FROM team_picks p WHERE p.guest_id = g.guest_id) AS team
   FROM guests g`;
 
 const toGuestStatus = (row: GuestStatusRow): AdminGuestStatus => ({
@@ -347,7 +354,9 @@ const readBoard = async ({ url, deps }: AdminContext): Promise<Response> => {
 };
 
 // Brad moving someone: onto a team (over the cap if he wants, closed or not) or off every team.
-// Like the guest's own pick, the row's outfits_json is left as it is.
+// Like the guest's own pick, the row's outfits_json is left as it is — unseating too, which
+// keeps the row and empties its team name (UNSEATED_TEAM_NAME), so a guest who reseats finds
+// every genre they dressed. A guest with no row has no seat and no outfits, so nothing to clear.
 const seatGuest = async ({ request, params, url, deps }: AdminContext): Promise<Response> => {
   const guestId = params.guestId ?? "";
   const body = await readJsonBody(request);
@@ -367,7 +376,10 @@ const seatGuest = async ({ request, params, url, deps }: AdminContext): Promise<
   }
 
   if (body.teamName === null) {
-    await deps.db.prepare("DELETE FROM team_picks WHERE guest_id = ?").bind(guestId).run();
+    await deps.db
+      .prepare("UPDATE team_picks SET team_name = ?, updated_at = ? WHERE guest_id = ?")
+      .bind(UNSEATED_TEAM_NAME, deps.now(), guestId)
+      .run();
   } else if (findRosterTeam(roster, body.teamName) === undefined) {
     return errorResponse("bad_request");
   } else {
@@ -407,7 +419,8 @@ const readGuestHead = async ({ params, deps }: AdminContext): Promise<Response> 
 // and size (for the pull to fetch from readGuestHead), the team they picked, and every genre's
 // outfit they built. Selected column by column so an address or a sign-in time cannot ride along.
 // The outfits go as stored, a bare-stripped genre's `{}` included (the pull's "cleared"), and go
-// even when the pick is orphaned: they are kept per genre, not per team. A head whose PNG is
+// even when the pick is orphaned or Brad unseated the guest: they are kept per genre, not per
+// team, and the pull merges them genre by genre. A head whose PNG is
 // missing from R2 exports as none, the same answer readGuestHead would give. A pick naming a
 // team the roster no longer has exports as none, as the board lists it: the night server refuses
 // to boot on a player whose team teams.json does not declare (seatPresetRosters), so an orphan
@@ -421,7 +434,8 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
 
   const { results } = await deps.db
     .prepare(
-      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash, p.team_name, p.outfits_json
+      `SELECT g.guest_id, g.display_name, a.object_key, a.head_hash, ${SEATED_TEAM_NAME_SQL} AS team_name,
+         p.outfits_json
        FROM guests g
        LEFT JOIN avatar_attempts a ON a.guest_id = g.guest_id AND a.accepted_at IS NOT NULL
          AND a.object_key IS NOT NULL AND a.head_hash IS NOT NULL
@@ -439,10 +453,7 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
   const exported: AdminGuestExport[] = await Promise.all(
     results.map(async (row) => {
       const object = row.object_key === null ? null : await deps.bucket.head(row.object_key);
-      const pick =
-        row.team_name === null || row.outfits_json === null
-          ? null
-          : parsePickRow({ team_name: row.team_name, outfits_json: row.outfits_json });
+      const outfits = row.outfits_json === null ? null : parseOutfitsJson(row.outfits_json);
 
       return {
         guestId: row.guest_id,
@@ -452,7 +463,7 @@ const exportGuests = async ({ url, deps }: AdminContext): Promise<Response> => {
             ? null
             : { sha256: row.head_hash, contentType: AVATAR_HEAD_TYPE, bytes: object.size },
         team: row.team_name !== null && findRosterTeam(roster, row.team_name) !== undefined ? row.team_name : null,
-        outfits: pick?.outfitsByGenre ?? {}
+        outfits: outfits ?? {}
       };
     })
   );

@@ -66,8 +66,9 @@ own seeded root. The server logs the root it resolved at boot as `server:content
 
 Guests, the heads they made and the team they picked on wingnight.tv come down with
 `pnpm pack:pull` (`--dry-run` first to see the diff): one-way, it adds guests as players, writes a
-pick onto the player's `team` (a guest with no pick leaves it alone), replaces the player's
-`outfits` with a dressed guest's (an undressed guest leaves them alone), never renames or removes a
+pick onto the player's `team` (a guest with no pick leaves it alone), merges the guest's `outfits`
+into the player's genre by genre (each genre the guest dressed or stripped bare replaces the
+player's; a genre the guest never touched, hand-dressed or not, is kept), never renames or removes a
 player, and backs up `players.json` and the avatar manifest beside themselves before it writes.
 Nothing else comes down.
 

@@ -8,7 +8,9 @@ import type {
   AdminMintedLink,
   AdminPicksState,
   AdminStyleReference,
-  AdminTeamBoard
+  AdminTeamBoard,
+  PortalMe,
+  PortalTeamList
 } from "@wingnight/shared/guestPortal";
 
 import { STYLE_REFERENCE_KEY, resolveHeadKey } from "../avatarStore/index.ts";
@@ -380,7 +382,13 @@ test("does reseat and unseat a guest, over the cap and with picks closed, when t
     [BARN_BURNERS]: [],
     unseated: ["g_rob"]
   });
-  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM team_picks WHERE guest_id = 'g_rob'").get()?.n, 0);
+  // The row stays, its team name emptied: it is where the outfits live.
+  assert.equal(portal.db.raw.prepare("SELECT team_name FROM team_picks WHERE guest_id = 'g_rob'").get()?.team_name, "");
+
+  // Unseating a guest who never picked is a no-op success: no row to keep, none written.
+  portal.addGuest({ guestId: "g_kim", displayName: "Kim" });
+  assert.equal((await seatGuest(portal, "g_kim", null)).status, 200);
+  assert.equal(portal.db.raw.prepare("SELECT COUNT(*) AS n FROM team_picks WHERE guest_id = 'g_kim'").get()?.n, 0);
 });
 
 test("does keep the row's outfits when the admin moves a guest", async () => {
@@ -390,6 +398,67 @@ test("does keep the row's outfits when the admin moves a guest", async () => {
   portal.db.raw.prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'").run(JSON.stringify(ROB_OUTFITS));
   await seatGuest(portal, "g_rob", MIRROR_BALLS);
 
+  assert.deepEqual(
+    { ...portal.db.raw.prepare("SELECT team_name, outfits_json FROM team_picks WHERE guest_id = 'g_rob'").get() },
+    { team_name: MIRROR_BALLS, outfits_json: JSON.stringify(ROB_OUTFITS) }
+  );
+});
+
+test("does keep the outfits but read the guest as unseated everywhere when the admin unseats them", async () => {
+  const portal = portalWithGuests();
+  const robCookie = await portal.signInAs("g_rob");
+
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  portal.db.raw.prepare("UPDATE team_picks SET outfits_json = ? WHERE guest_id = 'g_rob'").run(JSON.stringify(ROB_OUTFITS));
+  await seatGuest(portal, "g_rob", null);
+
+  // The board, the team list, the guest list, /me and the export all say no team.
+  assert.deepEqual(readSeating(await readBoard(portal)).unseated, ["g_brad", "g_rob"]);
+
+  const teams = (await (await portal.request("GET", "/api/teams", { cookie: robCookie })).json()) as PortalTeamList;
+
+  assert.deepEqual(
+    teams.teams.flatMap((team) => team.members.map((member) => member.guestId)),
+    []
+  );
+
+  const guests = (await (
+    await portal.request("GET", "/api/admin/guests", { headers: BEARER })
+  ).json()) as AdminGuestStatus[];
+
+  assert.equal(guests.find((guest) => guest.guestId === "g_rob")?.team, null);
+
+  const me = (await (await portal.request("GET", "/api/me", { cookie: robCookie })).json()) as PortalMe;
+
+  assert.equal(me.team, null);
+
+  // The outfits still go out with the export, as an orphaned pick's do: they are per genre.
+  const exported = (await (
+    await portal.request("GET", "/api/admin/export", { origin: null, headers: BEARER })
+  ).json()) as AdminGuestExport[];
+
+  assert.deepEqual(
+    exported.find((guest) => guest.guestId === "g_rob"),
+    { guestId: "g_rob", displayName: "Rob", head: null, team: null, outfits: ROB_OUTFITS }
+  );
+
+  // With no seat the wardrobe is shut: no_team, and the stored outfits are untouched.
+  const refused = await portal.request("PUT", "/api/me/outfit", {
+    cookie: robCookie,
+    body: { genre: "metal", outfit: {} }
+  });
+
+  assert.equal(refused.status, 409);
+  assert.deepEqual(await refused.json(), { error: "no_team" });
+
+  // Reseating, by the guest or by Brad, brings every genre back.
+  await pickTeam(portal, "g_rob", IRON_HENS);
+  assert.deepEqual(
+    ((await (await portal.request("GET", "/api/me", { cookie: robCookie })).json()) as PortalMe).team,
+    { teamName: IRON_HENS, outfitsByGenre: ROB_OUTFITS }
+  );
+  await seatGuest(portal, "g_rob", null);
+  await seatGuest(portal, "g_rob", MIRROR_BALLS);
   assert.deepEqual(
     { ...portal.db.raw.prepare("SELECT team_name, outfits_json FROM team_picks WHERE guest_id = 'g_rob'").get() },
     { team_name: MIRROR_BALLS, outfits_json: JSON.stringify(ROB_OUTFITS) }

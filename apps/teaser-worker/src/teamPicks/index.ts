@@ -2,7 +2,13 @@
 // need them: a guest's own pick, the list GET teams answers, the board /admin reads, and the
 // switch. The writes live with their routes (src/guestRoutes seats under the cap, src/adminRoutes
 // seats over it); this module is the shared reads and the one seating query behind them.
-import { isRecord, resolveGenreKey, resolveWornOutfit } from "@wingnight/shared";
+import {
+  isRecord,
+  resolveGenreKey,
+  resolveWornOutfit,
+  validateOutfitsByGenre,
+  type OutfitsByGenre
+} from "@wingnight/shared";
 import {
   isTeamPick,
   resolveTeamSeatCap,
@@ -17,6 +23,18 @@ import type { PortalDeps } from "../deps/index.ts";
 import type { PortalRoster } from "../roster/index.ts";
 
 export const PICKS_CLOSED_KEY = "picks_closed";
+
+// The team_name of a guest Brad unseated. Unseating keeps the row, because the row is also where
+// the bird's outfits live and a guest who reseats should find every genre they dressed. The
+// column is NOT NULL (0005), and neither a roster team nor a pick request can be named "", so the
+// empty name is the seatless row. Every read turns it back into "no pick" (NULLIF in the SQL, and
+// isTeamPick's non-empty name in parsePickRow), so the board, /me, the guest list and the export
+// see what they saw when Unseat deleted the row; a pick's upsert overwrites it like any team.
+export const UNSEATED_TEAM_NAME = "";
+
+// The stored team name as the reads want it: NULL for no row and for an unseated one alike.
+// `p` is team_picks.
+export const SEATED_TEAM_NAME_SQL = `NULLIF(p.team_name, '${UNSEATED_TEAM_NAME}')`;
 
 // The kept head's hash, as the admin guest status selects it.
 const HEAD_HASH_SUBQUERY =
@@ -35,9 +53,23 @@ type PickRow = {
   outfits_json: string;
 };
 
+// A row's outfits on their own, whatever team it names (an unseated or orphaned row's too), or
+// null when they are not JSON or not the shape. Shape only, as isTeamPick checks it: every outfit
+// was read strictly on the way in (PUT myOutfit).
+export const parseOutfitsJson = (outfitsJson: string): OutfitsByGenre | null => {
+  try {
+    const outfits: unknown = JSON.parse(outfitsJson);
+
+    return validateOutfitsByGenre(outfits).length === 0 ? (outfits as OutfitsByGenre) : null;
+  } catch {
+    return null;
+  }
+};
+
 // A stored pick read back through the same guard that guards the wire, so a row the schema has
 // outgrown reads as no pick rather than a malformed one. Every outfit in it was read strictly on
-// the way in (PUT myOutfit), so the guard only has the shape to check.
+// the way in (PUT myOutfit), so the guard only has the shape to check. An unseated row is no
+// pick: the guard refuses an empty team name.
 export const parsePickRow = (row: PickRow): TeamPick | null => {
   try {
     const pick: unknown = { teamName: row.team_name, outfitsByGenre: JSON.parse(row.outfits_json) };
@@ -84,7 +116,8 @@ export const readGuestCount = async (deps: PortalDeps): Promise<number> => {
 const readSeatingRows = async (deps: PortalDeps): Promise<SeatingRow[]> => {
   const { results } = await deps.db
     .prepare(
-      `SELECT g.guest_id, g.display_name, p.team_name, p.outfits_json, ${HEAD_HASH_SUBQUERY} AS head_hash
+      `SELECT g.guest_id, g.display_name, ${SEATED_TEAM_NAME_SQL} AS team_name, p.outfits_json,
+         ${HEAD_HASH_SUBQUERY} AS head_hash
        FROM guests g LEFT JOIN team_picks p ON p.guest_id = g.guest_id
        ORDER BY g.display_name COLLATE NOCASE, g.guest_id`
     )
