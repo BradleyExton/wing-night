@@ -21,8 +21,9 @@ import { CHARACTER_PARTS, CHARACTER_PIVOTS, type CharacterPart } from "../geomet
 //                 dance's clap): the one transform in the rig that is not a turn
 //
 // A Move is CSS, like every other pose: `resolveCharacterMovesCss` writes one
-// keyframe set per moving part per Move, which `moves.css` holds (a test keeps
-// the two equal), and `CharacterFigure`'s `move` plays it once.
+// keyframe set per moving part per Move (and one for the Prop's layer where the
+// Move flips the wing), which `moves.css` holds (a test keeps the two equal),
+// and `CharacterFigure`'s `move` plays it once.
 export type CharacterMovePose = Partial<
   Record<
     | CharacterPart
@@ -49,7 +50,7 @@ const EASE = {
 
 type CharacterMoveEase = keyof typeof EASE;
 
-type CharacterMoveKey = readonly [percent: number, pose: CharacterMovePose, ease?: CharacterMoveEase];
+export type CharacterMoveKey = readonly [percent: number, pose: CharacterMovePose, ease?: CharacterMoveEase];
 
 type CharacterMoveScript = {
   id: string;
@@ -328,6 +329,27 @@ export const resolveCharacterMovePartTransform = (pose: CharacterMovePose, part:
   return `translate(${round(tx)}px, ${round(ty)}px) rotate(${round(turn)}deg)${flip}`;
 };
 
+/** A Move's key poses, as its keyframes are written from them (for a sweep that walks the bar). */
+export const resolveCharacterMoveKeys = (move: CharacterMovePlay): readonly CharacterMoveKey[] =>
+  SCRIPTS.find(([id]) => id === move)?.[1] ?? [];
+
+/**
+ * The Prop's CSS transform in one key pose, about the wing's pivot. A Prop is
+ * held at the wing and turns with it, except while the wing is flipped: a
+ * mirrored wing points FORWARD (the heart-point jab, the chicken dance's
+ * clap), and a Prop mirrored with it would point forward across the chest
+ * and face (docs/research/bird-wardrobe.md §2.1). For those frames the wing
+ * sets the Prop down: it holds its rest place on the body (the lean, drop and
+ * hop still carry it; the wing's own turn, nudge and flip do not), the way it
+ * hangs slung on the back, and the wing picks it up again as it unflips.
+ * Between a held key and a parked one CSS slides it from the wing to the body.
+ */
+export const resolveCharacterMovePropTransform = (pose: CharacterMovePose): string =>
+  resolveCharacterMovePartTransform(
+    pose.wingFlip === true ? { ...pose, wing: 0, wingX: 0, wingY: 0, wingFlip: false } : pose,
+    "wing"
+  );
+
 const REST_TRANSFORM = "translate(0px, 0px) rotate(0deg)";
 
 /** The class a figure playing this Move wears: it names each part's keyframes (`moves.css`). */
@@ -342,20 +364,26 @@ const MOVES_CSS_HEADER = `/* The cast's Moves (packages/cast/src/Character/moves
  * part that moves in a Move gets `@keyframes cast-move-<move>-<part>`, and the
  * Move's class points that part's custom property at it; a part that holds
  * still gets `none`, so nothing a surface wraps the bird in can leak a
- * neighbour's Move into it.
+ * neighbour's Move into it. The Prop's layer is named too (`--cast-move-prop`):
+ * the wing's keyframes, or its own where the Move flips the wing.
  */
 export const resolveCharacterMovesCss = (): string => {
   const blocks = SCRIPTS.map(([move, keys]) => {
+    const framesOf = (transformOf: (pose: CharacterMovePose) => string) =>
+      keys.map(([percent, pose, ease = "io"]) => ({ percent, transform: transformOf(pose), ease }));
     const animated = CHARACTER_PARTS.map((part) => {
-      const frames = keys.map(([percent, pose, ease = "io"]) => ({
-        percent,
-        transform: resolveCharacterMovePartTransform(pose, part),
-        ease
-      }));
+      const frames = framesOf((pose) => resolveCharacterMovePartTransform(pose, part));
 
       return { part, frames, still: frames.every((frame) => frame.transform === REST_TRANSFORM) };
     });
-    const keyframes = animated
+    // The Prop's layer: the wing's own keyframes, unless the Move flips the
+    // wing, when it gets its own set (`resolveCharacterMovePropTransform`).
+    const propFrames = framesOf(resolveCharacterMovePropTransform);
+    const wingFrames = animated.find(({ part }) => part === "wing")?.frames ?? [];
+    const propOwn = propFrames.some((frame, index) => frame.transform !== wingFrames[index]?.transform);
+    const wingStill = wingFrames.every((frame) => frame.transform === REST_TRANSFORM);
+    const propName = propOwn ? `cast-move-${move}-prop` : wingStill ? "none" : `cast-move-${move}-wing`;
+    const keyframes = [...animated, ...(propOwn ? [{ part: "prop", frames: propFrames, still: false }] : [])]
       .filter(({ still }) => !still)
       .map(
         ({ part, frames }) =>
@@ -366,9 +394,10 @@ export const resolveCharacterMovesCss = (): string => {
             )
             .join("\n")}\n}`
       );
-    const names = animated
-      .map(({ part, still }) => `  --cast-move-${part}: ${still ? "none" : `cast-move-${move}-${part}`};`)
-      .join("\n");
+    const names = [
+      ...animated.map(({ part, still }) => `  --cast-move-${part}: ${still ? "none" : `cast-move-${move}-${part}`};`),
+      `  --cast-move-prop: ${propName};`
+    ].join("\n");
 
     return [...keyframes, `.${resolveCharacterMoveClassName(move)} {\n${names}\n}`].join("\n\n");
   });

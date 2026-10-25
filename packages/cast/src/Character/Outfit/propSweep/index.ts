@@ -15,14 +15,17 @@
 // commands; the nonzero fill rule.
 export type SweepPoint = [number, number];
 
-type Matrix = [number, number, number, number, number, number];
+/** A 2D affine transform as SVG writes one: `matrix(a b c d e f)`. */
+export type SweepMatrix = [number, number, number, number, number, number];
 
-const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
+type Matrix = SweepMatrix;
+
+export const SWEEP_IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 
 // Samples per curve segment, and twice that per arc.
 const STEPS = 12;
 
-const multiply = (a: Matrix, b: Matrix): Matrix => [
+export const multiplySweepMatrix = (a: Matrix, b: Matrix): Matrix => [
   a[0] * b[0] + a[2] * b[1],
   a[1] * b[0] + a[3] * b[1],
   a[0] * b[2] + a[2] * b[3],
@@ -31,24 +34,25 @@ const multiply = (a: Matrix, b: Matrix): Matrix => [
   a[1] * b[4] + a[3] * b[5] + a[5]
 ];
 
-const apply = (m: Matrix, [x, y]: SweepPoint): SweepPoint => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+export const applySweepMatrix = (m: Matrix, [x, y]: SweepPoint): SweepPoint => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 
-const parseTransform = (attribute: string | undefined): Matrix =>
+/** An SVG `transform` attribute (translate, rotate and scale) as one matrix. */
+export const parseSweepTransform = (attribute: string | undefined): Matrix =>
   [...(attribute ?? "").matchAll(/(translate|rotate|scale)\(([^)]*)\)/g)].reduce<Matrix>((matrix, [, kind, raw]) => {
     const [a = 0, b, c = 0] = (raw ?? "").split(/[\s,]+/).filter(Boolean).map(Number);
     const radians = (a * Math.PI) / 180;
     const turn: Matrix = [Math.cos(radians), Math.sin(radians), -Math.sin(radians), Math.cos(radians), 0, 0];
 
     if (kind === "translate") {
-      return multiply(matrix, [1, 0, 0, 1, a, b ?? 0]);
+      return multiplySweepMatrix(matrix, [1, 0, 0, 1, a, b ?? 0]);
     }
 
     if (kind === "scale") {
-      return multiply(matrix, [a, 0, 0, b ?? a, 0, 0]);
+      return multiplySweepMatrix(matrix, [a, 0, 0, b ?? a, 0, 0]);
     }
 
-    return b === undefined ? multiply(matrix, turn) : multiply(multiply(multiply(matrix, [1, 0, 0, 1, b, c]), turn), [1, 0, 0, 1, -b, -c]);
-  }, IDENTITY);
+    return b === undefined ? multiplySweepMatrix(matrix, turn) : multiplySweepMatrix(multiplySweepMatrix(multiplySweepMatrix(matrix, [1, 0, 0, 1, b, c]), turn), [1, 0, 0, 1, -b, -c]);
+  }, SWEEP_IDENTITY);
 
 const cubic = (p0: SweepPoint, p1: SweepPoint, p2: SweepPoint, p3: SweepPoint): SweepPoint[] =>
   Array.from({ length: STEPS }, (_, i) => {
@@ -212,7 +216,7 @@ type Frame = { matrix: Matrix; inClipPath: string | undefined; clipRef: string |
 export const resolveSweepPoints = (markup: string): SweepPoint[] => {
   const shapes: { outlines: SweepPoint[][]; matrix: Matrix; clipRef: string | undefined; unfilled: boolean }[] = [];
   const clips = new Map<string, SweepPoint[][]>();
-  const stack: Frame[] = [{ matrix: IDENTITY, inClipPath: undefined, clipRef: undefined, unfilled: false }];
+  const stack: Frame[] = [{ matrix: SWEEP_IDENTITY, inClipPath: undefined, clipRef: undefined, unfilled: false }];
 
   for (const [, close, tag = "", raw = "", selfClosing] of markup.matchAll(/<(\/?)([a-zA-Z]+)((?:\s+[a-zA-Z:-]+="[^"]*")*)\s*(\/?)>/g)) {
     if (close === "/") {
@@ -225,7 +229,7 @@ export const resolveSweepPoints = (markup: string): SweepPoint[] => {
     const fillClass = (attributes.class ?? "").split(/\s+/).find((name) => name.startsWith("fill-"));
     const fill = attributes.fill ?? fillClass;
     const frame: Frame = {
-      matrix: multiply(parent.matrix, parseTransform(attributes.transform)),
+      matrix: multiplySweepMatrix(parent.matrix, parseSweepTransform(attributes.transform)),
       inClipPath: tag === "clipPath" ? attributes.id : parent.inClipPath,
       clipRef: attributes["clip-path"]?.match(/url\(#([^)]+)\)/)?.[1] ?? parent.clipRef,
       unfilled: fill === undefined ? parent.unfilled : fill === "none" || fill === "fill-none"
@@ -254,6 +258,6 @@ export const resolveSweepPoints = (markup: string): SweepPoint[] => {
         ? own
         : [...own.filter((point) => isInside(clip, point)), ...(unfilled ? [] : clip.flat().filter((point) => isInside(outlines, point)))];
 
-    return shown.map((point) => apply(matrix, point));
+    return shown.map((point) => applySweepMatrix(matrix, point));
   });
 };

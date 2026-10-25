@@ -10,6 +10,7 @@ import {
   CHARACTER_MOVES,
   resolveCharacterMoveClassName,
   resolveCharacterMovePartTransform,
+  resolveCharacterMovePropTransform,
   resolveCharacterMovesCss
 } from "./index.js";
 
@@ -38,7 +39,7 @@ test("does name every part's keyframes from each Move's class, none for a part t
   for (const move of [...CHARACTER_MOVES, "the-bump-answer"] as const) {
     const rule = css.match(new RegExp(`\\.${resolveCharacterMoveClassName(move)} \\{([^}]*)\\}`))?.[1] ?? "";
 
-    for (const part of CHARACTER_PARTS) {
+    for (const part of [...CHARACTER_PARTS, "prop"]) {
       const named = rule.match(new RegExp(`--cast-move-${part}: ([\\w-]+);`))?.[1];
 
       assert.ok(named !== undefined, `${move} names ${part}`);
@@ -63,6 +64,34 @@ test("does mirror only the wing about its shoulder when a key pose flips it", ()
   assert.equal(resolveCharacterMovePartTransform(pose, "head"), "translate(0px, 0px) rotate(0deg)");
   assert.match(resolveCharacterMovesCss(), /@keyframes cast-move-heart-point-wing \{[^@]*scale\(-1, 1\)/);
   assert.match(resolveCharacterMovesCss(), /@keyframes cast-move-chicken-dance-wing \{[^@]*scale\(-1, 1\)/);
+});
+
+test("does set the Prop down on the body while the wing is flipped and hand it back after", () => {
+  const clap = { wing: 60, wingFlip: true, wingX: 2, wingY: 2, y: -2, lean: -3, head: -8 };
+
+  // Carried by the lean and the hop, never by the wing's own turn, nudge or mirror.
+  assert.equal(resolveCharacterMovePropTransform(clap), resolveCharacterMovePartTransform({ y: -2, lean: -3 }, "wing"));
+  assert.equal(resolveCharacterMovePropTransform({ wing: -30 }), resolveCharacterMovePartTransform({ wing: -30 }, "wing"));
+
+  const css = resolveCharacterMovesCss();
+  const propFrames = css.match(/@keyframes cast-move-chicken-dance-prop \{[^@]*/)?.[0] ?? "";
+
+  assert.ok(propFrames.length > 0);
+  assert.doesNotMatch(propFrames, /scale/);
+  assert.match(css, /\.cast-move-chicken-dance \{[^}]*--cast-move-prop: cast-move-chicken-dance-prop;/);
+  // A Move that never flips the wing hands the Prop the wing's own keyframes.
+  assert.match(css, /\.cast-move-horns-pump \{[^}]*--cast-move-prop: cast-move-horns-pump-wing;/);
+});
+
+test("does play the Prop's own keyframes on its layer while a Move plays", () => {
+  const html = renderToStaticMarkup(
+    <Character appearance={{ ...drawn, outfit: { prop: { item: "flying-v-a" } } }} showpieces move="chicken-dance" />
+  );
+  const prop = html.indexOf('data-outfit-slot="prop"');
+  const layer = html.lastIndexOf('<g data-character-part="wing"', prop);
+
+  assert.match(html.slice(layer, prop), /var\(--cast-move-prop,none\)/);
+  assert.match(html.slice(0, layer), /data-character-part="wing" class="[^"]*var\(--cast-move-wing,none\)/);
 });
 
 test("does turn a leaning part about the hips rather than its own pivot", () => {

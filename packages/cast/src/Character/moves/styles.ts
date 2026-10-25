@@ -16,3 +16,9 @@ export const moveParts: Record<CharacterPart, string> = {
   wing: "motion-safe:[animation:var(--cast-move-wing,none)_var(--cast-move-ms,2000ms)_linear_var(--cast-move-delay,0ms)_1_both]",
   head: "motion-safe:[animation:var(--cast-move-head,none)_var(--cast-move-ms,2000ms)_linear_var(--cast-move-delay,0ms)_1_both]"
 };
+
+// The Prop's layer playing a Move: the wing's keyframes, or the Prop's own
+// where the Move flips the wing (`resolveCharacterMovePropTransform`), on the
+// same bar and delay as every part.
+export const moveProp =
+  "motion-safe:[animation:var(--cast-move-prop,none)_var(--cast-move-ms,2000ms)_linear_var(--cast-move-delay,0ms)_1_both]";

@@ -81,6 +81,32 @@ export const cobPaths = (p0: Point, p1: Point, dims: CobDims): { outline: string
   return { outline, rows: `${row(1)} ${row(-1)}` };
 };
 
+// A husk sheath (run 5's corn-cob a): two white leaves that wrap the whole
+// width of the cob from its base to `reach`, meeting on a seam down its middle
+// that splits at `split` so the cob's top shows in the V between their tips,
+// and each tip peeling `flare` out past the cob's edge — the corn emoji's
+// husk, a solid white cup rather than two slivers along a yellow cob (which
+// read as white puffs at 76px once the cob sank into an orange team).
+export const huskSheathPaths = (
+  p0: Point,
+  p1: Point,
+  dims: CobDims,
+  { reach, split, flare }: { reach: number; split: number; flare: number }
+): [string, string] => {
+  const { at, width } = cobFrame(p0, p1, dims);
+  const half = (t: number): number => width(t) / 2;
+  const leaf = (s: number): string => {
+    const seamBase = at(0, -s * 0.6);
+    const outerBase = at(0, s * (half(0) + 0.6));
+    const outer = at(reach * 0.5, s * (half(reach * 0.5) + flare * 0.9));
+    const tip = at(reach, s * (half(reach) + flare));
+    const inner = at((split + reach) / 2, s * half((split + reach) / 2) * 0.35);
+    const seamTop = at(split, -s * 0.6);
+    return `M ${pt(seamBase)} L ${pt(outerBase)} Q ${pt(outer)} ${pt(tip)} Q ${pt(inner)} ${pt(seamTop)} Z`;
+  };
+  return [leaf(1), leaf(-1)];
+};
+
 // The two white husk leaves hugging a cob's sides (left of the axis first),
 // each from the base to `reach` along it, its outer edge flaring `flare` out.
 export const huskLeafPaths = (

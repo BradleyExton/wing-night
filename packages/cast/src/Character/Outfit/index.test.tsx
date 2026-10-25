@@ -7,10 +7,12 @@ import { Character, CharacterStage, CharacterWing } from "../index.js";
 import { CHARACTER_PIVOTS, COSTUME_HEAD_ANCHORS, DRAWN_HEAD_ANCHORS } from "../geometry/index.js";
 import { resolveCharacterShapes } from "../shapes/index.js";
 import { resolveTeamSilhouette } from "../../resolveTeamSilhouette/index.js";
+import { CHARACTER_BODIES, CHARACTER_TAILS } from "../../resolvePlayerAppearance/index.js";
 import { resolveCharacterRagdollRest } from "../ragdoll/index.js";
 import { CharacterRagdollFigure } from "../CharacterRagdollFigure/index.js";
 import { OUTFIT_DRAWINGS } from "./index.js";
 import { resolveSweepPoints } from "./propSweep/index.js";
+import { resolvePropSweepFault, resolvePropSweepPoses } from "./propSweep/poses/index.js";
 
 const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as const;
 
@@ -165,38 +167,17 @@ test("does draw every catalogue item", () => {
   assert.equal(undrawn.length, 0, `${undrawn.length} kept items have no drawing yet, from ${undrawn[0]?.id ?? "none"}`);
 });
 
-// The Prop sweep (docs/research/bird-wardrobe.md §2.1): a prop turns with the
-// wing about the shoulder, so at rest and the walk tuck no point of it may
-// enter the head box or drop through the floor, and at the dance extremes it
-// may pass behind the head but dip at most four units under the floor.
-//
-// Measured as the harness measured it for Gate 1: points along the outline
-// that SHOWS (`resolveSweepPoints`), on every body the prop is worn on, in
-// every style, under both heads. The outline is the shape's own edge, not the
-// outside of its ink, because that is the line every kept prop was drawn to.
-// The Moves' own wing extremes are run 5's face-crossing sweep.
-const HEAD_BOX = { x0: 36, x1: 80, y0: -12, y1: 37 };
-const FLOOR_Y = 72.75;
-const SOFT_DIP = 4;
-const SWEEP = [
-  { angle: 0, strict: true },
-  { angle: -8, strict: true },
-  { angle: -26, strict: false },
-  { angle: -62, strict: false }
-];
-
-const turnAboutShoulder = ([x, y]: [number, number], degrees: number): [number, number] => {
-  const { x: px, y: py } = CHARACTER_PIVOTS.wing;
-  const radians = (degrees * Math.PI) / 180;
-
-  return [
-    px + (x - px) * Math.cos(radians) - (y - py) * Math.sin(radians),
-    py + (x - px) * Math.sin(radians) + (y - py) * Math.cos(radians)
-  ];
-};
-
-test("does keep every prop out of the face and above the floor through the sweep", () => {
+// The face-crossing sweep (docs/research/bird-wardrobe.md §2.1, rule 5 of
+// §2.8): every prop, on every body it is worn on, in every style and under
+// both heads, through every place it is carried while drawn — the shown
+// poses, every dance's beat and jig extremes, and every frame of its rail's
+// Moves and the shared chicken dance (`resolvePropSweepPoses`, which holds the
+// rules). Measured as the harness measured Gate 1: the points along the
+// outline that SHOWS (`resolveSweepPoints`), the shape's own edge rather than
+// the outside of its ink, because that is the line every kept prop was drawn to.
+test("does keep every prop out of the face and above the floor through every pose, dance and Move", () => {
   const props = OUTFIT_ITEMS.filter((item) => item.slot === "prop");
+  const faults: string[] = [];
 
   assert.ok(props.length > 0);
 
@@ -210,31 +191,35 @@ test("does keep every prop out of the face and above the floor through the sweep
 
     for (const genre of item.genre === "shared" ? OUTFIT_GENRES : [item.genre]) {
       const silhouette = resolveTeamSilhouette({ genre });
-      const shapes = resolveCharacterShapes({ body: "round", comb: "crest", tail: "fan", silhouette });
+      const poses = resolvePropSweepPoses(genre);
+      // A genre with no silhouette is the stock bird, whose body and tail are
+      // the player's own: every one of them.
+      const birds =
+        silhouette === undefined
+          ? CHARACTER_BODIES.flatMap((body) => CHARACTER_TAILS.map((tail) => ({ body, tail })))
+          : [{ body: "round" as const, tail: "fan" as const }];
 
-      for (const style of item.styles) {
-        for (const head of [DRAWN_HEAD_ANCHORS, COSTUME_HEAD_ANCHORS]) {
-          const label = `${item.id} (${genre}, ${style}, ${head === DRAWN_HEAD_ANCHORS ? "drawn" : "costume"} head)`;
-          const points = resolveSweepPoints(
-            renderToStaticMarkup(
-              <svg>
-                <drawing.Drawing context={{ shapes, silhouette, head, style }} />
-              </svg>
-            )
-          );
+      for (const { body, tail } of birds) {
+        const shapes = resolveCharacterShapes({ body, comb: "crest", tail, silhouette });
 
-          assert.ok(points.length > 0, label);
+        for (const style of item.styles) {
+          for (const head of [DRAWN_HEAD_ANCHORS, COSTUME_HEAD_ANCHORS]) {
+            const label = `${item.id} (${genre}, ${body}/${tail}, ${style}, ${head === DRAWN_HEAD_ANCHORS ? "drawn" : "costume"} head)`;
+            const points = resolveSweepPoints(
+              renderToStaticMarkup(
+                <svg>
+                  <drawing.Drawing context={{ shapes, silhouette, head, style }} />
+                </svg>
+              )
+            );
 
-          for (const { angle, strict } of SWEEP) {
-            for (const point of points) {
-              const [x, y] = turnAboutShoulder(point, angle);
+            assert.ok(points.length > 0, label);
 
-              assert.ok(y <= FLOOR_Y + (strict ? 0 : SOFT_DIP), `${label} at ${angle}° dips to ${y.toFixed(1)}`);
+            for (const pose of poses) {
+              const fault = resolvePropSweepFault(points, pose);
 
-              if (strict) {
-                const inHead = x > HEAD_BOX.x0 && x < HEAD_BOX.x1 && y < HEAD_BOX.y1 && y > HEAD_BOX.y0;
-
-                assert.ok(!inHead, `${label} at ${angle}° reaches the head at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+              if (fault !== undefined) {
+                faults.push(`${label} ${pose.label}: ${fault.rule} at (${fault.at[0].toFixed(1)}, ${fault.at[1].toFixed(1)})`);
               }
             }
           }
@@ -242,4 +227,6 @@ test("does keep every prop out of the face and above the floor through the sweep
       }
     }
   }
+
+  assert.deepEqual(faults, []);
 });

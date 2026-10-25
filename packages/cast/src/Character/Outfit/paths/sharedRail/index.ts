@@ -322,12 +322,16 @@ export const knottedSash = (
 
 // ------------------------------------------------------------ golden egg --
 
-// `CLUTCH`: the clutched egg's centre and lean, per body.
+// `CLUTCH`: the clutched egg's centre and lean, per body. Run 5's face-crossing
+// sweep (every frame of every Move) moved two: the spiky egg up half a unit,
+// which the chicken dance's drop sank 0.05 through the soft floor, and the
+// preener's up and back to [28, 60], which Night Fever's down point swung out
+// in front of the pitched face.
 const CLUTCH: PerBody<{ c: Point; tilt: number }> = {
   stock: { c: [36, 63.5], tilt: -18 },
-  spiky: { c: [34, 64], tilt: -18 },
+  spiky: { c: [34, 63.5], tilt: -18 },
   broody: { c: [37, 63], tilt: -14 },
-  preener: { c: [32, 64], tilt: -20 }
+  preener: { c: [28, 60], tilt: -20 }
 };
 
 export const clutchedEgg = (silhouette: CharacterSilhouette | undefined): Egg => {

@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useId, type ReactNode, type RefObject } from "react";
 
 import type { CharacterAppearance, CharacterDance } from "../../resolvePlayerAppearance/index.js";
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
@@ -6,6 +6,7 @@ import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { CharacterHead } from "../CharacterHead/index.js";
 import { resolveCharacterMoveClassName, type CharacterMovePlay } from "../moves/index.js";
 import * as moveStyles from "../moves/styles.js";
+import { useSyncedBodyLoops } from "./bodyLoops/index.js";
 import { isOutfitSlotDrawn, OutfitLayer } from "../Outfit/index.js";
 import {
   CHARACTER_WING_PATH,
@@ -79,6 +80,7 @@ export const CHARACTER_WING_ROOT = CHARACTER_PIVOTS.wing;
 // The bird's paths live in `../shapes`; these stay exported from here because
 // that is where every consumer has always imported them from.
 export { CHARACTER_WING_PATH, resolveCharacterRideStance, resolveCharacterWingPath, type CharacterRideStance };
+export { CharacterWingFigure } from "../CharacterWingFigure/index.js";
 
 // A part on its pivot: the outer translate puts the pivot at the origin, the
 // `<g>`s in the middle are what move it, and the inner translate puts the
@@ -106,11 +108,13 @@ const Part = ({
   part,
   rig,
   drop = 0,
+  outerRef,
   children
 }: {
   part: CharacterPart;
   rig: CharacterRig;
   drop?: number;
+  outerRef?: RefObject<SVGGElement>;
   children: ReactNode;
 }): JSX.Element => {
   const pivot = CHARACTER_PIVOTS[part];
@@ -123,7 +127,7 @@ const Part = ({
   );
 
   return (
-    <g transform={`translate(${pivot.x} ${pivot.y + drop})`}>
+    <g ref={outerRef} transform={`translate(${pivot.x} ${pivot.y + drop})`}>
       {jigClassName === undefined ? (
         posed
       ) : (
@@ -181,46 +185,6 @@ export const CharacterStageFigure = ({
   );
 };
 
-/**
- * The wing alone, as the figure draws it — its path and the Sleeve on it — for
- * a surface that draws the bird in two slices (`layer`) and turns a wing of its
- * own between them (FAPPY's beat, JOUST's reach for the band), so the Top and
- * the head still paint over it as they do on the rig. In the bird's 80×72 box
- * with the shoulder at `CHARACTER_WING_ROOT`; the surface does the turning.
- * Without an `appearance` it is the bare wing.
- */
-export const CharacterWingFigure = ({
-  appearance,
-  silhouette
-}: {
-  appearance?: CharacterAppearance;
-  silhouette?: CharacterSilhouette;
-}): JSX.Element => {
-  const wingPath = resolveCharacterWingPath(silhouette);
-  // The join is the silhouette's, as on the rig's own wing: a spiky wing's
-  // feather points are mitered, or they come out blunted a unit on this layer.
-  const ink = resolveCharacterShapes({ body: "round", comb: "none", tail: "fan", silhouette }).mitered
-    ? styles.silhouetteMitered
-    : styles.silhouette;
-
-  if (appearance?.outfit === undefined) {
-    return <path className={ink} d={wingPath} />;
-  }
-
-  const shapes = resolveCharacterShapes({ ...appearance, silhouette });
-
-  return (
-    <g>
-      <path className={ink} d={wingPath} />
-      <OutfitLayer
-        slot="sleeve"
-        outfit={appearance.outfit}
-        context={{ shapes, silhouette, head: appearance.avatarSrc === undefined ? DRAWN_HEAD_ANCHORS : COSTUME_HEAD_ANCHORS }}
-      />
-    </g>
-  );
-};
-
 export const CharacterFigure = ({
   appearance,
   apparel,
@@ -257,6 +221,9 @@ export const CharacterFigure = ({
       : pose === "dance"
         ? { pose: styles.dances[danced], jig: styles.danceJigs[danced] }
         : { pose: styles.poses[pose], jig: {} };
+  const propRig: CharacterRig = { pose: { wing: moveStyles.moveProp }, jig: {} };
+  const topDrawn = isOutfitSlotDrawn(outfit, "top");
+  const { bodyRef, topRef } = useSyncedBodyLoops(topDrawn);
   // Riding is the one pose that redraws anything: a crouch is a bent knee, and
   // no turn of a straight shank bends one. Everything above the knees sinks by
   // the shape's crouch; the legs are drawn from the sunk hips down to the
@@ -313,7 +280,7 @@ export const CharacterFigure = ({
                 )}
               </g>
             </Part>
-            <Part part="body" rig={rig} drop={crouch}>
+            <Part part="body" rig={rig} drop={crouch} outerRef={bodyRef}>
               <path className={ink} d={shapes.body} />
               <path className={styles.shade} d={shapes.belly} />
             </Part>
@@ -343,15 +310,17 @@ export const CharacterFigure = ({
         {/* The Top paints OVER the wing (it was judged that way, a slung belt
             crosses it) but rides the body's bob, not the wing's beat: a second
             layer on the body's own rig, between the wing and the head. */}
-        {over && isOutfitSlotDrawn(outfit, "top") && (
-          <Part part="body" rig={rig} drop={crouch}>
+        {over && topDrawn && (
+          <Part part="body" rig={rig} drop={crouch} outerRef={topRef}>
             <OutfitLayer slot="top" outfit={outfit} context={outfitContext} />
           </Part>
         )}
         {/* The Prop is held at the wing and turns with it, over the Top as the
-            harness drew it: a second layer on the wing's rig. */}
+            harness drew it: a second layer on the wing's rig. Under a Move it
+            plays the Prop's own keyframes, which set it down on the body while
+            the wing is flipped forward (`resolveCharacterMovePropTransform`). */}
         {showpieces && winged && isOutfitSlotDrawn(outfit, "prop") && (
-          <Part part="wing" rig={rig} drop={crouch}>
+          <Part part="wing" rig={move === undefined ? rig : propRig} drop={crouch}>
             <OutfitLayer slot="prop" outfit={outfit} context={outfitContext} />
           </Part>
         )}

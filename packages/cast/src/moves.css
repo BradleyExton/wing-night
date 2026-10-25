@@ -338,6 +338,7 @@
   --cast-move-legNear: cast-move-horns-pump-legNear;
   --cast-move-wing: cast-move-horns-pump-wing;
   --cast-move-head: cast-move-horns-pump-head;
+  --cast-move-prop: cast-move-horns-pump-wing;
 }
 
 @keyframes cast-move-double-headbang-tail {
@@ -542,6 +543,7 @@
   --cast-move-legNear: cast-move-double-headbang-legNear;
   --cast-move-wing: cast-move-double-headbang-wing;
   --cast-move-head: cast-move-double-headbang-head;
+  --cast-move-prop: cast-move-double-headbang-wing;
 }
 
 @keyframes cast-move-heart-point-tail {
@@ -946,6 +948,73 @@
   }
 }
 
+@keyframes cast-move-heart-point-prop {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  15% {
+    transform: translate(-1.321px, -0.437px) rotate(25deg);
+    animation-timing-function: cubic-bezier(.65,0,.85,.35);
+  }
+  25% {
+    transform: translate(3.645px, 0.88px) rotate(5deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  31.25% {
+    transform: translate(0.435px, 0.161px) rotate(1deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  37.5% {
+    transform: translate(3.645px, 0.88px) rotate(5deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  40.625% {
+    transform: translate(0.435px, 0.161px) rotate(1deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  43.75% {
+    transform: translate(5.48px, 1.283px) rotate(7deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  47% {
+    transform: translate(1.867px, 0.329px) rotate(2deg);
+    animation-timing-function: cubic-bezier(.65,0,.85,.35);
+  }
+  50% {
+    transform: translate(-18.394px, -4.325px) rotate(52deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  56.25% {
+    transform: translate(-18.394px, -6.325px) rotate(52deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  59.375% {
+    transform: translate(-18.394px, -4.325px) rotate(52deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  62.5% {
+    transform: translate(-18.394px, -6.325px) rotate(52deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  68.75% {
+    transform: translate(-18.394px, -4.325px) rotate(52deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  80% {
+    transform: translate(-16.478px, -4.183px) rotate(48deg);
+    animation-timing-function: cubic-bezier(.65,0,.85,.35);
+  }
+  90% {
+    transform: translate(0.435px, 0.161px) rotate(-7deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+}
+
 .cast-move-heart-point {
   --cast-move-tail: cast-move-heart-point-tail;
   --cast-move-legFar: cast-move-heart-point-legFar;
@@ -953,6 +1022,7 @@
   --cast-move-legNear: cast-move-heart-point-legNear;
   --cast-move-wing: cast-move-heart-point-wing;
   --cast-move-head: cast-move-heart-point-head;
+  --cast-move-prop: cast-move-heart-point-prop;
 }
 
 @keyframes cast-move-sporty-hop-tail {
@@ -1196,6 +1266,7 @@
   --cast-move-legNear: cast-move-sporty-hop-legNear;
   --cast-move-wing: cast-move-sporty-hop-wing;
   --cast-move-head: cast-move-sporty-hop-head;
+  --cast-move-prop: cast-move-sporty-hop-wing;
 }
 
 @keyframes cast-move-boot-scoot-tail {
@@ -1463,6 +1534,7 @@
   --cast-move-legNear: cast-move-boot-scoot-legNear;
   --cast-move-wing: cast-move-boot-scoot-wing;
   --cast-move-head: cast-move-boot-scoot-head;
+  --cast-move-prop: cast-move-boot-scoot-wing;
 }
 
 @keyframes cast-move-yeehaw-buck-tail {
@@ -1778,6 +1850,7 @@
   --cast-move-legNear: cast-move-yeehaw-buck-legNear;
   --cast-move-wing: cast-move-yeehaw-buck-wing;
   --cast-move-head: cast-move-yeehaw-buck-head;
+  --cast-move-prop: cast-move-yeehaw-buck-wing;
 }
 
 @keyframes cast-move-night-fever-tail {
@@ -2117,6 +2190,7 @@
   --cast-move-legNear: cast-move-night-fever-legNear;
   --cast-move-wing: cast-move-night-fever-wing;
   --cast-move-head: cast-move-night-fever-head;
+  --cast-move-prop: cast-move-night-fever-wing;
 }
 
 @keyframes cast-move-the-bump-tail {
@@ -2432,6 +2506,7 @@
   --cast-move-legNear: cast-move-the-bump-legNear;
   --cast-move-wing: cast-move-the-bump-wing;
   --cast-move-head: cast-move-the-bump-head;
+  --cast-move-prop: cast-move-the-bump-wing;
 }
 
 @keyframes cast-move-the-bump-answer-tail {
@@ -2747,6 +2822,7 @@
   --cast-move-legNear: cast-move-the-bump-answer-legNear;
   --cast-move-wing: cast-move-the-bump-answer-wing;
   --cast-move-head: cast-move-the-bump-answer-head;
+  --cast-move-prop: cast-move-the-bump-answer-wing;
 }
 
 @keyframes cast-move-chicken-dance-tail {
@@ -3175,6 +3251,77 @@
   }
 }
 
+@keyframes cast-move-chicken-dance-prop {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  3.125% {
+    transform: translate(0px, 1px) rotate(-18deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  9.375% {
+    transform: translate(0px, 0px) rotate(8deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  15.625% {
+    transform: translate(0px, 1px) rotate(-18deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  21.875% {
+    transform: translate(0px, 0px) rotate(8deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  25% {
+    transform: translate(-15px, -8.5px) rotate(84deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  31.25% {
+    transform: translate(0px, 1px) rotate(-40deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  37.5% {
+    transform: translate(-15px, -8.5px) rotate(84deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  43.75% {
+    transform: translate(0px, 1px) rotate(-40deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  53.125% {
+    transform: translate(-1.436px, 5.078px) rotate(-4deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  65.625% {
+    transform: translate(1.337px, 3.196px) rotate(-16deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  71.875% {
+    transform: translate(0.867px, 1.329px) rotate(-28deg);
+    animation-timing-function: cubic-bezier(.65,0,.85,.35);
+  }
+  78.125% {
+    transform: translate(-1.321px, -2.437px) rotate(-3deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  84.375% {
+    transform: translate(0px, 0px) rotate(0deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  90.625% {
+    transform: translate(-1.321px, -2.437px) rotate(-3deg);
+    animation-timing-function: cubic-bezier(.15,.85,.3,1);
+  }
+  96% {
+    transform: translate(0px, 0px) rotate(-30deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(0deg);
+    animation-timing-function: cubic-bezier(.45,0,.55,1);
+  }
+}
+
 .cast-move-chicken-dance {
   --cast-move-tail: cast-move-chicken-dance-tail;
   --cast-move-legFar: cast-move-chicken-dance-legFar;
@@ -3182,4 +3329,5 @@
   --cast-move-legNear: cast-move-chicken-dance-legNear;
   --cast-move-wing: cast-move-chicken-dance-wing;
   --cast-move-head: cast-move-chicken-dance-head;
+  --cast-move-prop: cast-move-chicken-dance-prop;
 }

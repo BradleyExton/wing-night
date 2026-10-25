@@ -515,11 +515,15 @@ const knottedSash = (ctx) => {
 // as the body clips it). The critic's +3u x, +2u y left 0.3..1.6u; the stock
 // needs [36, 63.5] (at [34, 64.5] the pop squash dips it to y 77.4), the spiky
 // [34, 64], the broody [37, 63], the preener [32, 64].
+// Run 5 (2026-10-24), the face-crossing sweep through every frame of every
+// Move: the spiky egg rose half a unit (the chicken dance's drop sank it 0.05
+// through the soft floor) and the preener's moved up and back to [28, 60]
+// (Night Fever's down point swung it out in front of the pitched face).
 const CLUTCH = {
   stock: { c: [36, 63.5], tilt: -18 },
-  spiky: { c: [34, 64], tilt: -18 },
+  spiky: { c: [34, 63.5], tilt: -18 },
   broody: { c: [37, 63], tilt: -14 },
-  preener: { c: [32, 64], tilt: -20 }
+  preener: { c: [28, 60], tilt: -20 }
 };
 
 /**

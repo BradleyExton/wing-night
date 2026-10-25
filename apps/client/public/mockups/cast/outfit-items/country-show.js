@@ -190,6 +190,25 @@ const hugLeaf = (frame, s, reach = 0.58, flare = 2.6, overlap = 2.4) => {
   const inner = at(reach * 0.55, s * (half(reach * 0.55) - overlap));
   return `M ${pt(b0)} Q ${pt(outer)} ${pt(tip)} Q ${pt(inner)} ${pt(b0)} Z`;
 };
+/**
+ * A husk sheath (run 5, corn a): two white leaves wrapping the whole width of
+ * the cob from its base to `reach`, meeting on a seam down its middle that
+ * splits at `split` so the cob's top shows in the V between their tips, each
+ * tip peeling `flare` out past the cob's edge. A solid white cup rather than
+ * two slivers: the slivers read as white puffs at 76px once the cob sank into
+ * an orange team. Copied by the cast's countryShow `huskSheathPaths`.
+ */
+const sheathLeaf = (frame, s, { reach, split, flare }) => {
+  const { at, width } = frame;
+  const half = (t) => width(t) / 2;
+  const seamBase = at(0, -s * 0.6);
+  const outerBase = at(0, s * (half(0) + 0.6));
+  const outer = at(reach * 0.5, s * (half(reach * 0.5) + flare * 0.9));
+  const tip = at(reach, s * (half(reach) + flare));
+  const inner = at((split + reach) / 2, s * half((split + reach) / 2) * 0.35);
+  const seamTop = at(split, -s * 0.6);
+  return `M ${pt(seamBase)} L ${pt(outerBase)} Q ${pt(outer)} ${pt(tip)} Q ${pt(inner)} ${pt(seamTop)} Z`;
+};
 /** Fresh husk: white with a 2-unit ink outline. White husk round a yellow lumpy cob is the corn icon; a dark leaf was the grenade's lever. */
 const husk = (d) => `<path fill="${WHITE}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" d="${d}"/>`;
 /** The two white husk leaves hugging a cob's sides, tips up and out: the corn emoji's outline. */
@@ -296,13 +315,17 @@ const cornCob = {
   variants: [
     {
       key: "a",
-      note: "The harvest pair: two yellow cobs, 8 to 10.5 across with blunt 7-unit tips, raised in a V behind the back from one grip at the wing tip, each between its own two hugging white husk leaves. Gate 1 blunted the saw edge, added the kernel rows and swapped the drooping husk for the hugging leaves; the upright cob leans back to (21.8,23) and the back cob drops to (7.8,36), so the right-hand leaf stays left of x 34 above the chin line and the V stays about 46 degrees open.",
+      note: "The harvest pair: two gold cobs, 9 to 12 across with blunt 8.5-unit tips, raised in a V behind the back from one grip at the wing tip, each in a white husk sheath that wraps its lower part and peels into two pointed tips. Gate 1 blunted the saw edge, added the kernel rows and swapped the drooping husk for the hugging leaves; run 5 (2026-10-24) found the ember cobs sank into the country orange at 76px, leaving four white slivers that read as puffs, so the cob went gold (outlined in ink; it reads on the hearth) and the slivers became a sheath. The upright cob leans back to (21.8,23) and the back cob drops to (7.8,36), so the right-hand leaf stays left of x 34 above the chin line and the V stays about 46 degrees open.",
       styles: ["white"],
       whitePoints: 1,
       darkCentre: false,
       draw: () => {
-        const dims = { w0: 8, wMax: 10.5, wTip: 7 };
-        const ear = (p0, p1) => `${cob(p0, p1, dims, EMBER)}${huskPair(cobFrame(p0, p1, dims), 0.62, 4, 1.8)}`;
+        const dims = { w0: 9, wMax: 12, wTip: 8.5 };
+        const sheath = { reach: 0.62, split: 0.25, flare: 1.8 };
+        const ear = (p0, p1) => {
+          const frame = cobFrame(p0, p1, dims);
+          return `${cob(p0, p1, dims, COLORS.gold)}${husk(sheathLeaf(frame, 1, sheath))}${husk(sheathLeaf(frame, -1, sheath))}`;
+        };
         return `${ear({ x: 29, y: 46 }, { x: 7.8, y: 36 })}${ear({ x: 29.6, y: 46 }, { x: 21.8, y: 23 })}`;
       }
     },

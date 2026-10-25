@@ -1,4 +1,5 @@
 import type { OutfitItemProps } from "../../context/index.js";
+import { isOnPlume, PLUME_MIDDLE_TIP_SHIFT } from "../../paths/popKit/index.js";
 import * as styles from "./styles.js";
 
 // ribbon-streamers a (pop Tail), ported from the harness's pop-kit.js: two
@@ -8,7 +9,8 @@ import * as styles from "./styles.js";
 // ribbon). A 6u knot ball with one short bow loop out of it, back and up.
 //
 // The ribbons are the harness's `ribbonBand(hang(…))` written out, tied at
-// the stock fan's middle tip (2, 20). Inked only round the outside (the
+// the stock fan's middle tip (2, 20), or the plume's lower tip for a bird
+// whose tail is the plume. Inked only round the outside (the
 // harness's `silhouettes`). In white it is one group; in ink the back ribbon
 // and loop stay white on the room, where ink would vanish, and the ink ribbon
 // and ball are a second group over the fan.
@@ -47,7 +49,7 @@ export const RibbonStreamersA = ({ context }: OutfitItemProps): JSX.Element => {
   ];
 
   return (
-    <g>
+    <g transform={isOnPlume(context.shapes.tail) ? PLUME_MIDDLE_TIP_SHIFT : undefined}>
       {style === "white" ? (
         <Pieces pieces={[...behind, ...over]} />
       ) : (

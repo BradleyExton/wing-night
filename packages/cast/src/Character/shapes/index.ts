@@ -20,6 +20,15 @@ const TAIL_PATHS: Record<CharacterTail, string> = {
   plume: "M 24 36 C 10 30 2 16 12 2 C 9 19 17 28 30 32 Z M 22 43 C 8 41 0 28 6 16 C 9 31 17 37 28 38 Z"
 };
 
+/**
+ * Which stock tail a tail path is, undefined for a genre silhouette's: for an
+ * outfit item drawn on the stock bird (pop's), which is handed the bird's
+ * paths rather than the name hash that picked them, and has to find the fan's
+ * tips or the plume's.
+ */
+export const resolveCharacterStockTail = (tail: string): CharacterTail | undefined =>
+  (Object.keys(TAIL_PATHS) as CharacterTail[]).find((key) => TAIL_PATHS[key] === tail);
+
 const BODY_PATHS: Record<CharacterBody, string> = {
   round: "M 16 42 C 16 28 32 22 50 27 C 64 31 67 44 61 55 C 53 65 30 66 21 58 C 16 54 16 48 16 42 Z",
   tall: "M 19 42 C 17 24 33 19 50 25 C 63 30 63 47 58 57 C 52 66 30 66 23 59 C 19 55 19 49 19 42 Z",
