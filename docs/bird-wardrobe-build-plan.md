@@ -16,7 +16,7 @@ in `CLAUDE.md` passes and the screenshots are in hand.
 |---|---|---|---|
 | 0 | before run 1 | Answer the open questions. **Done 2026-10-14: defaults.** | — |
 | 1 | after run 1 | Open `mockups/cast/outfit-gallery.html` and keep or cut every candidate at 76px. Paste the cut list back. Decide on gold. **Cuts done 2026-10-20: [bird-wardrobe-gate-1.md](bird-wardrobe-gate-1.md), gold kept where it reads.** | ~30 min |
-| 2 | after run 5 (done 2026-10-25) | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. | ~30 min |
+| 2 | after run 5 (done 2026-10-25; deployed 2026-10-25, Worker version 9b2d23cd) | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. | ~30 min |
 
 ## Runs
 
