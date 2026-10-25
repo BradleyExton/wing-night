@@ -3,8 +3,10 @@
 export const rail = "flex flex-col gap-3";
 
 // The tabs stick to the top of the screen, over the page's own `bg`, so the grid scrolls under them.
+// Seven across a 390px phone is 45px a tab only with the gaps and the inset this tight: at the
+// card's own 16px and a 4px gap they come out at 43, under a thumb.
 export const tabs =
-  "sticky top-0 z-10 -mx-4 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-1 bg-bg/95 px-4 py-2 [box-shadow:0_8px_16px_-12px_theme(colors.shade)]";
+  "sticky top-0 z-10 -mx-4 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-0.5 bg-bg/95 px-3 py-2 [box-shadow:0_8px_16px_-12px_theme(colors.shade)]";
 
 const tabBase =
   "relative inline-flex min-h-[44px] min-w-0 items-center justify-center rounded-lg border px-0.5 text-[0.6rem] font-extrabold uppercase tracking-[0.06em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
@@ -40,7 +42,7 @@ export const styleRow = "flex items-center gap-3";
 export const stylesLabel = "text-[0.68rem] font-extrabold uppercase tracking-[0.3em] text-mutedWarm";
 
 const swatchBase =
-  "h-9 w-9 flex-none cursor-pointer rounded-full border-2 border-text/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
+  "h-11 w-11 flex-none cursor-pointer rounded-full border-2 border-text/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
 
 export const swatch = swatchBase;
 

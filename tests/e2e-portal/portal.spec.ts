@@ -7,8 +7,9 @@ import { readSeededLinks, resolveScreenshotPath } from "./portalStack.ts";
 // The guest portal against wrangler dev (local D1/R2, logged mail, the fake painter) through the
 // teaser's Vite proxy, on a phone. In order, because each step builds on the last: Rob makes his
 // head and picks a team (and Sam finds it full), Rob is kept out of Brad's page, then Brad runs
-// the team board and the list. The stack seeds three guests and three teams, so every team has
-// exactly one seat (resolveTeamSeatCap) until Brad adds a fourth guest.
+// the team board and the list. The stack seeds three guests and four teams, one per genre the
+// wardrobe draws, so every team has exactly one seat (resolveTeamSeatCap), a fourth guest
+// included.
 test.describe.configure({ mode: "serial" });
 
 // Against the repo root, never `import.meta.url`: Playwright transpiles specs to CommonJS

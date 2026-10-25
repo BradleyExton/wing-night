@@ -9,16 +9,18 @@ export const root =
 export const column =
   "mx-auto flex w-full max-w-[30rem] flex-col gap-4 px-4 pb-14 pt-[calc(env(safe-area-inset-top)+1.1rem)]";
 
-export const topBar = "flex items-center justify-between gap-3";
+// Every link up here is a 44px thumb target round text a third of that; the bar's negative margin
+// gives back the height the targets add, so the page sits where the words alone put it.
+export const topBar = "-my-[11px] flex items-center justify-between gap-3";
 
 export const wordmark =
-  "text-[1.35rem] font-black uppercase leading-none tracking-[-0.01em] text-text no-underline [text-shadow:0_0_18px_theme(colors.primary/35%)]";
+  "inline-flex min-h-[44px] items-center text-[1.35rem] font-black uppercase leading-none tracking-[-0.01em] text-text no-underline [text-shadow:0_0_18px_theme(colors.primary/35%)]";
 
 export const topLinks = "flex items-center gap-4";
 
 // A quiet text link: the top bar's way to another page, and to sign out.
 export const navLink =
-  "cursor-pointer border-0 bg-transparent p-0 text-[0.85rem] font-semibold text-mutedWarm underline decoration-mutedWarmDim underline-offset-4";
+  "inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-[0.85rem] font-semibold text-mutedWarm underline decoration-mutedWarmDim underline-offset-4";
 
 export const heading = "flex flex-col gap-1 pt-1";
 

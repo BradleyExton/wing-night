@@ -9,12 +9,16 @@ export const stageTv = `${stageBase} bg-bg`;
 export const birdButton =
   "flex h-full w-full cursor-pointer items-end justify-center border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow aria-disabled:cursor-default";
 
-export const bird = "block h-[min(16rem,33svh)]";
+// The bird's box is its 72-unit body; a photo head rises 12 units past the top of it, over the
+// right half, where the TV-size pill sits. Sized so that head clears the pill's 52px band, with
+// room for its idle bob, on a phone tall or short: (stage − foot padding − 60px) × 72 ÷ 84 is
+// about 25svh at both ends of the stage's clamp, and 13rem where the stage stops growing.
+export const bird = "block h-[min(13rem,25svh)]";
 
 export const hint = "pointer-events-none absolute left-3 top-3 text-[0.72rem] text-mutedWarmDim";
 
 const pillBase =
-  "absolute right-2.5 top-2.5 inline-flex min-h-[36px] items-center rounded-full px-3 text-[0.64rem] font-bold uppercase tracking-[0.18em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
+  "absolute right-2 top-2 inline-flex min-h-[44px] items-center rounded-full px-3.5 text-[0.64rem] font-bold uppercase tracking-[0.18em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
 
 export const tvPill = `${pillBase} border border-text/15 bg-bg/60 text-text`;
 

@@ -11,6 +11,7 @@ import {
   resolveOutfitRail,
   resolveOutfitSlots,
   resolveWornOutfit,
+  type CharacterSilhouette,
   type GenreKey,
   type Outfit,
   type OutfitChoice,
@@ -137,24 +138,79 @@ export const resolveWornLookId = (genre: GenreKey, outfit: Outfit): string | nul
 /** The outfit as worn, read in the genre: what a Look or the dice put on, styles made concrete. */
 export const resolveWornLookOutfit = (genre: GenreKey, look: OutfitLook): Outfit => resolveWornOutfit(genre, look.outfit);
 
+// The bodies a tile is framed on: a genre's silhouette, or the stock bird
+// (pop and every genre without a shape), whose three name-hashed bodies differ
+// by a few units of belly and share one wing, tail and set of windows.
+export type OutfitCropBody = CharacterSilhouette | "stock";
+
 // Where a slot's tile looks, in the bird's own 80×72 box: the chest for the
-// Top, the wing for the Sleeve and the Prop, the tail, the feet for Boots and
-// the Stage (§2.5: at 44px a whole bird shows nothing). Started from the picker
-// mockup's (`mockups/cast/wardrobe-picker.html`) and widened to the items as the
-// cast draws them, measured on every body: a Prop stands taller than the wing it
-// is held in, and the Stage is wider than the bird. Every window is square,
-// like its tile: a wider one would letterbox, and the letterbox shows the bird
-// around it. The Stage and the Move tiles show the whole bird, a Stage because
-// it is the floor under all of it and a Move because it is all of it moving.
-export const OUTFIT_SLOT_CROPS: Record<OutfitSlot, string> = {
-  top: "32 24 48 48",
-  sleeve: "8 20 52 52",
-  tail: "-12 -4 56 56",
-  boots: "20 44 36 36",
-  prop: "0 4 68 68",
-  stage: "-9 -6 98 98",
-  move: "-6 -14 92 92"
+// Top, the wing for the Sleeve, the tail, the feet for Boots, the wing and
+// whatever it holds up for the Prop (§2.5: at 44px a whole bird shows
+// nothing). Started from the picker mockup's (`mockups/cast/wardrobe-picker.html`)
+// and fitted per body to the items as the cast draws them, measured in the
+// browser on every silhouette: broody's tail hangs low and preener's stands
+// straight up, so one window cut the first off and left the second half empty;
+// and pop's rail holds props on both sides, up in the wing and out in front
+// of the chest, so its Prop window is nearly the whole bird. Every window is
+// square, like its tile: a wider one would letterbox, and the letterbox shows
+// the bird around it. These tiles draw the bird without its head
+// (`isOutfitCropWhole`), which is what lets a window reach as high as a Prop
+// does. The Stage and the Move tiles show the whole bird, head and all, a
+// Stage because it is the floor under all of it and a Move because it is all
+// of it moving: theirs are one window for every body, with room for a photo
+// head's hair and halo (and for most of a Move's travel; sporty-hop's apex
+// still leaves the tile for a beat).
+const WHOLE_BIRD_CROPS = {
+  stage: "-9 -15 98 98",
+  move: "-10 -22 100 100"
+} as const;
+
+export const OUTFIT_SLOT_CROPS: Record<OutfitCropBody, Record<OutfitSlot, string>> = {
+  spiky: {
+    top: "26 22 46 46",
+    sleeve: "10 21 44 44",
+    tail: "-13 0 54 54",
+    boots: "20 44 36 36",
+    prop: "6 6 62 62",
+    ...WHOLE_BIRD_CROPS
+  },
+  broody: {
+    top: "26 26 44 44",
+    sleeve: "14 23 40 40",
+    tail: "-12 26 40 40",
+    boots: "20 44 36 36",
+    prop: "-3 12 64 64",
+    ...WHOLE_BIRD_CROPS
+  },
+  preener: {
+    top: "24 16 46 46",
+    sleeve: "8 21 44 44",
+    tail: "-8 -3 48 48",
+    boots: "20 44 36 36",
+    prop: "-9 5 67 67",
+    ...WHOLE_BIRD_CROPS
+  },
+  stock: {
+    top: "26 22 48 48",
+    sleeve: "14 22 42 42",
+    tail: "-9 1 48 48",
+    boots: "20 44 36 36",
+    prop: "-4 2 78 78",
+    ...WHOLE_BIRD_CROPS
+  }
 };
+
+/** A slot's tile window on this body: `theme.silhouette`, undefined for the stock bird. */
+export const resolveOutfitSlotCrop = (silhouette: CharacterSilhouette | undefined, slot: OutfitSlot): string =>
+  OUTFIT_SLOT_CROPS[silhouette ?? "stock"][slot];
+
+// Whether a slot's tile shows the whole bird (the Stage, the Move) or a crop of
+// it. A crop draws the bird WITHOUT its head: the head is where a Prop is held
+// up beside and a tail rises past, so a window framed on the item either takes
+// in a slice of the guest's face, which is the one thing in a tile the eye goes
+// to, or cuts the item to stay clear of it — a Flying V's headstock and the
+// photo's cheek share the same few units on every body.
+export const isOutfitCropWhole = (slot: OutfitSlot): boolean => slot in WHOLE_BIRD_CROPS;
 
 // A Top or a Sleeve is judged on the bird without the Prop held across it, the
 // way a game draws it (kit only); the showpiece slots' own tiles draw them.

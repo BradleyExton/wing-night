@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolvePlayerAppearance, type CharacterAppearance, type CharacterMove } from "@wingnight/cast";
 import type { GenreKey, Outfit, OutfitItem, OutfitSlot, OutfitStyle, TeamTheme } from "@wingnight/shared";
 import {
@@ -8,6 +8,7 @@ import {
   type PortalTeam
 } from "@wingnight/shared/guestPortal";
 
+import { useBeatClock } from "../DisplayBoard/useBeatClock";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { usePortalMe } from "../../utils/usePortalMe";
 import { usePortalTeams } from "../../utils/usePortalTeams";
@@ -33,6 +34,9 @@ import {
 import * as styles from "./styles";
 
 const BACK_LINKS = [{ label: portalWardrobeCopy.backLink, href: TEASER_ROUTES.me }];
+
+// No music on the page: the beat clock keeps its own steady 120.
+const NO_MUSIC = { current: null };
 
 // /me/wardrobe: the bird's wardrobe for the guest's team (docs/research/bird-wardrobe.md §2.5),
 // a page of its own so the phone's back button leaves it. It opens on the team the guest is on;
@@ -120,8 +124,12 @@ type WardrobeEditorProps = {
   update: (next: (me: PortalMe) => PortalMe) => void;
 };
 
-// The wardrobe itself, for one genre: keyed on it, so a genre never inherits another's taps.
+// The wardrobe itself, for one genre: keyed on it, so a genre never inherits another's taps. It
+// keeps the page's one beat, flipping `data-beat` on its root as the TV does on its own: the team
+// at the foot dances to it, a Move tapped on the stage starts on it, and the Move tiles loop on it.
 const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps): JSX.Element => {
+  const beatRootRef = useRef<HTMLDivElement | null>(null);
+  useBeatClock({ mediaRef: NO_MUSIC, audioUnlocked: false, rootRef: beatRootRef });
   const stored = useMemo(() => resolveGenreOutfit(me.team?.outfitsByGenre, genre), [me.team, genre]);
   const save = useOutfitSave({ genre, stored, update });
   const outfit = save.shown;
@@ -162,13 +170,14 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
       : (said ?? summary);
 
   return (
-    <div className={styles.cards}>
+    <div className={styles.cards} ref={beatRootRef}>
       <section className={shellStyles.card} aria-label={portalWardrobeCopy.title}>
         <WardrobeStage
           appearance={dressBird(outfit)}
           theme={theme}
           move={outfit.move?.item as CharacterMove | undefined}
           label={summary}
+          beatRootRef={beatRootRef}
         />
         <p
           className={`${save.status.kind === "failed" ? shellStyles.statusError : shellStyles.voice} ${styles.statusLine}`}
@@ -178,7 +187,7 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
         >
           {statusText}
         </p>
-        <div className={styles.looks}>
+        <div className={styles.looks} data-scrolls="x">
           <button
             type="button"
             className={styles.dressMe}
@@ -211,6 +220,7 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
           dressBird={dressBird}
           onDress={handleDress}
           onRestyle={handleRestyle}
+          beatRootRef={beatRootRef}
         />
       </section>
       <section className={shellStyles.card} aria-labelledby="wardrobe-team-title">

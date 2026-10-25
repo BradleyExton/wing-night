@@ -1,14 +1,9 @@
-import { useRef } from "react";
 import { Character, resolveCharacterGrooveClassName, resolvePlayerAppearance } from "@wingnight/cast";
 import type { Outfit, TeamTheme } from "@wingnight/shared";
 import { resolveGuestAvatarRoute, type PortalTeamMember } from "@wingnight/shared/guestPortal";
 
-import { useBeatClock } from "../../DisplayBoard/useBeatClock";
 import { wardrobeTeamCopy } from "./copy";
 import * as styles from "./styles";
-
-// No music on the page: the beat clock keeps its own steady time.
-const NO_MUSIC = { current: null };
 
 type WardrobeTeamProps = {
   members: ReadonlyArray<PortalTeamMember>;
@@ -23,18 +18,15 @@ const resolveMemberHeadSrc = (member: PortalTeamMember): string | null =>
 
 // The foot of the wardrobe (research §2.5): everyone who has picked the team, dancing in the
 // parade to a steady beat, dressed as they are right now. It is the social proof and the fun
-// part, and it lets a team coordinate. The beat flips `data-beat` on this strip as the TV's
-// does on its root, and every bird's own groove lands it.
+// part, and it lets a team coordinate. The page's beat (PortalWardrobe's) flips `data-beat` on
+// the page as the TV's does on its root, and every bird's own groove lands it.
 export const WardrobeTeam = ({ members, theme, me }: WardrobeTeamProps): JSX.Element => {
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const line = members.some((member) => member.guestId === me.guestId)
     ? members
     : [...members, { guestId: me.guestId, displayName: me.displayName, headHash: null }];
 
-  useBeatClock({ mediaRef: NO_MUSIC, audioUnlocked: false, rootRef });
-
   return (
-    <div className={styles.parade} ref={rootRef} data-testid="wardrobe-team">
+    <div className={styles.parade} data-testid="wardrobe-team">
       {line.map((member) => {
         const isMe = member.guestId === me.guestId;
         const outfit = isMe ? me.outfit : member.outfit;

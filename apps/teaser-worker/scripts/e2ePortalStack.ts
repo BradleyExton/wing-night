@@ -3,10 +3,10 @@
 //
 // A fresh local D1 and R2 in a throwaway directory the config names — never this package's
 // `.wrangler/state`, which is the developer's own `teaser:dev` data — seeded with an admin (Brad),
-// a guest with an address (Rob) and one without (Sam), and a three-team roster served as the
-// Worker's static assets (apps/client/dist-teaser is empty here, Vite serves the pages, so the
-// Worker would otherwise find no teams; three guests over three teams makes the seat cap one,
-// which the specs rely on). The personal links and the team names, in seating order, are written
+// a guest with an address (Rob) and one without (Sam), and a four-team roster, one per genre the
+// wardrobe draws, served as the Worker's static assets (apps/client/dist-teaser is empty here, Vite
+// serves the pages, so the Worker would otherwise find no teams; three guests over four teams
+// makes the seat cap one, which the specs rely on, and a fourth guest keeps it there). The personal links and the team names, in seating order, are written
 // to `links.json` there for the specs to read. Then `wrangler dev` on that state, with mail
 // logged and the fake painter, until Playwright stops it.
 import { spawn, spawnSync } from "node:child_process";
@@ -71,7 +71,8 @@ const seedGuestSql = async (displayName: string, email: string | null, now: numb
 const SEEDED_TEAMS = [
   { name: "Iron Hens", genre: "Metal" },
   { name: "Mirror Balls", genre: "Disco" },
-  { name: "Barn Burners", genre: "Country" }
+  { name: "Barn Burners", genre: "Country" },
+  { name: "Sugar Rush", genre: "Pop" }
 ];
 const roster = {
   players: [],

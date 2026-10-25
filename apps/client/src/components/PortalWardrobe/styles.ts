@@ -1,6 +1,8 @@
 // /me/wardrobe (mockups/cast/wardrobe-picker.html, in the portal's Hearth): the stage on top,
-// the rail under it, the team at the foot, each a portal card.
-export const cards = "flex flex-col gap-4";
+// the rail under it, the team at the foot, each a portal card. `group/beat` as on the TV's root
+// (DisplayBoard/styles): the page's beat clock flips `data-beat` here and the dancing team
+// answers it.
+export const cards = "group/beat flex flex-col gap-4";
 
 // The rail's card is the portal card without its clip, because the slot tabs inside it stick to
 // the top of the screen as the grid scrolls, and a clipping box would hold them in the card.

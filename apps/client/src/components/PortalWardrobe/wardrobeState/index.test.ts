@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseOutfit, resolveOutfitRail } from "@wingnight/shared";
+import { COSTUME_HEAD_ANCHORS, COSTUME_HEAD_HEIGHT } from "@wingnight/cast";
+import { CHARACTER_SILHOUETTES, OUTFIT_SLOTS, parseOutfit, resolveOutfitRail } from "@wingnight/shared";
 
 import {
+  OUTFIT_SLOT_CROPS,
   dressOutfitSlot,
+  isOutfitCropWhole,
+  resolveOutfitSlotCrop,
+  type OutfitCropBody,
   resolveDressMeOutfit,
   resolveGenreOutfit,
   resolveOutfitLooks,
@@ -101,4 +106,49 @@ test("does read a genre's stored outfit as worn and leave every other genre's ou
   assert.deepEqual(resolveGenreOutfit(outfits, "metal"), { top: { item: "battle-vest-a", style: "ink" } });
   assert.deepEqual(resolveGenreOutfit(outfits, "pop"), {});
   assert.deepEqual(resolveGenreOutfit(undefined, "pop"), {});
+});
+
+const CROP_BODIES = Object.keys(OUTFIT_SLOT_CROPS) as OutfitCropBody[];
+
+const readWindow = (viewBox: string): { x: number; y: number; width: number; height: number } => {
+  const [x = NaN, y = NaN, width = NaN, height = NaN] = viewBox.split(" ").map(Number);
+
+  return { x, y, width, height };
+};
+
+test("does give every body a square window for every slot", () => {
+  assert.deepEqual([...CROP_BODIES].sort(), [...CHARACTER_SILHOUETTES, "stock"].sort());
+
+  for (const body of CROP_BODIES) {
+    for (const slot of OUTFIT_SLOTS) {
+      const window = readWindow(OUTFIT_SLOT_CROPS[body][slot]);
+
+      assert.ok(window.width > 0 && window.width === window.height, `${body} ${slot} is ${OUTFIT_SLOT_CROPS[body][slot]}`);
+    }
+  }
+});
+
+test("does frame a genre with no silhouette on the stock bird's windows", () => {
+  assert.equal(resolveOutfitSlotCrop(undefined, "prop"), OUTFIT_SLOT_CROPS.stock.prop);
+  assert.equal(resolveOutfitSlotCrop("broody", "tail"), OUTFIT_SLOT_CROPS.broody.tail);
+});
+
+test("does show the whole bird only on the Stage and Move tiles, with the photo head and its halo inside", () => {
+  assert.deepEqual(OUTFIT_SLOTS.filter(isOutfitCropWhole), ["stage", "move"]);
+
+  // The costume head's box, widened by its 1.4-unit ink halo.
+  const halo = 1.5;
+  const head = {
+    x0: COSTUME_HEAD_ANCHORS.cx - COSTUME_HEAD_HEIGHT / 2 - halo,
+    x1: COSTUME_HEAD_ANCHORS.cx + COSTUME_HEAD_HEIGHT / 2 + halo,
+    y0: COSTUME_HEAD_ANCHORS.top - halo
+  };
+
+  for (const body of CROP_BODIES) {
+    for (const slot of ["stage", "move"] as const) {
+      const window = readWindow(OUTFIT_SLOT_CROPS[body][slot]);
+
+      assert.ok(window.x <= head.x0 && window.x + window.width >= head.x1 && window.y <= head.y0, `${body} ${slot}`);
+    }
+  }
 });
