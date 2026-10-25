@@ -41,6 +41,23 @@ test("does leave a genreless team's birds bare", () => {
   assert.doesNotMatch(html, /data-character-apparel/);
 });
 
+test("does stand every bird idle, showpieces on, until the room's beat starts its Move", () => {
+  const theme = resolveTeamTheme(buildTeam("metal"));
+  const dressed: Player[] = [
+    {
+      id: "player-1",
+      name: "Rob",
+      outfits: { metal: { prop: { item: "flying-v-b", style: "white" }, move: { item: "horns-pump" } } }
+    }
+  ];
+  const html = renderToStaticMarkup(<TeamLineup players={dressed} theme={theme} sizeClassName="h-40" />);
+
+  assert.match(html, /data-outfit-slot="prop"/);
+  assert.match(html, /data-character-pose="idle"/);
+  assert.doesNotMatch(html, /data-character-move=/);
+  assert.doesNotMatch(html, /data-lineup-move=/);
+});
+
 test("does render nothing when the team has no players", () => {
   const theme = resolveTeamTheme(buildTeam("metal"));
 

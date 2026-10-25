@@ -16,7 +16,11 @@ export type ParadeFrame = {
 
 export const PARADE_STAGED_MS = 80;
 export const PARADE_ENTER_MS = 3200;
-export const PARADE_DANCE_MS = 14000;
+// Eight bars at the lobby's 120 bpm, plus the wait for the first beat and the
+// frame or so each beat runs over when the beat clock keeps its own time: a
+// bird's Move comes round once every eight bars (resolveCastMoves), so every
+// bird on the floor gets its one.
+export const PARADE_DANCE_MS = 17000;
 export const PARADE_EXIT_MS = 3200;
 export const PARADE_CYCLE_MS = PARADE_ENTER_MS + PARADE_DANCE_MS + PARADE_EXIT_MS;
 

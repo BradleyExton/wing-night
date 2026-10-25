@@ -63,8 +63,90 @@ test("does stage both groups off their own edges, walking, before the first fram
 test("does face the right-hand group left so it walks in towards the floor", () => {
   const html = renderParade(players);
 
-  assert.match(html, new RegExp(`data-cast-group="team-beta"[^]*?class="${styles.member} ${styles.memberFacingLeft} `));
+  // The ground and the bird each carry the mirror; the member they share is
+  // never transformed, so it never stacks on its own.
+  assert.match(
+    html,
+    new RegExp(
+      `data-cast-member="player-2"><span class="${escapeForRegExp(styles.ground)} ${escapeForRegExp(styles.facingLeft)}">[^]*?<span class="${escapeForRegExp(styles.bird)} z-\\[\\d+\\] ${escapeForRegExp(styles.facingLeft)}">`
+    )
+  );
   assert.match(html, new RegExp(`data-cast-group="team-alpha"[^]*?class="${styles.member} [^"]*" data-cast-member="player-1"`));
+  assert.doesNotMatch(
+    html,
+    new RegExp(`data-cast-member="player-1"><span class="[^"]*${escapeForRegExp(styles.facingLeft)}`)
+  );
+});
+
+// Dressed for the wardrobe's showpieces (docs/research/bird-wardrobe.md §2.6).
+const dressedPlayers: Player[] = [
+  { id: "player-1", name: "Alex" },
+  {
+    id: "player-2",
+    name: "Morgan",
+    outfits: { metal: { prop: { item: "flying-v-b", style: "white" } } }
+  },
+  { id: "player-3", name: "Sam" },
+  { id: "player-4", name: "Jo" },
+  { id: "player-5", name: "Kit", outfits: { metal: { stage: { item: "lava-disc-c" } } } }
+];
+
+const dressedTeams: Team[] = [
+  {
+    id: "team-alpha",
+    name: "Team Alpha",
+    playerIds: ["player-1", "player-2", "player-3", "player-4", "player-5"],
+    totalScore: 0,
+    genre: "metal"
+  }
+];
+
+const memberClassName = (html: string, playerId: string): string =>
+  new RegExp(`class="([^"]*)" data-cast-member="${playerId}"`).exec(html)?.[1] ?? "";
+
+test("does give a bird with a Prop or a Stage room either side of it in the huddle", () => {
+  const html = renderParade(dressedPlayers, dressedTeams);
+
+  assert.doesNotMatch(memberClassName(html, "player-1"), /-ml-/, "the first bird tucks in behind nobody");
+  assert.match(memberClassName(html, "player-2"), new RegExp(escapeForRegExp(styles.memberOverlapShowpiece)));
+  assert.match(memberClassName(html, "player-3"), new RegExp(escapeForRegExp(styles.memberOverlapShowpiece)));
+  assert.match(memberClassName(html, "player-4"), new RegExp(escapeForRegExp(styles.memberOverlapTight)));
+  assert.match(memberClassName(html, "player-5"), new RegExp(escapeForRegExp(styles.memberOverlapShowpiece)));
+});
+
+// A tail or a Prop is out at a bird's back; the face is at its front. In a
+// huddle the bird behind's face must paint over the bird in front's back.
+test("does paint each bird's face over the back of the bird in front of it", () => {
+  const html = renderParade(dressedPlayers, dressedTeams);
+  const depthOf = (playerId: string): number =>
+    Number(new RegExp(`data-cast-member="${playerId}"[^]*?class="${escapeForRegExp(styles.bird)} z-\\[(\\d+)\\]`).exec(html)?.[1]);
+
+  // The left group faces right, so its front bird is its last.
+  assert.ok(depthOf("player-1") > depthOf("player-2"));
+  assert.ok(depthOf("player-4") > depthOf("player-5"));
+  // Every ground lies under every bird.
+  assert.match(styles.ground, /\bz-0\b/);
+  assert.ok(depthOf("player-5") >= 1);
+});
+
+test("does lay a worn Stage in the ground under the bird, in the shadow pool's place", () => {
+  const html = renderParade(dressedPlayers, dressedTeams);
+
+  assert.match(
+    html,
+    new RegExp(`data-cast-member="player-5"[^>]*><span class="${escapeForRegExp(styles.ground)} ?"><svg[^>]*data-character-stage`)
+  );
+  assert.doesNotMatch(
+    html,
+    new RegExp(`data-cast-member="player-5"[^>]*><span class="${escapeForRegExp(styles.ground)} ?"><span class="${escapeForRegExp(styles.shadow)}"`)
+  );
+});
+
+test("does play no Move before the pair is dancing to the room's beat", () => {
+  const html = renderParade(dressedPlayers, dressedTeams);
+
+  assert.doesNotMatch(html, /data-cast-move=/);
+  assert.doesNotMatch(html, /data-character-move=/);
 });
 
 test("does hand every bird its own groove, so the floor is not one animal on one clock", () => {
@@ -87,7 +169,9 @@ test("does wrap every bird in a bounce layer inside its mirror, so it keeps faci
 
   assert.match(
     html,
-    new RegExp(`data-cast-member="player-2">[^]*?<span class="${escapeForRegExp(styles.jive)}"`)
+    new RegExp(
+      `data-cast-member="player-2">[^]*?<span class="${escapeForRegExp(styles.bird)} z-\\[\\d+\\] ${escapeForRegExp(styles.facingLeft)}"><span class="${escapeForRegExp(styles.jive)}"`
+    )
   );
   // Walking on, the group's own transform carries the birds and nothing
   // wobbles under it — the bird's bounce timings are set on it, but the
@@ -104,7 +188,7 @@ test("does give every bird a pool of shade that sits outside its bounce layer", 
   assert.match(
     html,
     new RegExp(
-      `data-cast-member="player-2"><span class="${escapeForRegExp(styles.shadow)}"></span><span class="${escapeForRegExp(styles.jive)}"`
+      `data-cast-member="player-2"><span class="${escapeForRegExp(styles.ground)} ${escapeForRegExp(styles.facingLeft)}"><span class="${escapeForRegExp(styles.shadow)}"></span></span><span class="${escapeForRegExp(styles.bird)} [^"]*"><span class="${escapeForRegExp(styles.jive)}"`
     )
   );
   // Walking on, the pool is as still as the bird is.

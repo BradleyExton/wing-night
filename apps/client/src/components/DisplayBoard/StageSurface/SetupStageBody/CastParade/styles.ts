@@ -13,12 +13,17 @@ export const unassignedFill = "text-mutedWarm";
 // height, not width, is the legibility knob: 12vh is ~130px at 1080p and
 // ~240px (the cap) on a 4K TV; the bird is a bobblehead, so this puts a
 // costume head at roughly 80px at 1080p, which is what it takes to tell whose
-// face it is from the couch. Birds in a row overlap by a little, as a huddle
-// does, so a team of six still fits its half of the floor.
+// face it is from the couch.
+//
+// The row stands a little off the strip's floor: a worn Stage is drawn in
+// perspective round the feet and reaches about ten bird units below them (a
+// Prop dips as far at the bottom of a dance), and the stage body clips at its
+// own bottom edge, where the standings deck paints over anything that
+// crosses it. Ten of the box's 72 units, on the same clamp as the height.
 const groupBase =
-  "absolute bottom-0 flex items-end will-change-transform transition-transform duration-[3200ms] ease-linear motion-reduce:transition-none";
+  "absolute flex items-end will-change-transform transition-transform duration-[3200ms] ease-linear motion-reduce:transition-none";
 
-const groupPaired = `${groupBase} h-[clamp(5rem,12vh,15rem)] -space-x-[2.5vw]`;
+const groupPaired = `${groupBase} bottom-[clamp(0.7rem,1.67vh,2.1rem)] h-[clamp(5rem,12vh,15rem)]`;
 
 export const groupLeft = `${groupPaired} left-0`;
 
@@ -38,7 +43,7 @@ export const groupRightOnstage = "-translate-x-[6vw]";
 // floor that takes teams one at a time is a phone's, where six birds at the
 // paired spacing are wider than the screen — and stand a touch shorter, so a
 // full team fits between the edges with its faces still readable.
-export const groupSolo = `${groupBase} left-1/2 h-[clamp(4.5rem,11vh,15rem)] -space-x-[11vw]`;
+export const groupSolo = `${groupBase} bottom-[clamp(0.63rem,1.53vh,2.1rem)] left-1/2 h-[clamp(4.5rem,11vh,15rem)]`;
 
 // Pinned at the centre line, so "off the left edge" is half the screen plus
 // the group's own width back, and "off the right edge" is half the screen on.
@@ -48,32 +53,75 @@ export const groupSoloRightOffstage = "translate-x-[50vw]";
 
 export const groupSoloOnstage = "-translate-x-1/2";
 
+// A member is one bird's slot in the row. It carries no transform and no
+// stacking of its own, so every bird's ground (its pool or Stage) and every
+// bird sit on the GROUP's stacking context: all the grounds under all the
+// birds, so a Stage never paints over a neighbour's feet.
 export const member = "relative block h-full";
 
-// The drawing faces right; a bird walking left, or dancing on the right
-// side facing its opposite number, is the same bird mirrored.
-export const memberFacingLeft = "-scale-x-100";
+// Birds in a row overlap by a little, as a huddle does, so a team of six still
+// fits its half of the floor (the first bird takes no overlap). A bird on show
+// with a Prop or a Stage takes room either side of it: a Prop is held at the
+// wing tip, out at the bird's back, and in the huddle it lay across the face
+// of the bird behind; two Stages a huddle apart were one smear. Six showpieces
+// at the loose spacing still fit their half of a 16:9 floor.
+export const memberOverlapTight = "-ml-[2.5vw]";
 
-// Inside the member, so the bounce composes with that mirror rather than
+export const memberOverlapShowpiece = "-ml-[0.5vw]";
+
+export const memberOverlapSolo = "-ml-[11vw]";
+
+// The bird's pool or Stage, laid exactly over the bird's own box, under every
+// bird in the group.
+export const ground = "pointer-events-none absolute inset-0 z-0 block h-full";
+
+// The bird itself, over every ground. Which bird of a huddle paints over which
+// follows the way the row faces: each bird's face over the back of the bird in
+// front of it, so a tail or a Prop never covers a face (`birdDepths`, picked
+// by the bird's place in the row).
+export const bird = "relative block h-full";
+
+// One literal per place, as Tailwind needs; a row longer than this shares the
+// top one, which only matters where two of those overlap.
+export const birdDepths = [
+  "z-[1]",
+  "z-[2]",
+  "z-[3]",
+  "z-[4]",
+  "z-[5]",
+  "z-[6]",
+  "z-[7]",
+  "z-[8]",
+  "z-[9]",
+  "z-[10]",
+  "z-[11]",
+  "z-[12]"
+] as const;
+
+// The drawing faces right; a bird walking left, or dancing on the right
+// side facing its opposite number, is the same bird mirrored. The ground and
+// the bird each carry it, since the member they share must stay untransformed.
+export const facingLeft = "-scale-x-100";
+
+// Inside the bird's layer, so the bounce composes with that mirror rather than
 // overwriting it — an animation's transform beats a utility's, and a bird
 // that lost its flip would dance with its back to the room.
-// Positioned, so the bird always paints over the pool or the Stage under it (both
-// absolute siblings before it): an unpositioned bird would sink under a worn
-// Stage while it walks and only rise over it once the dance gave it a transform.
 export const jive = "relative block h-full";
 
 // Off its feet: a hop, a lean and a little wander, at this bird's own tempo
 // and phase (`--cast-jive-*` from the cast's `resolveCharacterGroove`, set on the
 // member). `origin-bottom` puts the pivot on the floor, so a lean is a lean
 // and not the whole bird swinging. Only while the pair is DANCING — the walk
-// on and off is the group's own transform and wants no wobble under it.
+// on and off is the group's own transform and wants no wobble under it — and
+// not while the bird plays a Move, which is a whole flourish of its own.
 export const jiveDancing =
   "relative block h-full origin-bottom will-change-transform motion-safe:[animation:cast-jive_var(--cast-jive-ms,820ms)_ease-in-out_var(--cast-jive-delay,0ms)_infinite]";
 
 // The pool of shade under a bird, the same depth cue JOUST draws on the sand
 // (DESIGN.md §2.7): without it the floor is a strip of stickers pasted on the
-// flame, and with it the row is standing on the deck. It hangs on the MEMBER,
-// outside the jive layer, so a hop lifts the bird off a shadow that stays put.
+// flame, and with it the row is standing on the deck. It hangs in the bird's
+// ground, outside the jive layer, so a hop lifts the bird off a shadow that
+// stays put.
 //
 // The bird is drawn facing right in an 80x72 box with its feet at x=38, so the
 // pool is centred a touch left of the box's middle; the mirror on a left-facing
@@ -87,11 +135,6 @@ const shadowBase =
   "pointer-events-none absolute bottom-0 left-[25%] right-[30%] h-[clamp(0.35rem,0.8vh,0.85rem)] rounded-[50%] bg-bg opacity-[0.6] blur-[4px]";
 
 export const shadow = shadowBase;
-
-// A worn Stage (the wardrobe's showpiece) in the pool's place: the bird's own
-// 80x72 box laid exactly over the bird's, so the stage's coordinates are the
-// bird's, and it carries the member's mirror the way the pool does.
-export const stage = "pointer-events-none absolute inset-0 block h-full";
 
 // Dancing, it answers the bird's own bounce on the bird's own clock
 // (`--cast-jive-*` from the cast's groove, set on the member) — the same
