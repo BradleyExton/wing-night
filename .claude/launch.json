@@ -24,6 +24,13 @@
       "url": "http://localhost:5173"
     },
     {
+      "name": "wing-night-portal",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": ["exec", "--using=25", "pnpm", "teaser:dev"],
+      "port": 5173,
+      "url": "http://localhost:5173"
+    },
+    {
       "name": "wing-night-server",
       "runtimeExecutable": "env",
       "runtimeArgs": [
