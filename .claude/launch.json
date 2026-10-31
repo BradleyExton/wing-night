@@ -17,6 +17,13 @@
       "url": "http://127.0.0.1:8793"
     },
     {
+      "name": "wing-night-party",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=3000", "fnm", "exec", "--using=25", "pnpm", "dev"],
+      "port": 5173,
+      "url": "http://localhost:5173"
+    },
+    {
       "name": "wing-night-server",
       "runtimeExecutable": "env",
       "runtimeArgs": [

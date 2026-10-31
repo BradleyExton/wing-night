@@ -16,7 +16,7 @@ in `CLAUDE.md` passes and the screenshots are in hand.
 |---|---|---|---|
 | 0 | before run 1 | Answer the open questions. **Done 2026-10-14: defaults.** | — |
 | 1 | after run 1 | Open `mockups/cast/outfit-gallery.html` and keep or cut every candidate at 76px. Paste the cut list back. Decide on gold. **Cuts done 2026-10-20: [bird-wardrobe-gate-1.md](bird-wardrobe-gate-1.md), gold kept where it reads.** | ~30 min |
-| 2 | after run 5 (done 2026-10-25; deployed 2026-10-25, Worker version 9b2d23cd) | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. | ~30 min |
+| 2 | after run 5 (done 2026-10-25; deployed 2026-10-25, Worker version 9b2d23cd) | Feel test on the real TV and tablet: the lobby parade in full kit, one game, `/me/wardrobe` on a phone. Then `pnpm teaser:deploy` and a `pack:pull`. **Feel test and calls done 2026-10-30: every call kept as shipped (see "Gate 2: what Brad decided"). The `pack:pull` waits until guests have dressed.** | ~30 min |
 
 ## Runs
 
@@ -199,6 +199,30 @@ session (63d49e2d..c8e742b2). Screenshots in `docs/screenshots/wardrobe/run-5/`.
     body's back a little more than on round.
 - **Not covered by e2e.** No sample-pack player wears a Move, so no Playwright spec sees one
   play; giving one sample player a Move would (sample round 1 drives five specs, so check them).
+
+## Gate 2: what Brad decided (2026-10-30)
+
+The night pack had no outfits yet, so the feel test ran the LAN stack (`wing-night-party` in
+`.claude/launch.json`) on a scratch copy of the pack: every file linked to the real one except
+`players.json`. That copy dressed each bird in a Look for its genre, filled the empty slots and
+added a Move, with each open call's item placed on purpose. The real pack was not touched.
+
+Every open call is kept as shipped:
+
+- The parade's ~18px lift and the 17 s dance: keep both.
+- Headless kit and Prop tiles, and the 208px stage bird: keep both (the pill stays put).
+- corn-cob a's gold against country orange: reads, keep it.
+- heart-point's empty-wing jab with the Prop parked: fine.
+- Tops that show bare body under a raised wing (battle-vest a most): live with it.
+- JOUST's ~40px lane birds: leave them.
+- sporty-hop leaving its Move tile: leave it.
+- team-sash a/b overhanging the tall body: fine.
+
+**Still open: the real `pack:pull`.** The portal holds what guests do on wingnight.tv, and
+nothing reaches the night pack until a pull. The party server reads the pack at boot, so restart
+the stack after one. On 2026-10-30 the dry run showed one guest (Brad, a head, no team pick and no
+outfit) and no outfit changes, so the pull waits until guests have dressed. It merges, so
+pulling again later is safe.
 
 ## Rules every agent brief carries
 

@@ -483,8 +483,9 @@ lists above; nothing here repeats them.
   above.
 - **Wardrobe** (`docs/bird-wardrobe-build-plan.md`). Gate 1, the art pass and runs 2–5 are
   done (run 5's polish audit 2026-10-25) and deployed to wingnight.tv 2026-10-25 (Worker version
-  9b2d23cd); still to come: the rest of Gate 2 (feel test on the TV and tablet, a real
-  `pack:pull`) and the open calls listed under "Run 5: what landed".
+  9b2d23cd). Gate 2's feel test and open calls are done 2026-10-30 (all kept as shipped). Still
+  to come: the real `pack:pull` once guests have dressed on wingnight.tv (dry run first, then
+  restart the stack), and a sample player wearing a Move so e2e sees one play.
 
 ## Team identity (genre theming)
 
