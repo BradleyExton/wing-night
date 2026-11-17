@@ -1,26 +1,112 @@
-// The crew scene's own colours (DESIGN.md §2.11's licence for scene art): the night street it
-// stands on until the real backdrops are redrawn for the band (docs/minigames/brawl-crew-spec.md
-// §0.8 step 4), and the per-player marker colours the wall and each phone's pad agree on.
+import type {
+  QueensHotelPalette,
+  SouldiersSkateShopPalette,
+  SpiritCatcherPalette,
+  StorefrontsPalette,
+  TownClusterPalette,
+  WaterfrontCondosPalette
+} from "@wingnight/scenery";
 
-/** One a slot, in the order the crew stepped out: the ring under a hen and the tint of her pad. */
-export const CREW_SLOT_COLOURS = ["#f97316", "#22d3ee", "#a3e635", "#e879f9", "#facc15", "#f87171", "#93c5fd", "#fdba74"] as const;
+// The street at night (DESIGN.md §2.11's licence for scene art, on the house tokens). Every value
+// is a custom property the scene's root sets from the theme (`styles.ts`), because the scenery
+// takes its colours as presentation attributes and a class cannot reach one. Drawing content, not
+// chrome: the goons have their own class-name palette (`Goons/palette.ts`) and the hen is the
+// team's colour.
+export const brawlNight = {
+  wall: "var(--bn-wall)",
+  wallDark: "var(--bn-wall-dark)",
+  buff: "var(--bn-buff)",
+  buffDark: "var(--bn-buff-dark)",
+  trim: "var(--bn-trim)",
+  pane: "var(--bn-pane)",
+  awning: "var(--bn-awning)",
+  sign: "var(--bn-sign)",
+  signInk: "var(--bn-sign-ink)",
+  signGreen: "var(--bn-sign-green)",
+  signGreenLight: "var(--bn-sign-green-light)",
+  flag: "var(--bn-flag)",
+  town: "var(--bn-town)",
+  townDark: "var(--bn-town-dark)",
+  townGlass: "var(--bn-town-glass)",
+  steel: "var(--bn-steel)",
+  steelDark: "var(--bn-steel-dark)",
+  mound: "var(--bn-mound)",
+  sidewalk: "var(--bn-sidewalk)",
+  joint: "var(--bn-joint)",
+  kerb: "var(--bn-kerb)",
+  road: "var(--bn-road)",
+  lane: "var(--bn-lane)",
+  plank: "var(--bn-plank)",
+  sand: "var(--bn-sand)",
+  chalk: "var(--bn-chalk)",
+  water: "var(--bn-water)",
+  glint: "var(--bn-glint)",
+  lamp: "var(--bn-lamp)",
+  lampGlow: "var(--bn-lamp-glow)",
+  post: "var(--bn-post)",
+  moon: "var(--bn-moon)",
+  star: "var(--bn-star)",
+  shadow: "var(--bn-shadow)"
+} as const;
 
-export const resolveCrewSlotColour = (slot: number | null): string => {
-  return slot === null ? crewNight.dim : (CREW_SLOT_COLOURS[slot % CREW_SLOT_COLOURS.length] ?? CREW_SLOT_COLOURS[0]);
+/** Dunlop's fronts across the road, lit from inside: dark brick, warm panes, red awnings. */
+export const NIGHT_STOREFRONTS: StorefrontsPalette = {
+  brick: brawlNight.wall,
+  brickDark: brawlNight.wallDark,
+  buff: brawlNight.buff,
+  buffDark: brawlNight.buffDark,
+  trim: brawlNight.trim,
+  pane: brawlNight.pane,
+  awning: brawlNight.awning,
+  cornice: brawlNight.trim
 };
 
-export const crewNight = {
-  sky: "#141021",
-  far: "#1d1830",
-  wall: "#2a2340",
-  pane: "#f5c26b",
-  kerb: "#6b6480",
-  road: "#2b2a33",
-  hazard: "#3b82f6",
-  exit: "#f7f3ea",
-  shadow: "#000000",
-  wing: "#fbbf24",
-  revive: "#f7f3ea",
-  ink: "#f7f3ea",
-  dim: "#8f8a99"
-} as const;
+export const NIGHT_SOULDIERS: SouldiersSkateShopPalette = {
+  brick: brawlNight.wall,
+  brickDark: brawlNight.wallDark,
+  trim: brawlNight.trim,
+  pane: brawlNight.pane,
+  signGreen: brawlNight.signGreen,
+  signGreenLight: brawlNight.signGreenLight,
+  signInk: brawlNight.signInk,
+  signLetter: brawlNight.lamp
+};
+
+export const NIGHT_QUEENS: QueensHotelPalette = {
+  buff: brawlNight.buff,
+  buffDark: brawlNight.buffDark,
+  trim: brawlNight.wallDark,
+  pane: brawlNight.pane,
+  cornice: brawlNight.trim,
+  signLetter: brawlNight.sign,
+  flag: brawlNight.flag
+};
+
+/** Downtown's far slabs and the twin condos, hazed into the dark. */
+export const NIGHT_TOWN: TownClusterPalette & WaterfrontCondosPalette & SpiritCatcherPalette = {
+  wall: brawlNight.town,
+  wallDark: brawlNight.townDark,
+  glass: brawlNight.townGlass,
+  tower: brawlNight.wall,
+  towerDark: brawlNight.wallDark,
+  towerGlass: brawlNight.pane,
+  roof: brawlNight.trim,
+  steel: brawlNight.steel,
+  steelDark: brawlNight.steelDark,
+  mound: brawlNight.mound
+};
+
+// The per-player marker colours the wall, the crew strip and each phone's pad agree on: one a
+// slot, in the order the crew stepped out. Five hens in one team colour are told apart by head,
+// ring and name, so the ring has to be a colour of its own; these are the scene's only literals.
+export const CREW_SLOT_COLOURS = ["#f97316", "#22d3ee", "#a3e635", "#e879f9", "#facc15", "#f87171", "#93c5fd", "#fdba74"] as const;
+
+/** A slot's colour; null is a player who has not stepped out. */
+export const resolveCrewSlotColour = (slot: number | null): string => {
+  return slot === null ? CREW_UNSEATED_COLOUR : (CREW_SLOT_COLOURS[slot % CREW_SLOT_COLOURS.length] ?? CREW_SLOT_COLOURS[0]);
+};
+
+const CREW_UNSEATED_COLOUR = "#8f8a99";
+
+/** The pad's two inks on a phone: its resting marks, and the mark under a thumb that is down. */
+export const crewPadInk = { dim: CREW_UNSEATED_COLOUR, ink: "#f7f3ea" } as const;

@@ -113,7 +113,17 @@ const MinigamePlayBody = ({
       minigameType={stageViewModel.minigameType}
       activeTeamName={stageViewModel.activeTeamName}
       minigameDisplayView={stageViewModel.minigameDisplayView}
-      handset={resolveLegHandset(stageViewModel.contestantTurn)}
+      // A relay's leg is in one hand. A crew's turn has no leg: it is on phones when the turn is
+      // and somebody on the team has one, exactly what the briefing told them to pick up.
+      handset={
+        stageViewModel.contestantTurn === null && stageViewModel.crewTurn !== null
+          ? resolveBriefingHandset(
+              stageViewModel.crewTurn,
+              stageViewModel.activeTeamPlayers.map((player) => player.id),
+              stageViewModel.claimedPlayerIds
+            )
+          : resolveLegHandset(stageViewModel.contestantTurn)
+      }
       remainingTimerSeconds={liveMinigameRemainingSeconds}
       totalTimerSeconds={
         stageViewModel.minigameTimerSnapshot !== null

@@ -4,7 +4,7 @@ Status: **Spec (draft)** — replaces the relay in [brawl-spec.md](brawl-spec.md
 game, same id (`BRAWL`), same name; the relay's spec stays the record of what is in the code
 until step 8 below folds this file into it.
 
-Last updated: 2026-11-16 (steps 1–3 of §0.8 built, and the phones' half of step 5: a team can play it from its own phones — §0.10. The relay is gone from the code; the screens are INTERIM until step 4 and the rest of step 5.)
+Last updated: 2026-11-17 (steps 1–5 of §0.8 built: a team plays it from its own phones on the real street, with the wall's crew strip, wave meter, endings, sound and results — §0.10. Unplayed on real phones, the TV or the tablet. Steps 6–9 remain.)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made on 2026-11-16, in chat or
@@ -341,8 +341,8 @@ minigame `.tsx` or `tests/e2e` change (CLAUDE.md). Steps 1–3 touch no surface.
 3. **The runtime. DONE 2026-11-16 (§0.10), with interim screens.** The reducer as sequencer, the pulse, views, scoring, round memory, rules.
    **Then measure the load** (§0.5) with five scripted pads through the real socket, and add the
    coalescer only if the numbers ask for it.
-4. **The scene.** Band, depth sort, shadows, rings and names, revive ring, redrawn backdrops.
-5. **The surfaces.** Display, pad, the tablet's monitor; the phone shell's crew branch.
+4. **The scene. DONE 2026-11-17 (§0.10).** Band, depth sort, shadows, rings and names, revive ring, redrawn backdrops.
+5. **The surfaces. DONE 2026-11-17 (§0.10).** Display, pad, the tablet's monitor; the phone shell's crew branch.
 6. **Tablet mode and solo.** One hen on the tablet and on the teaser.
 7. **E2E and the sandbox.** `/dev/minigame/brawl` grows pads you can add (keyboard-driven, and
    a bot hen on a button, MOUNT's precedent); `tests/e2e/brawl-sandbox.spec.ts` is rewritten.
@@ -521,9 +521,165 @@ plays it from its own phones now; the art is still the interim street.
 - **E2E:** `contestant-phones.spec.ts` plays it across four devices — the TV sends the team to
   their phones, two phones step out in turn and the wall shows the crew assembling, the tablet
   starts the fight and stays a monitor, and each thumb moves its own hen on the wall at once.
-- **Still to do in step 5:** the wall's crew strip, wave meter and ending callouts; sound from
-  `frame.events`; the turn's results card (`turnStats` is in the view and nothing draws it).
+- **Left for the rest of step 5** (built the next day, below): the wall's crew strip, wave meter
+  and ending callouts; sound from `frame.events`; the turn's results card.
   **Unmeasured still:** a real phone on the party Wi-Fi, and the Android tablet as monitor.
+
+**Step 4, the scene, and the rest of step 5 — the wall's extras, sound, results (2026-11-17).**
+Built together and landed as one change, with the gate run once over both: the scene's last
+piece (the endings) and the wall's callouts for them could not be told apart cleanly enough to
+split. The street is the real one on both screens; the relay's client is gone. Gate green
+(`pnpm lint && pnpm typecheck && pnpm test`, each on its exit code) and the Playwright suite at
+72 passed, four of them new in `brawl-sandbox.spec.ts` (the real street and its hazards, the strip
+and the meter, the scene painting without a render a frame, and a hen carried to the bay and
+named on the results) and the two-phone test in `contestant-phones.spec.ts` extended for the
+ready beat, the strip and the meter.
+
+*The scene (`client/CrewScene`).*
+
+- **The three backdrops are redrawn for the band**, from the relay's own art and night palette
+  (`CrewScene/Backdrop`, the files moved rather than copied). The band's back is the sim's ground
+  line (y 70), so a figure at depth `z` stands at `70 + z` and every goon drawing — which already
+  stands itself on that line — needed no change. **On Dunlop the band is the road**: the crew
+  fights down the middle of the street between the two kerbs, with the fronts a third bigger than
+  the relay drew them across the far sidewalk. §0.7 did not say where the band was; a sidewalk 32
+  deep would have pushed the buildings off the top of the wall's window.
+- **Hazards span the band, as street.** The patio is a deck across the whole depth with the
+  railing at its back and posts down its sides; the bay is a gap in the boardwalk from the rail to
+  the bottom of the window; the plinth is a slab with a front face below the band. All three are
+  drawn UNDER the fight. A front rail drawn over the figures was tried on paper and dropped: it
+  would stand on the slot rings.
+- **Per-frame placement is through refs** (`scenePainter`, `HenSlot`, `FigureLayer`), the relay's
+  way: the scene subscribes to the street and writes each frame onto the DOM, every hen's six
+  poses are mounted once and shown by `display`, and React renders the figure layer only when a
+  goon's picture changes or two figures cross in depth. **`useCrewFrame` is a store now**, not
+  state: it no longer re-renders its surface sixty times a second. A surface reads the few values
+  it shows with `useStreetValue`, which re-renders on a change of that value only.
+- **Depth order has slack** (`drawOrder`, 1.5 units). A goon lines up on its hen's own line before
+  it closes, so sorted exactly the two swapped places in the picture on every frame — and the
+  order is the DOM's, where moving a node restarts the walk cycle on it.
+- **Three layers, not one `<svg>`.** The sky and the block's street are each an `<svg>` drawn once
+  and slid by a CSS transform; the figures are a third. `fit` is done with container units on a
+  16:9 window div rather than `preserveAspectRatio`, because three stacked layers have to agree on
+  one frame. `cover` and `contain` mean what they did.
+- **The endings play in the scene, on the screen's own clock** (`beatTimeline`, `beats`): block
+  clear (the crew walks over the line and hops), the bay (two geese a hen, a beat apart down the
+  slots — the relay's three geese for one hen would have been twenty-four for a full crew), the
+  bell. "Carried to the bay on a wipe" is read as: on the `wipe` outcome. There is no screen-wipe
+  transition. A terminal frame a screen never saw arrive (a wall reloaded during the hold) is
+  drawn with its ending already over. All three fit inside `BRAWL_READY_HOLD_MS`.
+- **A hit shakes the picture** (5 px for a heart, 11 px for a hen going down), §0.5's "the
+  hit-pause becomes shake and flash". No flash was added: she already reels and flickers.
+
+*The wall (`client/DisplayBrawlSurface`).*
+
+- **The crew strip is in the marquee's readout**, not over the street: a chip a hen (head in her
+  slot's ring, name, hearts, and a gold star while the wave has not touched her). §0.7 did not say
+  where it went; the top of the arena is the meter's and the bottom is the band's front, where a
+  strip would stand on the hens nearest the camera. The star is new: the clean-wave bonus is per
+  hen now, so the thing to lose in every wave is shown on the hen who can lose it.
+- **The wave meter** is the relay's, counting off `frame.spawned` and the goons on the street,
+  with ◀ ▶ for the side each waiting goon comes from; a wave of more than ten pips draws them at
+  two thirds (a crew of five's first wave is eleven, its biggest seventeen).
+- **The ready beat** is a plate where the meter will be: every player on the team by name, a dot
+  in her slot's colour once she is out, and who starts it. **The TV is now told a crew turn is on
+  phones at play** (`StageSurface` passes `resolveBriefingHandset(crewTurn, …)`; it used to say
+  "tablet" for every crew turn once the briefing ended), which is how the plate knows to ask for
+  phones rather than name whose block it is on the tablet.
+- **Callouts**: *Block clear!* under the street's name, *Into the bay!*, *Time!*, each with where
+  the street goes next and that the first thumb starts it (or that the tablet does).
+- **The status line is the one verb line** through the fight (principles 15); the wave count it
+  used to carry is the meter's.
+- **The results card** is the house `<ResultPlaque>` with the turn's awards under its rule
+  (`client/TurnAwards`): most geese, most revives, most often carried. An award nobody scored on
+  is not given, **and neither is one the whole crew ties on** — a wipe carries every hen once, and
+  "most often carried: everybody" is not a tease. The card waits for the last block's ending to
+  play. The tablet's readout carries the same names.
+
+*Sound (`client/useCrewSounds`, `client/crewEvents`, `client/audio`).*
+
+- On the TV only, and on the tablet only when it is the whole game (`seat === "solo"`). The
+  frame's `events` go through a reader that hands each out ONCE: an event is new if nothing of
+  its kind, hen and goon was rung within eight ticks of it, which covers both the same event in
+  the next fifty frames and the server's frame putting it a tick or two off the screen's own
+  stepped copy. A screen that first sees a fight already under way rings only the last twelve
+  ticks of it.
+- **Two cues are new**: `down` (a falling whistle and a thump) and `revive` (four notes climbing).
+  §0.8 said "through the existing cue table", and the table had no voice for either; they are the
+  two sounds a teammate most needs. `drop` rings nothing (the goon's fall is its sound).
+- **Five cues are not events and are read off the change between two frames**: a beak coming out
+  (`peck`), a goon starting its telegraph (`honk`, lowest for the boss; `hiss` for a swan), the
+  boss stepping on, the camera letting go (`go`), and each ending (`handoff` for a clear, `bay`,
+  `bell`). The first frame a screen sees of a fight rings none of them.
+
+*What was deleted.* The relay's leftover client: `BrawlScene` (its index, `Hen`, `RelayMates`,
+`GoonLayer`, `camera`, `goonDepth`), `useBrawlBlock`, `useHenFigure`, `mirrorEvents`,
+`goonsTally`, `hearts`, `HeartRow`, and the relay's `waveMeter` (rewritten in place for the crew
+frame). That is most of step 8's "leftover scene files"; the relay's SIM in `packages/shared`
+is untouched, and so are `brawl-spec.md` and the README row.
+
+**The frame rate, measured** (§0.8's "measure before and after"). Five brawler bots on block
+three (Centennial Beach) with the real reducer as the server in the page, the real
+`DisplayBrawlSurface` at 1920×1080, fifteen seconds a run, interim and finished alternated back to
+back, in real Chrome on the laptop's own GPU (Apple M1 Pro, Metal), CPU throttled by DevTools to
+stand in for a slower device:
+
+| CPU throttle | | Frames a second | Frames over 33 ms | Main thread, share of a core | of which script | of which style |
+|---|---|---|---|---|---|---|
+| none | interim | 60 | 0 | 21–22% | 13–14% | 1.5% |
+| none | finished | 60 | 0 | 15–16% | 5% | 3% |
+| 4× | interim | 60 | 0 | 78–84% | 50–54% | 6% |
+| 4× | finished | 60 | 0–2 of 900 | 56% | 18% | 12% |
+| 6× | interim | 55–57 | 7–14 of 850 | 97% | 58% | 7% |
+| 6× | finished | 48–56 | 10–51 of 720–820 | 83–88% | 27–29% | 17–20% |
+
+- **The wall holds sixty** with five hens and up to ten goons on the street, before and after, and
+  the finished scene does it on about a quarter less of a core, with every storefront, lamp and
+  hazard drawn. Headless Chrome's own vsync is 60 Hz; the laptop's panel is 120 and that was not
+  measured.
+- **The interim scene was already holding.** By the task's own rule ("move to refs if it does not
+  hold") the refs were not strictly owed for the TV. They were built because the interim scene
+  left a fifth of a core at 4× and nothing at 6×, and the host's Android tablet is the slow
+  device; at 4× the finished scene has twice the room.
+- **At 6× neither holds, and the finished scene is no better there.** Its script is half the
+  interim's but its style recalculation is nearly three times it, and taking the backdrop or the
+  chrome out of the page did not move that number — so it is in the figure layer. The likeliest
+  cause is showing a hen's pose by toggling `display` on six mounted figures where the interim
+  re-rendered one; **that is a guess and was not tested.** If the tablet stutters at a table, try
+  that first.
+- **Playwright's own headless shell is the wrong instrument for this scene.** It has no GPU
+  (`WEBGL` reports none) and composites in software, where three large layers cost more than one:
+  there the finished scene ran at 84–99 frames a second against the interim's 119, the opposite
+  of what the GPU shows. An evening of numbers was taken that way before this was understood, on
+  a machine other sessions had loaded to a load average of 28–46, and none of them are quoted
+  here. Two "findings" from that evening — that the meter's backdrop blur and the block's enter
+  animation each cost twenty frames a second — did not survive an alternated A/B and are NOT
+  claimed. The blur is off the wall's plates anyway, for the lobby's reason; the enter animation
+  is filled backwards so it holds nothing.
+- The harness is not in the repo. It is in the session's notes folder
+  (`brawl-wall-perf-harness/`), with how to run it.
+
+**Not verified — nobody has seen this on the real hardware.**
+
+- **Real phones on the party Wi-Fi**, and so the eight-way stick, the 192×108 window and the 0.6
+  crew scaling. Nothing here retuned any of them.
+- **The Android host tablet as monitor.** The 4× and 6× rows above are a laptop pretending.
+- **Real costume heads.** The harness's hens had no generated heads; a head is an `<img>` in the
+  chip and an `<image>` with a halo filter on the bird, and five of those moving were not timed.
+- **The sound, by ear.** Every cue is pinned to fire once by test; none of it has been listened
+  to on the TV's speakers over a playlist, and `BRAWL_MASTER_GAIN` and the two new voices are
+  untuned. The pack has no recorded takes for `down` or `revive`.
+- **A crew of five on the wall for real**: the strip at five to eight chips beside a long team
+  name, seventeen pips in the meter, and five names over five hens in one colour (principles 21).
+  Seen only in a headless screenshot with a crew of five bots that stand on top of each other.
+- **A timeout.** The bell's beat is pinned by unit test and was not watched: a block takes ninety
+  seconds to time out and no e2e waits for one.
+
+**Still to do.** Step 6 (tablet mode and the teaser's solo game work, and got the real street
+and its sound for free, but were not polished or re-checked on the teaser build — **still do not
+deploy the teaser from this branch without looking**); step 7 (pads you can add in the sandbox —
+its e2e is still one hen on the tablet, plus the two-phone test in `contestant-phones.spec.ts`);
+step 8 (the relay's sim, `brawl-spec.md`, the README row, the principles' worked example); step 9.
 
 ## 1) Principles check (docs/minigame-design-principles.md §11)
 

@@ -15,6 +15,8 @@ export const displayBrawlSurfaceCopy = {
   tally: (banked: number, total: number): string => `${banked} / ${total}`,
   tallyLabel: "Worth",
   blockCounter: (blockNumber: number, blocksTotal: number): string => `Block ${blockNumber} of ${blocksTotal}`,
+  best: (banked: number, total: number, teamName: string | null): string =>
+    `To beat ${Math.round((banked / Math.max(1, total)) * 100)}%${teamName === null ? "" : ` · ${teamName}`}`,
   // Block one on the line: the room watches the team assemble.
   steppingOut: (out: number, names: readonly string[]): string => {
     if (out === 0) {
@@ -25,10 +27,10 @@ export const displayBrawlSurfaceCopy = {
   },
   nextBlock: (outcome: BrawlCrewOutcome | null): string =>
     outcome === null ? "Next block — first thumb starts it" : `${OUTCOME_LINES[outcome]} First thumb starts the next block.`,
-  running: (wave: number, waves: number): string => `Wave ${Math.min(wave, waves)} of ${waves}`,
-  walkOn: "GO — walk on",
+  // The one verb line, under the street for the whole fight (principles §11, 15).
+  verbs: "Left thumb walks · right thumb pecks · stand over a fallen friend",
   finishedPrompt: "That's the team's street.",
-  finishedTitle: "Street clear",
+  finishedTitle: (banked: number, total: number): string => (banked >= total ? "Clean streets!" : "Off the street"),
   finishedBlurb: (banked: number, total: number): string => `${banked} of ${total} worth`,
   points: (points: number): string => `+${points}`
 } as const;

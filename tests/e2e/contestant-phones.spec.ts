@@ -414,6 +414,11 @@ test("does put a whole team on the street at once, each on their own phone, in S
   await expect(crewPad(second.page)).toHaveAttribute("data-crew-pad-slot", "0");
   await expect(wall.locator("[data-brawl-hen]")).toHaveCount(1);
   await expect(displayPage.locator("[data-brawl-status]")).toContainText("waiting on");
+  // The ready beat names who is out and who is not, and the crew strip has her hen in it.
+  await expect(displayPage.locator("[data-brawl-ready='phones']")).toHaveAttribute("data-brawl-ready-out", "1");
+  await expect(displayPage.locator(`[data-brawl-ready-player='${secondPlayerId}']`)).toHaveAttribute("data-out", "true");
+  await expect(displayPage.locator(`[data-brawl-ready-player='${firstPlayerId}']`)).toHaveAttribute("data-out", "false");
+  await expect(displayPage.locator("[data-brawl-crew-strip]")).toHaveAttribute("data-brawl-crew-strip", "1");
 
   await first.page.locator("[data-brawl-step-out]").click();
   await expect(crewPad(first.page)).toHaveAttribute("data-crew-pad-slot", "1");
@@ -424,6 +429,16 @@ test("does put a whole team on the street at once, each on their own phone, in S
   await hostPage.locator("[data-brawl-start]").click();
   await expect(hostPage.locator("[data-brawl-street-mode]")).toHaveAttribute("data-brawl-street-mode", "monitor");
   await expect(crewPad(first.page)).toHaveAttribute("data-crew-pad-status", "running");
+
+  // The wall is the game: the real street, each hen's chip with her hearts, and the wave's count
+  // furnished for a crew of two. The tablet mirrors the street and carries none of the wall's extras.
+  await expect(wall).toHaveAttribute("data-brawl-setting", "dunlop");
+  await expect(displayPage.locator("[data-brawl-ready]")).toHaveCount(0);
+  await expect(displayPage.locator("[data-brawl-crew-chip]")).toHaveCount(2);
+  await expect(displayPage.locator("[data-brawl-crew-chip='0']")).toHaveAttribute("data-hearts", "3");
+  await expect(displayPage.locator("[data-brawl-wave-meter]")).toHaveAttribute("data-brawl-wave-size", "5");
+  await expect(hostPage.locator("[data-brawl-wave-meter]")).toHaveCount(0);
+  await expect(hostPage.locator("[data-brawl-street-mode] [data-brawl-hen]")).toHaveCount(2);
 
   // Each thumb moves its own hen on the TV, at the same time: the first player (slot 1) walks
   // down the street while the second (slot 0) walks up it.

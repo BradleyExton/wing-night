@@ -11,8 +11,8 @@ import {
 
 /**
  * BRAWL's soundboard: the street's noises, as a table of voices for the house board
- * (`@wingnight/audio`). The TV's board, never the tablet's: the display is the room's speaker
- * (the tablet only sounds when it is the whole game, `solo`). Everything here is best-effort and
+ * (`@wingnight/audio`). The TV's board, never a phone's and never the tablet's beside a TV: the
+ * display is the room's speaker (the tablet only sounds when it is the whole game, `solo`). Everything here is best-effort and
  * silent when it cannot sound.
  */
 export type BrawlCueName =
@@ -27,6 +27,8 @@ export type BrawlCueName =
   | "splash"
   | "bump"
   | "wing"
+  | "down"
+  | "revive"
   | "go"
   | "clean"
   | "handoff"
@@ -46,6 +48,8 @@ export const BRAWL_CUE_NAMES: readonly BrawlCueName[] = [
   "splash",
   "bump",
   "wing",
+  "down",
+  "revive",
   "go",
   "clean",
   "handoff",
@@ -84,6 +88,10 @@ export const BRAWL_CUE_MIN_GAP_MS: Record<BrawlCueName, number> = {
   splash: 300,
   bump: 120,
   wing: 400,
+  // A hen going down and a hen getting up are each a moment the whole room should hear, and two
+  // of them a breath apart are two moments.
+  down: 350,
+  revive: 350,
   go: 900,
   clean: 900,
   handoff: 900,
@@ -199,6 +207,22 @@ const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
     playTone(rig, { startAt: startAt + 0.16, durationSeconds: 0.1, type: "triangle", fromHz: 988, peak: 0.22 });
     playTone(rig, { startAt: startAt + 0.25, durationSeconds: 0.22, type: "triangle", fromHz: 1480, peak: 0.24 });
   },
+  // A hen is out of hearts: a whistle falling away and the thump of her landing on her back. The
+  // one sound a teammate has to hear over everything else, so it is the longest of the hits.
+  down: (rig, startAt) => {
+    playTone(rig, { startAt, durationSeconds: 0.42, type: "triangle", fromHz: 1100, toHz: 180, peak: 0.3 });
+    playTone(rig, { startAt: startAt + 0.38, durationSeconds: 0.22, type: "sine", fromHz: 120, toHz: 46, peak: 0.5 });
+    playNoise(rig, { startAt: startAt + 0.38, durationSeconds: 0.12, peak: 0.34, filterType: "lowpass", fromHz: 900, toHz: 220 });
+  },
+  // A teammate stood over her and she is up: four quick notes climbing, the last one held.
+  revive: (rig, startAt) => {
+    for (const [index, hz] of [523, 659, 784].entries()) {
+      playTone(rig, { startAt: startAt + index * 0.07, durationSeconds: 0.09, type: "triangle", fromHz: hz, peak: 0.22 });
+    }
+
+    playTone(rig, { startAt: startAt + 0.21, durationSeconds: 0.34, type: "triangle", fromHz: 1047, peak: 0.26 });
+    playTone(rig, { startAt: startAt + 0.21, durationSeconds: 0.28, type: "sine", fromHz: 2094, peak: 0.06 });
+  },
   // A bowled goon landing: a dull thud, lower and shorter than the fall, with no twinkle — it is
   // down for a moment, not for good.
   bump: (rig, startAt) => {
@@ -221,7 +245,7 @@ const CUE_VOICES: Record<BrawlCueName, CueVoice> = {
     playTone(rig, { startAt: at + 0.12, durationSeconds: 0.36, type: "triangle", fromHz: 2637, peak: 0.24 });
     playTone(rig, { startAt: at + 0.12, durationSeconds: 0.3, type: "sine", fromHz: 5274, peak: 0.05 });
   },
-  // The tablet changes hands: three notes up, the last held.
+  // Block clear: three notes up, the last held. (The relay rang it as the tablet changed hands.)
   handoff: (rig, startAt) => {
     playTone(rig, { startAt, durationSeconds: 0.1, type: "triangle", fromHz: 659, peak: 0.26 });
     playTone(rig, { startAt: startAt + 0.09, durationSeconds: 0.1, type: "triangle", fromHz: 880, peak: 0.26 });
