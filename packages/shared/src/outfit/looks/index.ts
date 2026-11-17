@@ -95,7 +95,7 @@ export const OUTFIT_LOOKS: Record<OutfitGenre, readonly OutfitLook[]> = {
         top: { item: "western-yoke-b" },
         sleeve: { item: "suede-sleeve-a", style: "ink" },
         prop: { item: "acoustic-guitar-a", style: "white" },
-        stage: { item: "sawdust-ring-b" }
+        stage: { item: "sawdust-ring-a" }
       }
     },
     {
@@ -103,7 +103,7 @@ export const OUTFIT_LOOKS: Record<OutfitGenre, readonly OutfitLook[]> = {
       name: "Farmhand",
       outfit: {
         top: { item: "bandana-b", style: "white" },
-        prop: { item: "lasso-c", style: "ink" },
+        prop: { item: "lasso-b", style: "ink" },
         stage: { item: "egg-nest-a" }
       }
     }
@@ -131,7 +131,7 @@ export const OUTFIT_LOOKS: Record<OutfitGenre, readonly OutfitLook[]> = {
       id: "roller",
       name: "Roller",
       outfit: {
-        top: { item: "open-shirt-c" },
+        top: { item: "open-shirt-b" },
         boots: { item: "roller-skates-a", style: "white" },
         prop: { item: "vinyl-b" }
       }

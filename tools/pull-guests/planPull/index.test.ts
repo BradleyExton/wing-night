@@ -285,9 +285,9 @@ test("does match an accented guest to a plain-spelled player when the names fold
   ]);
 });
 
-const ROB_METAL: OutfitsByGenre = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a", style: "gold" } } };
+const ROB_METAL: OutfitsByGenre = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-b", style: "gold" } } };
 
-const ROB_POP = { pop: { top: { item: "crop-jacket-a" } } };
+const ROB_POP = { pop: { top: { item: "crop-jacket-b" } } };
 
 test("does keep a genre Brad dressed by hand when the guest's outfits do not carry it", () => {
   const playersFile = { players: [{ name: "Rob", outfits: ROB_POP }] };
@@ -306,7 +306,7 @@ test("does replace every genre the guest carries, and only those, when the guest
     players: [
       {
         name: "Rob",
-        outfits: { ...ROB_POP, metal: { top: { item: "battle-vest-b" } }, country: {}, disco: { tail: { item: "tinsel-a" } } }
+        outfits: { ...ROB_POP, metal: { top: { item: "biker-jacket-a" } }, country: {}, disco: { tail: { item: "tinsel-a" } } }
       }
     ]
   };

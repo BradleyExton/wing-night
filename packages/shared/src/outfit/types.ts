@@ -37,7 +37,7 @@ export type OutfitGenre = (typeof OUTFIT_GENRES)[number];
 export type OutfitRail = OutfitGenre | "shared";
 
 export type OutfitItem = {
-  /** Permanent, kebab: `flying-v-a`. */
+  /** Permanent, kebab: `flying-v-b`. */
   id: string;
   slot: OutfitSlot;
   genre: OutfitRail;

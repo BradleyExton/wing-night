@@ -85,7 +85,7 @@ test("does set the Prop down on the body while the wing is flipped and hand it b
 
 test("does play the Prop's own keyframes on its layer while a Move plays", () => {
   const html = renderToStaticMarkup(
-    <Character appearance={{ ...drawn, outfit: { prop: { item: "flying-v-a" } } }} showpieces move="chicken-dance" />
+    <Character appearance={{ ...drawn, outfit: { prop: { item: "flying-v-b" } } }} showpieces move="chicken-dance" />
   );
   const prop = html.indexOf('data-outfit-slot="prop"');
   const layer = html.lastIndexOf('<g data-character-part="wing"', prop);

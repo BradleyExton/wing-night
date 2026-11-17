@@ -36,7 +36,7 @@ const saveOutfit = (portal: TestPortal, cookie: string, body: unknown): Promise<
 const THRASH = {
   top: { item: "battle-vest-a" },
   sleeve: { item: "leather-sleeve-a", style: "ink" },
-  prop: { item: "flying-v-a", style: "gold" }
+  prop: { item: "flying-v-b", style: "gold" }
 } as const;
 
 const readMe = async (portal: TestPortal, cookie: string): Promise<PortalMe> =>
@@ -369,7 +369,7 @@ test("does refuse with outfit_invalid and write nothing when the outfit is not o
     { top: { item: "no-such-thing" } },
     { sleeve: { item: "battle-vest-a" } },
     { tail: { item: "tinsel-a" } },
-    { prop: { item: "flying-v-a", style: "team" } },
+    { prop: { item: "flying-v-b", style: "team" } },
     { top: "battle-vest-a" }
   ]) {
     const response = await saveOutfit(portal, cookie, { genre: "metal", outfit });

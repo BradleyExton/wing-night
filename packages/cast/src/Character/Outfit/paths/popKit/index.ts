@@ -6,14 +6,14 @@ import { resolveCharacterStockTail } from "../../../shapes/index.js";
 // and wing paths (for clips and restrokes), the tail's (fan or plume), the
 // style, and a boot's leg.
 
-// The track top's panel, shared by tracksuit-top a and b: the chest and front
+// The track top's panel (tracksuit-top b): the chest and front
 // from under the wing's front edge, back under the wing to a hem at y ≈58.
 export const TRACK_TOP_PANEL =
   "M 46.5 37 C 50 40 51.5 46 46.5 52 L 38 54.6 L 30 57 L 30 60.5 L 64 58.5 L 72 58.5 L 72 37 Z";
 
 // `BOW`: a bow in local units, centred on its knot, 17 wide: two loops pinched
 // at the knot and two ribbon ends hanging below it. little-black-dress b ties
-// it at the waist, big-bow a and b on the fan.
+// it at the waist, big-bow b on the fan.
 export const BOW =
   "M -1.5 -1.6 C -4 -6.5 -8.5 -6.8 -8.5 -2.6 L -8.5 2.6 C -8.5 6.6 -4 6.4 -1.5 1.6 Z M 1.5 -1.6 C 4 -6.5 8.5 -6.8 8.5 -2.6 L 8.5 2.6 C 8.5 6.6 4 6.4 1.5 1.6 Z M -2.4 -2.8 L 2.4 -2.8 L 2.1 2.8 L -2.1 2.8 Z M -1.2 1.8 L -5.5 10 L -3 9.4 L -1.6 11.6 L 1.2 2.4 Z M 1.2 1.8 L 5.5 10 L 3 9.4 L 1.6 11.6 L -1.2 2.4 Z";
 
@@ -25,8 +25,6 @@ export const BOW =
 // middle tip (2, 20) to the lower sickle's (6, 16). The fan is the harness's
 // bird, so it stays exactly as drawn.
 export const PLUME_TOP_TIP_SHIFT = "translate(1 -8)";
-
-export const PLUME_MIDDLE_TIP_SHIFT = "translate(4 -4)";
 
 /** Whether a pop Tail is being worn on the plume rather than the fan. */
 export const isOnPlume = (tail: string): boolean => resolveCharacterStockTail(tail) === "plume";

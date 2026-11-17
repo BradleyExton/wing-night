@@ -10,7 +10,7 @@ import { ensureSetupPhase } from "./hostShell";
 // moves them.
 const ALEX_KIT = {
   top: "battle-vest-a",
-  sleeve: "flame-sleeve-a",
+  sleeve: "flame-sleeve-b",
   tail: "chain-loop-b",
   boots: "combat-boots-a"
 } as const;
@@ -38,11 +38,11 @@ test("does dress a hand-dressed bird in the lobby parade, kit and showpieces bot
   // Boots on both legs; the parade is a showpiece surface, so the Prop is in
   // the wing and the Stage lies on the floor in the shadow pool's place.
   await expect(alex.locator('[data-outfit-slot="boots"]')).toHaveCount(2);
-  await expect(alex.locator('[data-outfit-slot="prop"]')).toHaveAttribute("data-outfit-item", "flying-v-a");
+  await expect(alex.locator('[data-outfit-slot="prop"]')).toHaveAttribute("data-outfit-item", "flying-v-b");
   await expect(alex.locator('[data-outfit-slot="prop"]')).toHaveAttribute("data-outfit-style", "white");
   await expect(alex.locator('[data-character-stage] [data-outfit-slot="stage"]')).toHaveAttribute(
     "data-outfit-item",
-    "lava-disc-a"
+    "lava-disc-c"
   );
 
   // Nobody else in the sample pack is dressed.

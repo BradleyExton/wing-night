@@ -223,7 +223,7 @@ const dressedAppearance = {
   ...drawnAppearance,
   outfit: {
     top: { item: "battle-vest-a" },
-    sleeve: { item: "flame-sleeve-a" },
+    sleeve: { item: "flame-sleeve-b" },
     tail: { item: "chain-loop-b" },
     boots: { item: "combat-boots-a" }
   }
@@ -267,7 +267,7 @@ test("does draw the whole stack once between the two slices, wing aside", () => 
 });
 
 test("does leave the showpieces' Prop off both slices and the Stage on the one under the wing", () => {
-  const outfit = { ...dressedAppearance.outfit, prop: { item: "flying-v-a" }, stage: { item: "lava-disc-a" } };
+  const outfit = { ...dressedAppearance.outfit, prop: { item: "flying-v-b" }, stage: { item: "lava-disc-c" } };
   const under = renderToStaticMarkup(
     <Character appearance={{ ...dressedAppearance, outfit }} silhouette="spiky" layer="underWing" showpieces />
   );

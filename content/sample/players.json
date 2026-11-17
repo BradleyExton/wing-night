@@ -6,11 +6,11 @@
       "outfits": {
         "metal": {
           "top": { "item": "battle-vest-a" },
-          "sleeve": { "item": "flame-sleeve-a" },
+          "sleeve": { "item": "flame-sleeve-b" },
           "tail": { "item": "chain-loop-b" },
           "boots": { "item": "combat-boots-a" },
-          "prop": { "item": "flying-v-a", "style": "white" },
-          "stage": { "item": "lava-disc-a" }
+          "prop": { "item": "flying-v-b", "style": "white" },
+          "stage": { "item": "lava-disc-c" }
         }
       }
     },

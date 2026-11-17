@@ -26,8 +26,8 @@ test("gives every catalogue item a unique kebab id", () => {
   assert.ok(ids.every((id) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)));
 });
 
-test("holds the 132 tiles Gate 1 kept", () => {
-  assert.equal(OUTFIT_ITEMS.length, 132);
+test("holds one tile per idea: 63 drawn items and the Moves", () => {
+  assert.equal(OUTFIT_ITEMS.length, 72);
   assert.equal(OUTFIT_ITEMS.filter((item) => item.slot === "move").length, 9);
 });
 
@@ -68,13 +68,13 @@ test("dresses every Look in items its own genre can wear", () => {
 });
 
 test("accepts a valid outfit as written when parsing strictly", () => {
-  const outfit = { top: { item: "battle-vest-b" }, prop: { item: "flying-v-a", style: "gold" } };
+  const outfit = { top: { item: "biker-jacket-a" }, prop: { item: "flying-v-b", style: "gold" } };
 
   assert.deepEqual(parseOutfit("metal", outfit), outfit);
 });
 
 test("refuses the whole outfit when one choice is wrong", () => {
-  assert.equal(parseOutfit("metal", { top: { item: "battle-vest-b" }, sleeve: { item: "nope" } }), null);
+  assert.equal(parseOutfit("metal", { top: { item: "biker-jacket-a" }, sleeve: { item: "nope" } }), null);
 });
 
 test("refuses an item from another genre's rail", () => {
@@ -105,8 +105,8 @@ test("keeps what it recognises and drops the rest when wearing tolerantly", () =
     {
       top: { item: "battle-vest-a" },
       sleeve: { item: "a-cut-sleeve" },
-      boots: { item: "bandana-a" },
-      hat: { item: "flying-v-a" }
+      boots: { item: "bandana-b" },
+      hat: { item: "flying-v-b" }
     },
     (issue) => dropped.push(issue.path)
   );
@@ -139,7 +139,7 @@ test("wears nothing quietly when there is no outfit at all", () => {
 });
 
 test("finds an item by its id", () => {
-  assert.equal(findOutfitItem("flying-v-a")?.slot, "prop");
+  assert.equal(findOutfitItem("flying-v-b")?.slot, "prop");
   assert.equal(findOutfitItem("flying-v"), undefined);
 });
 
@@ -152,7 +152,7 @@ test("reports a pack outfit map's bad genre, slot and choice by path", () => {
     pathsOf(
       validateOutfitsByGenre({
         Metal: {},
-        pop: { Top: { item: "crop-jacket-a" }, sleeve: "puff-sleeve-a", tail: { item: "big-bow-a", style: "pink" } }
+        pop: { Top: { item: "crop-jacket-b" }, sleeve: "puff-sleeve-a", tail: { item: "big-bow-b", style: "pink" } }
       })
     ),
     ["Metal", "pop.Top", "pop.sleeve", "pop.tail.style"]

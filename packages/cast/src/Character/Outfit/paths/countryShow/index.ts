@@ -106,25 +106,3 @@ export const huskSheathPaths = (
   };
   return [leaf(1), leaf(-1)];
 };
-
-// The two white husk leaves hugging a cob's sides (left of the axis first),
-// each from the base to `reach` along it, its outer edge flaring `flare` out.
-export const huskLeafPaths = (
-  p0: Point,
-  p1: Point,
-  dims: CobDims,
-  reach: number,
-  flare: number,
-  overlap: number
-): [string, string] => {
-  const { at, width } = cobFrame(p0, p1, dims);
-  const half = (t: number): number => width(t) / 2;
-  const leaf = (s: number): string => {
-    const b0 = at(0.02, s * half(0.02) * 0.2);
-    const tip = at(reach, s * (half(reach) + flare * 0.9));
-    const outer = at(reach * 0.45, s * (half(reach * 0.45) + flare * 1.3));
-    const inner = at(reach * 0.55, s * (half(reach * 0.55) - overlap));
-    return `M ${pt(b0)} Q ${pt(outer)} ${pt(tip)} Q ${pt(inner)} ${pt(b0)} Z`;
-  };
-  return [leaf(1), leaf(-1)];
-};

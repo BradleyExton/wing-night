@@ -187,7 +187,7 @@ test("does keep a dressed shooter's Top and head over the wing it reaches with",
   const html = render({
     figure: {
       ...FIGURE,
-      outfit: { top: { item: "battle-vest-a" }, sleeve: { item: "flame-sleeve-a" } }
+      outfit: { top: { item: "battle-vest-a" }, sleeve: { item: "flame-sleeve-b" } }
     },
     facing: 1,
     wingAimAt: { x: 60, y: 76.4 - 6 }

@@ -127,14 +127,14 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
   await expectSaved(page);
   await expect(page.locator('[data-testid="wardrobe-look"][data-look="thrash"]')).toHaveAttribute("aria-pressed", "false");
   await openTab(page, "tail");
-  await tile(page, "lava-tips-a").click();
+  await tile(page, "lava-tips-b").click();
   await expect(status(page)).toHaveText("Lava tips.");
   await expectSaved(page);
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "wardrobe-metal-390x844.png"), fullPage: true });
 
   // A reload reads it back from the Worker, gold Flying V and all.
   await page.reload();
-  expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "lava-tips-a", "leather-sleeve-a"]);
+  expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "lava-tips-b", "leather-sleeve-a"]);
   await openTab(page, "prop");
   await expect(page.locator('[data-testid="wardrobe-style"][data-style="gold"]')).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("wardrobe-team").scrollIntoViewIfNeeded();
@@ -160,7 +160,7 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
   await page.getByTestId("your-bird-card").scrollIntoViewIfNeeded();
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "wardrobe-me-card-390x844.png") });
   await page.goto("/me/wardrobe");
-  expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "lava-tips-a", "leather-sleeve-a"]);
+  expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "lava-tips-b", "leather-sleeve-a"]);
 
   // Stripping the bird bare: None on every filled slot.
   for (const slot of ["top", "sleeve", "tail", "boots", "prop"]) {
@@ -185,7 +185,7 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
         {
           name: "Rob",
           team: metalTeam,
-          outfits: { metal: { top: { item: "battle-vest-b" } }, pop: { prop: { item: "star-mic-a" } } }
+          outfits: { metal: { top: { item: "biker-jacket-a" } }, pop: { prop: { item: "star-mic-a" } } }
         }
       ]
     },
@@ -292,7 +292,6 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
   await signIn(page, await mintLinkPath(bradPage, robId));
 
   const genres: string[] = [];
-  const stuckGenres: string[] = [];
 
   for (const teamName of links.teams) {
     await seat(bradPage, robId, teamName);
@@ -373,7 +372,8 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
 
     // The tabs stick to the top of the screen while the grid scrolls under them: on the longest
     // grid, scrolled until the rail's head is off the screen, the tabs are not. A rail too short
-    // to scroll that far never needs them to.
+    // to scroll that far never needs them to, and since the catalogue went to one tile per idea
+    // (at most seven tiles a tab) none is that long at 844px, so no genre is required to stick.
     await page.locator(`[data-testid="wardrobe-tab"][data-slot="${longestSlot.slot}"]`).click();
     await page.evaluate(() => {
       const rail = document.querySelector('[data-testid="wardrobe-rail"]');
@@ -382,7 +382,6 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
 
     if (((await page.getByTestId("wardrobe-rail").boundingBox())?.y ?? 0) < 0) {
       expect(Math.round((await page.getByRole("tablist").boundingBox())?.y ?? -1), `${genre} tabs stick`).toBe(0);
-      stuckGenres.push(genre);
     }
 
     // A Move tapped on the stage plays, on the page's beat, and the bird goes back to its idle.
@@ -405,7 +404,6 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
 
   // Every genre the wardrobe draws a body for: the three silhouettes and pop's stock bird.
   expect([...genres].sort()).toEqual(["country", "disco", "metal", "pop"]);
-  expect(stuckGenres.length, "a rail long enough to need its tabs to stick").toBeGreaterThan(0);
   expect(errors).toEqual([]);
   await brad.close();
 });

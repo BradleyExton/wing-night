@@ -45,38 +45,3 @@ export const frontEdge = (y0: number, y1: number, inset = 0.6): string => {
   out.push(`L ${frontX(y1, inset)} ${f1(y1)}`);
   return out.join(" ");
 };
-
-type Point = readonly [number, number];
-
-const cubic = (p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point => {
-  const u = 1 - t;
-  return [
-    u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
-    u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]
-  ];
-};
-
-const quad = (p0: Point, p1: Point, p2: Point, t: number): Point => {
-  const u = 1 - t;
-  return [u * u * p0[0] + 2 * u * t * p1[0] + t * t * p2[0], u * u * p0[1] + 2 * u * t * p1[1] + t * t * p2[1]];
-};
-
-// The broody wing's lower outline, sampled off its path, back tip to front
-// point: C (27,43)(26,47)(28,50)(31,51) · Q (35,47)(39,50) · C (45,47)(49,41)(47,36).
-const wingLow = (): Point[] => {
-  const out: Point[] = [];
-  for (let i = 0; i <= 40; i += 1) out.push(cubic([27, 43], [26, 47], [28, 50], [31, 51], i / 40));
-  for (let i = 1; i <= 40; i += 1) out.push(quad([31, 51], [35, 47], [39, 50], i / 40));
-  for (let i = 1; i <= 40; i += 1) out.push(cubic([39, 50], [45, 47], [49, 41], [47, 36], i / 40));
-  return out;
-};
-
-/**
- * The harness's fringe-sleeve cuff: the wing's trailing edge below the line
- * from its front point to its back tip, and the same edge lifted 3.2, closed.
- */
-export const trailingCuff = (): string => {
-  const edge = wingLow().filter(([x, y]) => y >= 35 + ((45 - 35) * (x - 47)) / (26.9 - 47) - 0.5);
-  const top = edge.map(([x, y]) => `${f1(x)} ${f1(y - 3.2)}`).reverse();
-  return `M ${edge.map(([x, y]) => `${f1(x)} ${f1(y)}`).join(" L ")} L ${top.join(" L ")} Z`;
-};
