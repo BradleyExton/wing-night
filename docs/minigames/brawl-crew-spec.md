@@ -32,8 +32,9 @@ its rules, the hazards, the wing drop, the wave lock, worth-not-count scoring, t
 
 ### 0.2 What the prototype settled
 
-`/dev/lab/brawl-street` and `/dev/lab/brawl-pad` (`apps/client/src/components/BrawlProtoLab`,
-throwaway, on branch `claude/streets-barrie-multiplayer-e06c9e`). Brad played it on 2026-11-16.
+`/dev/lab/brawl-street` and `/dev/lab/brawl-pad`: a throwaway prototype, since removed — it is in
+the history at commit `fbce4b18` (`apps/client/src/components/BrawlProtoLab`, and a relay in
+`apps/server/src/socketServer/protoBrawlPad`). Brad played it on 2026-11-16.
 
 - **Free 2-D movement, not three lanes (Brad).**
 - **The lag is fine as it is (Brad).** The prototype relays a pad's state through the server to
@@ -346,8 +347,8 @@ minigame `.tsx` or `tests/e2e` change (CLAUDE.md). Steps 1–3 touch no surface.
 7. **E2E and the sandbox.** `/dev/minigame/brawl` grows pads you can add (keyboard-driven, and
    a bot hen on a button, MOUNT's precedent); `tests/e2e/brawl-sandbox.spec.ts` is rewritten.
 8. **Docs and the clean-up.** Fold this file into `brawl-spec.md` as built; README row;
-   `DESIGN.md` §2.14; the principles' worked example; delete `BrawlProtoLab`, the server's
-   `protoBrawlPad`, its two launch entries and `VITE_PROTO_BRAWL_SERVER_PORT`.
+   `DESIGN.md` §2.14; the principles' worked example; delete the relay's sim and its leftover
+   scene files. (The prototype is already gone: removed 2026-11-17, before the merge to main.)
 9. **A table.** Five real phones on the party Wi-Fi and the real TV. §4's tuning list.
 
 ### 0.9 Tests that pin it

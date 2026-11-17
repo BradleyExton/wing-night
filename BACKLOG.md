@@ -136,12 +136,11 @@ every `Record<MinigameType, …>` in the repo until fully wired, so there's no t
 
 ### Streets of Barrie — the whole team at once
 
-Drafted 2026-11-16, not built: [docs/minigames/brawl-crew-spec.md](docs/minigames/brawl-crew-spec.md).
+Drafted 2026-11-16, part built: [docs/minigames/brawl-crew-spec.md](docs/minigames/brawl-crew-spec.md).
 The relay becomes every player on the active team on the street together, each on their own phone
 as a gamepad, with up and down movement, teammate revives, and the server sequencing everyone's
-inputs. Its §0.8 is the order of work and its §4 lists what Brad still has to confirm. The controls
-prototype it rests on is throwaway (`/dev/lab/brawl-street`, `/dev/lab/brawl-pad`) and is deleted
-in that spec's step 8.
+inputs. Steps 1–3 and the phones' half of step 5 are built (its §0.10): it plays end to end on
+interim art. Its §0.8 is the order of work and its §4 lists what Brad still has to confirm.
 
 ### Streets of Barrie — depth pass
 

@@ -33,7 +33,6 @@ import type { TokenBucket } from "../utils/tokenBucket/index.js";
 import { createTrailingCoalescer } from "../utils/trailingCoalescer/index.js";
 import { registerPlayerHandlers, resolvePlayerRoom } from "./registerPlayerHandlers/index.js";
 import { resolveContestantHostViewDelivery } from "./contestantHostView/index.js";
-import { attachProtoBrawlPadRelay } from "./protoBrawlPad/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
 import { createSeatGuard, type SeatedSocketData } from "./seatGuard/index.js";
 
@@ -120,10 +119,6 @@ export const attachSocketServer = (
       threshold: 1024
     }
   });
-
-  // PROTOTYPE — throwaway (`./protoBrawlPad`): the four-at-once BRAWL controls lab's relay, on
-  // a namespace of its own that the seat guard below never sees.
-  attachProtoBrawlPadRelay(socketServer as unknown as Server);
 
   // Every seat is decided here, before a connection exists: HOST is the
   // laptop itself or the host control token, PLAYER is the current join token,
