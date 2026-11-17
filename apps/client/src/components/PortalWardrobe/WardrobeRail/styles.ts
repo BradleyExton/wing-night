@@ -29,9 +29,6 @@ export const none = "text-[0.72rem] font-extrabold uppercase tracking-[0.14em] t
 export const moveName =
   "pointer-events-none absolute inset-x-0 bottom-1 truncate px-1 text-center text-[0.62rem] font-bold text-text [text-shadow:0_1px_2px_theme(colors.shade)]";
 
-export const shared =
-  "pointer-events-none absolute bottom-1 left-1.5 text-[0.5rem] font-bold uppercase tracking-[0.14em] text-mutedWarmDim";
-
 export const styleRow = "flex items-center gap-2";
 
 const swatchBase =

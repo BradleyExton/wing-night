@@ -259,8 +259,7 @@ tabs. `/me/wardrobe` is now one scrolling page:
 
 1. **The stage, pinned.** The bird sticks to the top of the screen (on a screen at least 520px
    tall), so a tap anywhere on the page shows on it. It is shorter than it was (28svh, down from
-   40svh) to leave the page room. The status line sits under it, held to two lines, with the
-   TV-size pill beside it instead of over the bird.
+   40svh) to leave the page room. The status line sits under it, held to two lines.
 2. **Looks.** Two across, each the guest's own bird wearing the whole Look, with its name under
    it. The dice takes the cell an odd number of Looks leaves, or a bar under an even number.
 3. **Mix your own.** Every slot under its own heading, kit first and showpieces after, each group
@@ -271,6 +270,19 @@ tabs. `/me/wardrobe` is now one scrolling page:
 Nothing about the data or the saves changed. This departs from `mockups/cast/wardrobe-picker.html`
 (a Looks row and slot tabs), which was not redrawn. Screenshots are in
 `docs/screenshots/wardrobe/one-page/`.
+
+## Page chrome stripped (2026-11-16)
+
+Cut from `/me/wardrobe`, as things a guest does not need to dress a bird:
+
+- **The TV-size pill** and its 130px and 76px previews. It was a way to judge an item's
+  legibility, which is a design question; the harness still answers it.
+- **The "All teams" badge** on shared-rail tiles.
+- **The fine print under the team** about live wardrobes and the last pull. The line for a team
+  of one ("Your teammates dance in here once they pick the team.") stays.
+
+The two group lines on the rail are shorter: "Kit: worn in every game." and "Showpieces: parade
+and lineup only." With the pill gone the status line has the stage card's full width again.
 
 ## Rules every agent brief carries
 

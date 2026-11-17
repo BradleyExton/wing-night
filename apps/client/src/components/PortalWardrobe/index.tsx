@@ -187,16 +187,15 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
             move={outfit.move?.item as CharacterMove | undefined}
             label={summary}
             beatRootRef={beatRootRef}
+          />
+          <p
+            className={`${save.status.kind === "failed" ? shellStyles.statusError : shellStyles.voice} ${styles.statusLine}`}
+            role="status"
+            data-testid="wardrobe-status"
+            data-save-state={save.status.kind}
           >
-            <p
-              className={`${save.status.kind === "failed" ? shellStyles.statusError : shellStyles.voice} ${styles.statusLine}`}
-              role="status"
-              data-testid="wardrobe-status"
-              data-save-state={save.status.kind}
-            >
-              {statusText}
-            </p>
-          </WardrobeStage>
+            {statusText}
+          </p>
         </section>
       </div>
       <section className={shellStyles.card} aria-labelledby="wardrobe-looks-title">
@@ -235,10 +234,7 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
           theme={theme}
           me={{ guestId: me.guestId, displayName: me.displayName, headSrc, outfit }}
         />
-        <p className={styles.fine}>
-          {team.members.length <= 1 ? `${wardrobeTeamCopy.alone} ` : ""}
-          {wardrobeTeamCopy.fine}
-        </p>
+        {team.members.length <= 1 && <p className={styles.fine}>{wardrobeTeamCopy.alone}</p>}
       </section>
     </div>
   );

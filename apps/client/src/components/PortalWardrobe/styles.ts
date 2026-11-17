@@ -13,9 +13,9 @@ export const stageDock =
   "z-20 -mx-4 -my-2 px-4 py-2 [@media(min-height:520px)]:sticky [@media(min-height:520px)]:top-0 [@media(min-height:520px)]:bg-bg/95 [@media(min-height:520px)]:[box-shadow:0_8px_16px_-12px_theme(colors.shade)]";
 
 // Two lines at most, so a long outfit never grows the pinned stage over the page.
-export const statusLine = "line-clamp-2 min-h-[2.6em] min-w-0 flex-1";
+export const statusLine = "line-clamp-2 min-h-[2.6em]";
 
-// What reaches the TV, in one line under the team.
+// The one line under a team of one.
 export const fine = "m-0 text-[0.8rem] leading-snug text-mutedWarmDim";
 
 // A whole page that is one message (no team yet): the message, then the way back.

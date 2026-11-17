@@ -310,18 +310,6 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
     const genre = (await page.getByTestId("wardrobe-rail").getAttribute("data-genre")) ?? "";
     genres.push(genre);
 
-    // The photo head (the one portal.spec.ts painted, when it ran first) rises past the bird's box
-    // on the right: it stays clear of the TV-size pill, which sits under the stage.
-    const headUnderPill = await page.evaluate(() => {
-      const head = document.querySelector('[data-testid="wardrobe-bird"] [data-character-head] image')?.getBoundingClientRect();
-      const pill = document.querySelector('[data-testid="wardrobe-tv-size"]')?.getBoundingClientRect();
-
-      return head === undefined || pill === undefined
-        ? null
-        : head.bottom > pill.top && head.top < pill.bottom && head.right > pill.left && head.left < pill.right;
-    });
-    expect(headUnderPill, `${genre} head and pill`).not.toBe(true);
-
     // The dice and every Look dress the bird and save.
     await page.getByTestId("wardrobe-dress-me").click();
     await expectSaved(page);

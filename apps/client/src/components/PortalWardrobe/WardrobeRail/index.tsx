@@ -201,7 +201,6 @@ const WardrobeSlot = ({ genre, slot, theme, outfit, dressBird, onDress, onRestyl
                 move={slot === "move" ? (item.id as CharacterMove) : undefined}
               />
               {slot === "move" && <span className={styles.moveName}>{item.name}</span>}
-              {item.genre === "shared" && slot !== "move" && <span className={styles.shared}>{wardrobeRailCopy.shared}</span>}
             </button>
           );
         })}
