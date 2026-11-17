@@ -410,7 +410,10 @@ test("does call JOUST's next shooter up on the server's clock and leave Undo on 
   playArcadeTurn("JOUST", { deviceMode: "tablet" });
   assert.equal(readMinigameDeadline(), null, "no clock on a band nobody has pulled");
 
-  dispatchMinigameAction("JOUST", "launch", { x: -0.8, y: 0.6 });
+  // A shot that leaves somebody standing, so there is a next shooter to call: the arcade night
+  // racks two, one on each of two shelves, and this pull takes at most the near one on every
+  // sample lane (a steep lob can rake both shelves, clear the rack and end the turn).
+  dispatchMinigameAction("JOUST", "launch", { x: -0.7, y: 0.2 });
   assert.equal(hostViewOf("JOUST").phase, "resolved");
 
   const deadline = readMinigameDeadline();
