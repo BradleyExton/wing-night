@@ -195,6 +195,26 @@ test("names who went over on the plaque once the replay has landed", () => {
   assert.match(html, /\+2/);
 });
 
+test("does name who is up next under the plaque while the landed shot holds", () => {
+  const html = renderSurface(baseView({ phase: "resolved", lastShot: pileUp }));
+
+  assert.match(html, /Alex is up next/);
+  assert.doesNotMatch(
+    renderSurface(baseView({ phase: "resolved", lastShot: pileUp, shotIndex: 2 })),
+    /is up next/,
+    "the turn's last shot calls nobody up"
+  );
+});
+
+test("does call the shooter up over the lane on a fresh band, and not once the band is drawn", () => {
+  const fresh = renderSurface(baseView());
+
+  assert.match(fresh, /data-joust-up-callout="display"/);
+  assert.match(fresh, /Step up to the slingshot/);
+  assert.doesNotMatch(renderSurface(baseView({ aim: { x: -0.5, y: 0.1 } })), /data-joust-up-callout/);
+  assert.doesNotMatch(renderSurface(baseView({ phase: "done" })), /data-joust-up-callout/);
+});
+
 test("stands the tower on two legs drawn from its bodies, and tags what the shelf pays", () => {
   const html = renderSurface(baseView());
 

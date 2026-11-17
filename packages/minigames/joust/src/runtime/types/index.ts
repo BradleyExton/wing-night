@@ -56,6 +56,9 @@ export type JoustRuntimeState = {
   aim: JoustAim;
   shots: JoustShotResult[];
   lastShot: JoustMinigameShot | null;
+  // When the server took the shot in hand (`receivedAtMs` of its launch), while it is resolved:
+  // the clock the next shot is called on (`selectDeadlineAction`). Null on a fresh band.
+  resolvedAtMs: number | null;
   // What the active team had banked before this turn, so `resetTurn` can hand
   // back exactly what the turn added and nothing more.
   turnStartPoints: number;
@@ -93,5 +96,12 @@ export const JOUST_SIMULATION_OPTIONS: Omit<JoustSimulateOptions, "seed"> = {
   stepHz: 240,
   keyframeHz: 24
 };
+
+/**
+ * How long the room sits on a landed shot before the next shooter is called up: long enough to
+ * read the plaque (who went down, what it paid) and short enough that nobody has to ask what now.
+ * Counted from the end of the replay, so a tower still coming down is never cut off.
+ */
+export const JOUST_SHOT_HOLD_MS = 2500;
 
 export const SLACK_JOUST_AIM: JoustAim = { x: 0, y: 0 };

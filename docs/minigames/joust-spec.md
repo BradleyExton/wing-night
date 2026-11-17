@@ -2,7 +2,7 @@
 
 Status: **Shipped** — `packages/minigames/joust/`
 
-Last updated: 2026-09-23 (the loadout: content-authored projectile kinds with their own physics; Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band; 2026-09-24 information asymmetry named)
+Last updated: 2026-11-16 (the sample lanes split into three small towers each, on four different plans, §5 and §7; before that 2026-09-23, the loadout: content-authored projectile kinds with their own physics; Centennial Beach at dusk, beach props by `kind`, four Barrie lanes; the bench walks: turn-ordered line, walk-off, the shooter grabs the band; 2026-09-24 information asymmetry named)
 
 ## 1) One-liner
 
@@ -56,14 +56,14 @@ it is.
   shoved the way the tower is going so they tumble rather than ride it down standing, and the
   falling frame sweeps whoever is beneath it. A fallen tower is rubble for the rest of the turn:
   drawn flat, built for nothing, nobody on it. A lob that lands on top of a tower does not fold
-  it; the base is the target. Sweeps put 2–5% of the aim space on a collapse per lane, clustered
-  low and hard.
+  it; the base is the target. On the sample lanes a Standard pull folds a tower from 2–10% of the
+  aim space and the Log from 7–12% (§7), clustered low and hard.
 - **A player is worth what they stood on.** One point on the sand, like bowling; a shelf pays
   more the higher it is — `resolveJoustPerchPoints`: one more per `JOUST_PERCH_POINTS_TIER` (20)
-  units of rise, capped at `JOUST_PERCH_POINTS_MAX` (3). The sample lanes' towers all pay 2 and
-  the plank says so on the TV; their docks sit under the tier and pay what the sand does, so a
-  dock is a place to stand rather than a prize. Together with collapse this is the choice: pick a
-  player off the shelf with an arc for 2, or go for the legs and take the whole shelf at once.
+  units of rise, capped at `JOUST_PERCH_POINTS_MAX` (3). On the sample lanes the nearer
+  towers pay 2 and the far, tallest one pays 3, and each plank says so on the TV; the players
+  stood on the sand between a tower's legs pay 1. Together with collapse this is the choice: pick
+  a shelf off with an arc, or go for the legs and take the shelf and the group under it at once.
 - **The ghost of the last shot.** While a teammate aims, the previous shot's arc (the head's path
   up to its first contact) and the ring it was pulled to stay on the lane, on both screens. Each
   shooter on a team is adjusting off the last one rather than starting blind. Client-drawn from
@@ -241,13 +241,17 @@ it is.
       "id": "arena-centennial-beach",
       "name": "Centennial Beach",
       "perches": [
-        { "x": 54, "y": 78, "width": 102 },
-        { "x": 54, "y": 64, "width": 28, "kind": "dock" },
-        { "x": 71, "y": 50, "width": 83, "kind": "lifeguard-tower" }
+        { "x": 54, "y": 52, "width": 23.7, "kind": "lifeguard-tower" },
+        { "x": 56.15, "y": 78, "width": 19.4 },
+        { "x": 78.5, "y": 48, "width": 28.4, "kind": "lifeguard-tower" },
+        { "x": 83, "y": 78, "width": 19.4 },
+        { "x": 132.2, "y": 34, "width": 23.7, "kind": "lifeguard-tower" },
+        { "x": 109.85, "y": 78, "width": 19.4 },
+        { "x": 107.7, "y": 38, "width": 23.7, "kind": "lifeguard-tower" },
+        { "x": 134.35, "y": 78, "width": 19.4 }
       ],
       "obstacles": [
-        { "x": 45, "y": 64, "width": 7, "height": 14, "kind": "umbrella" },
-        { "x": 60, "y": 73, "width": 16, "height": 5, "kind": "canoe" },
+        { "x": 45, "y": 68, "width": 7, "height": 10, "kind": "umbrella" },
         { "x": 156, "y": 50, "width": 2, "height": 28, "kind": "mast" }
       ]
     }
@@ -260,7 +264,11 @@ World is 160 wide, 90 tall, floor at y = 78, slingshot fork at (40, 46). A lane 
 not shooting that night, dealt across the perches. A perch is anchored by its left edge `x` and by
 the surface `y` players stand on; one at floor level is the sand, and any higher one grows its own
 slab and legs. Perches must sit between `JOUST_RACK_LEFT` (54) and `JOUST_RACK_RIGHT` (156) and no
-higher than `JOUST_RACK_TOP` (22).
+higher than `JOUST_RACK_TOP` (22). A lane may carry as many floor-level perches as it likes: each
+is its own short row of sand, dealt to like any shelf, which is how the sample lanes stand a
+separate group between each tower's legs instead of one row the length of the beach. Perches
+are dealt in the order they are listed when two are equally empty, so the sample lanes list the
+shelves first.
 
 A perch's optional `kind` is what the renderer BUILDS it as, one of `dock`, `lifeguard-tower`,
 `queens-balcony`, `souldiers-roof` or `condo-balcony` (`JOUST_PERCH_KINDS`); anything else is
@@ -280,15 +288,60 @@ squat one); anything else is rejected at load, and a missing `kind` draws an umb
 reaches the physics — a canoe and a chip truck of the same rectangle stop a shot identically — so
 pick the drawing that fits the rectangle rather than the other way round.
 
-**The sample lanes are four Barrie lanes**, dealt by turn slot, and each shelf is built as a
-piece of its place: Centennial Beach (a dock and a big lifeguard tower), The Spirit Catcher (a
-dock and the tallest lifeguard stand of the four — open timber, so the steel bird on the beach
-behind it stays in view; a façade there hid the thing the lane is named after), Allandale Dock
-(a long waterfront condo balcony, the pair that really does stand over that shore, and a dock at
-the water's end) and Meridian Place (the Queen's Hotel balcony and Souldiers' roof, the two Dunlop Street fronts
-beside the square, with a lamp post and a planter for furniture). They seat 17 each, and the
-available points across them are within one at every rack size from 9 to 14, because the first
-team's lane must not be the richest one.
+**The sample lanes are four Barrie lanes**, dealt by turn slot, and each is **three small
+towers stepping up away from the slingshot** with a group stood on the sand between each
+tower's own legs: six groups a lane, none bigger than four. No two lanes share a plan,
+so a team that watched the last lane get solved has not watched its own:
+
+| lane | towers, near to far (width, players up / under) | gaps | in front |
+| --- | --- | --- | --- |
+| Centennial Beach | three lifeguard towers: 28.4 (3 / 2), the big one 37.4 (4 / 3), the tall one 32.6 (3 / 3) | 1.7 | umbrella, 16 tall |
+| The Spirit Catcher | a narrow pier 23.7 (2 / 2), a wide stand 37.4 (4 / 3), the tall stand 32.6 (3 / 3) | 4.1 | chip truck, 16 tall |
+| Allandale Dock | the long dock 37.4 (4 / 3), a narrow condo 23.7 (2 / 2), the tall condo 32.6 (3 / 3) | 4.1 | lifeguard chair, 14 tall |
+| Meridian Place | Souldiers, the Queen's, a condo: 32.6 each (3 / 3) | 2 | planter, 16 tall |
+
+Each shelf is built as a piece of its place. The Spirit Catcher's stands are open timber, so the
+steel bird on the beach behind them stays in view (a façade there hid the thing the lane is
+named after); Allandale's two condos really do stand over that shore; Meridian's three fronts
+are the Dunlop Street side of the square, kept 32.6 wide because a façade only carries its
+lettering from 30 up. The lanes seat 17 or 18, and the available points across them are within
+one at every rack size from 9 to 17 (26 or 27 at a rack of fifteen, 20 or 21 at twelve), because
+the first team's lane must not be the richest one. Parity is why the plans differ in the ways
+they do: with the dealer filling the emptiest perch first, these four signatures (and the order
+their perches are listed in) are ones whose payouts track each other; an open pair on the sand
+was two points adrift at some rack size on every arrangement tried.
+
+Why towers with people under them and not five separate little structures: **a lane is two storeys deep almost end to
+end, by arithmetic.** The rack is 102 units long and a bird needs 9, so one level seats eleven
+at most; seating seventeen means six or more stand under somebody else's shelf. And a tower's
+leg is a wall the full height of its shelf, so whoever stands between two legs cannot be reached
+from the side or from above: only by folding that tower, or by a blow that shoves its near leg
+into them. The 2026-11-16 pass (§7) therefore keeps every group small and every tower
+foldable, rather than chasing open sand the seat count has no room for. The rules it settled
+on, for anyone authoring a lane:
+
+- **No shelf wider than four birds.** A row on one shelf goes over like dominoes; hit one and
+  the shelf is gone. The sample shelves hold two to four.
+- **Step the towers up, nearest lowest.** A bird knocked off a shelf falls toward the far end, so
+  a lower shelf beyond it catches the fall and chains; a higher one does not. Shelves at like
+  heights are one long shelf to a flat shot.
+- **Leave about seven units of the front tower's near leg showing** above whatever stands in
+  front of it (the leg runs from the shelf's underside, `y + 3`, to the sand). Less, and nothing
+  folds the tower and the group under it is safe for the whole turn; nothing in front at all, and
+  one hard low pull folds the lane.
+- **Keep the front obstacle 16 units tall or less** (its top at `y` 62 or below), or the Log,
+  which flies low and slow, spends every pull on it.
+- **Hang no shelf higher than `y` 34** (`y` grows downward, so 30 is higher): above that, heads
+  sit under the tablet's loadout picker.
+- **Widths come in steps.** 23.7 seats two up and two under; 28.4 three and two; 32.6 three and
+  three, with room for the last bird to fall off the far end; 37.4 four and three.
+- **Make the far tower a wide one.** A shelf above `y` 40 or so barely folds, so the group under
+  the far tower is the hardest thing in the lane: under a far tower 32.6 wide best play still
+  gets to it, under one 28.4 or narrower nothing on the grid did (§7). Every sample lane ends
+  on a 32.6.
+- **Three towers, not four.** Four narrower towers had the lowest best pull of anything tried,
+  and left the groups under the two far ones behind three frames of timber: best play stalled at
+  12 of 15 (§7).
 
 **The night pack carries no `joust.json`**, so the sample lanes above are what the party plays
 until one is added. A pack file replaces the whole file, not a lane at a time: an author adding one
@@ -309,7 +362,7 @@ shooting team faces the BIGGEST rack — 15 roster + 2 spare chairs − 3 shooti
 floor, not a target: the night pack seats twenty in teams of five, a rack of fifteen, and on
 2026-09-24 two of the four shipped lanes seated only 14 — so on the TV those two teams' turns
 fell back to bare sand, every target worth one and the towers empty. The shipped lanes now seat
-17 each, and `world/index.test.ts` holds them to it. A lane that
+17 or 18, and `world/index.test.ts` holds them to at least 17. A lane that
 seats fewer does not fail at a party, it silently falls back: `resolveJoustRackLayout` abandons
 every perch, dumps the whole rack on one bare row worth a point a head, and the towers stop being
 drawn on. One consequence is deliberate: the sand alone holds eleven, so **every authored lane must
@@ -360,6 +413,105 @@ demo night is unchanged. Schedule it with `"minigame": "JOUST"` on a round in
 
 ## 7) Open questions
 
+### The lanes split, by sweep (2026-11-16)
+
+The owner's complaint was that one good pull took most of the rack, so there was no choice to
+make. The sweep agreed, and said why: a shelf of eight goes over like dominoes when any bird on
+it is hit, and on the old lanes one shelf held half the rack. Every pull on the 0.05 × 0.1 grid
+(x −1 to −0.05, y −0.5 to 0.7, 260 aims a lane), seed 7, the four sample lanes before and
+after. `score` is the share of pulls that fell anybody, `mean` players felled when scoring,
+`half` and `2/3` the share of pulls felling at least that much of the rack, `clear` the share
+felling all of it, `best` the biggest single pull, `fold` the share folding a tower.
+
+| lane | rack | kind | | score | mean | half | 2/3 | clear | best | fold |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Centennial Beach | 15 | standard | before | 85.0% | 4.30 | 33.8% | 0.4% | 0.4% | 15 | 0.8% |
+| | | | after | 53.5% | 5.58 | 0.4% | 0.0% | 0.0% | 9 | 5.8% |
+| | 15 | log | before | 76.9% | 2.35 | 10.0% | 0.0% | 0.0% | 9 | 1.5% |
+| | | | after | 35.4% | 4.92 | 0.0% | 0.0% | 0.0% | 7 | 8.1% |
+| | 12 | standard | before | 85.0% | 2.89 | 27.3% | 0.4% | 0.4% | 12 | 0.8% |
+| | | | after | 53.5% | 3.35 | 3.1% | 0.4% | 0.0% | 8 | 6.2% |
+| | 12 | log | before | 76.9% | 1.34 | 5.0% | 0.0% | 0.0% | 6 | 1.5% |
+| | | | after | 37.7% | 2.55 | 0.0% | 0.0% | 0.0% | 5 | 10.4% |
+| The Spirit Catcher | 15 | standard | before | 49.6% | 3.98 | 8.5% | 2.7% | 0.0% | 12 | 5.0% |
+| | | | after | 49.2% | 3.55 | 3.8% | 2.3% | 0.0% | 10 | 6.9% |
+| | 15 | log | before | 41.9% | 4.97 | 10.4% | 10.4% | 0.0% | 11 | 24.2% |
+| | | | after | 36.9% | 2.34 | 0.0% | 0.0% | 0.0% | 4 | 11.2% |
+| | 12 | standard | before | 54.6% | 4.25 | 16.5% | 1.5% | 0.0% | 10 | 5.0% |
+| | | | after | 54.2% | 3.34 | 5.8% | 2.3% | 0.0% | 9 | 10.0% |
+| | 12 | log | before | 44.2% | 4.19 | 15.0% | 0.0% | 0.0% | 7 | 18.5% |
+| | | | after | 41.9% | 2.42 | 0.0% | 0.0% | 0.0% | 5 | 11.2% |
+| Allandale Dock | 15 | standard | before | 48.1% | 8.85 | 46.5% | 5.4% | 4.6% | 15 | 8.5% |
+| | | | after | 56.2% | 4.01 | 4.2% | 0.0% | 0.0% | 9 | 5.8% |
+| | 15 | log | before | 38.8% | 8.55 | 33.5% | 5.0% | 4.6% | 15 | 17.7% |
+| | | | after | 40.8% | 3.45 | 0.0% | 0.0% | 0.0% | 6 | 6.9% |
+| | 12 | standard | before | 38.8% | 6.34 | 35.4% | 2.7% | 1.9% | 12 | 8.5% |
+| | | | after | 56.2% | 4.01 | 8.8% | 3.1% | 0.0% | 9 | 6.5% |
+| | 12 | log | before | 20.8% | 6.31 | 18.1% | 0.0% | 0.0% | 7 | 17.3% |
+| | | | after | 41.2% | 3.45 | 6.2% | 0.0% | 0.0% | 6 | 7.3% |
+| Meridian Place | 15 | standard | before | 64.6% | 5.60 | 25.8% | 15.0% | 0.0% | 13 | 15.4% |
+| | | | after | 53.5% | 4.19 | 1.9% | 0.4% | 0.0% | 11 | 6.2% |
+| | 15 | log | before | 65.8% | 4.65 | 21.9% | 21.9% | 0.0% | 13 | 22.7% |
+| | | | after | 37.7% | 3.92 | 0.0% | 0.0% | 0.0% | 8 | 11.9% |
+| | 12 | standard | before | 36.9% | 6.24 | 21.9% | 8.1% | 0.0% | 11 | 8.5% |
+| | | | after | 53.5% | 3.05 | 8.1% | 0.4% | 0.0% | 9 | 6.9% |
+| | 12 | log | before | 36.5% | 9.61 | 35.8% | 35.8% | 0.8% | 12 | 36.5% |
+| | | | after | 37.7% | 2.92 | 6.2% | 0.0% | 0.0% | 6 | 11.2% |
+
+Standing per group at fifteen: before, Centennial stood 8 on its tower, 6 on the sand and 1 on
+the dock; Allandale 8 on the balcony, 6 on the sand and 1 on the dock; the Spirit Catcher 4 on
+the dock, 4 on the tower and 7 on the sand; Meridian 4 and 4 on its two fronts and 7 on the
+sand. After, nobody stands more than three to a group at fifteen: Centennial 3 + 3 + 3 up
+and 2 + 2 + 2 beneath, the Spirit Catcher 2 + 3 + 3 up and 2 + 3 + 2 beneath, Allandale
+3 + 2 + 3 up and 3 + 2 + 2 beneath, Meridian 3 + 3 + 3 up and 2 + 2 + 2 beneath.
+
+What the first pull does not show is the turn, so the same harness played whole turns at a rack
+of fifteen: each shot swept on the full grid against what was still standing, then the best pull
+taken (or the median scoring one, for a team that is not that good). **Before, the best pull
+cleared Allandale and Centennial outright and the other two in two.** After, the best play on
+every lane is eight or nine (every shelf), then two folds: three pulls, each a different shot,
+and nobody left standing. The median team fells 10 to 15 of 15 over its five pulls (all 15 on
+three of the lanes), with 10–20% of the aim space still scoring on the second pull and mostly
+2–11% on the later ones.
+
+What was tried on the way, so it is not tried again:
+
+- **Four narrower towers.** First-pull numbers were the best of anything (half the rack on
+  under 10% of pulls on 275 of 280 random layouts, best pull 7 or 8), and whole turns were the
+  worst: with the shelves gone, the groups under the third and fourth towers are behind three
+  frames of timber. Centennial Beach was committed on this plan first, best pull 8 of 15, and
+  best play stalled at 12 of 15 with three players under the far towers out of reach; the owner
+  chose every player reachable over the lower best pull, and it went to three towers.
+- **A narrow far tower.** Two 28.4 towers behind a 37.4, or either side of one: of 44 layouts
+  that passed the first-pull targets, best play left players standing on 41, mostly the two
+  under the far 28.4, and the one of the other three tried again lost it to a tenth of a unit
+  of gap.
+- **A group in the open on the sand.** One bird fits in front of the first leg at 17 seats; the
+  one pair layout that seats 17 could not be made to pay like the others. Of 70 layouts with
+  that bird, one held the targets, and on it the Log scored on 28% of pulls and best play
+  stalled at 12; with a lower obstacle or none in front, none held them.
+- **Open sand groups and docks between the towers.** No room: see §5, the lane is two storeys
+  deep by arithmetic. The nearest thing that fits, two towers of four over three with an open
+  group between them, still had a pull on the grid that cleared the whole rack.
+- **Real gaps between towers.** Three towers of 32.6 leave four units to spare; the two lanes
+  with a 23.7 tower get two gaps of four. Narrowing the FAR tower instead made its sand group
+  unreachable.
+- **A tall first tower, or the tallest in the middle.** The first puts a wall in front of every
+  flat pull (12% of pulls scored); the second put half the rack down on 10–12% of pulls.
+- **`resolveJoustRackLayout` was left alone**, and so were the shares and the topple
+  thresholds. The cap on a shelf that was in scope turned out not to be needed: the widest
+  shelf shipped is 37.4, which cannot seat more than four.
+
+What still bears watching at a table: the nearest shelf is in the line of fire of most pulls
+(it goes on about 55% of first pulls; the old lanes' front group went on roughly 50–80%), so the choice
+starts on the second shot more than the first; the best single pull is 9 on Centennial and
+Allandale, 10 on the Spirit Catcher and 11 on Meridian, in every case the arc that rakes all
+the shelves (Meridian's is a short steep lob, pull −0.4, 0.6, that takes its nine shelf players
+and two beneath), and the only thing found that stops it is two to a shelf, which is the
+four-tower plan and brings its stall with it; the Log cannot reach past the first tower on a
+first pull, by design, and scores on 35–41% of pulls where the Standard scores on 49–56%; and a lane is worth 26 or 27 at a rack of fifteen where it was 23, because the far shelf
+now pays 3.
+
 ### Hit detection, by sweep (2026-10-01)
 
 The same 0.05 × 0.1 aim grid as below, four sample lanes, 12-player rack, seed 7, but classifying
@@ -400,7 +552,8 @@ bulldozed every row and the Standard cleared a twelve-rack on one pull in twenty
 plough and the Log. Full clears are 1.7% of aims overall, but Allandale Dock's one big tower
 holding most of the rack clears on 5.9% of Standard pulls (was 0.1%): fold it and the sand row
 goes with it. That is the jackpot the lane was built around; if it comes up too often on the
-night, raise that tower or split it rather than touching the shares.
+night, raise that tower or split it rather than touching the shares. (It did, and every lane's
+long shelf with it: the lanes were split on 2026-11-16, above.)
 
 At the night pack's real rack of fifteen (twenty at the table in teams of five) the same sweep
 reads: Standard score 32.2% → 56.5%, mean 6.30 → 9.49, touched-and-standing 73.7% → 24.8%, clears

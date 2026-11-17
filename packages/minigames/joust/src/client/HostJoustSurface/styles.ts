@@ -1,4 +1,4 @@
-import { briefingCard, railCounterOverlay, takeoverPrimary, takeoverSecondary } from "@wingnight/surface";
+import { briefingCard, railCounterOverlay, takeoverSecondary } from "@wingnight/surface";
 
 // JOUST is a `<TakeoverCanvas>` (docs/takeover-layout-api.md §3): the lane is
 // evenly spread scenery, so a chip in one corner costs a corner of sky, bay or
@@ -76,9 +76,8 @@ export const waitingNote =
 // layout floats this bottom-left and constrains its width so it cannot run
 // under the corner dock — neither the position nor the max-width is typed
 // here. The buttons only have to be their own size now that they are a row
-// rather than a 330px column, so the `w-full` and `flex-1` are gone.
-export const primaryButton = takeoverPrimary;
-
+// rather than a 330px column, so the `w-full` and `flex-1` are gone. There is no primary: the
+// server calls the next shot, so the only buttons left are the escape hatches.
 export const secondaryButton = `${takeoverSecondary} h-12`;
 
 export const hint = "rounded-xl bg-bg/70 px-3 py-2 text-[0.82rem] italic text-text/75 backdrop-blur";

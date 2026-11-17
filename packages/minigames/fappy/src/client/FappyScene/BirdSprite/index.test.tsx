@@ -14,7 +14,7 @@ const DRESSED: LegBird = {
     dance: "bounce",
     outfit: {
       top: { item: "battle-vest-a" },
-      sleeve: { item: "flame-sleeve-a" },
+      sleeve: { item: "flame-sleeve-b" },
       tail: { item: "chain-loop-b" },
       boots: { item: "combat-boots-a" }
     }

@@ -8,7 +8,7 @@ const rob = {
   name: "Rob",
   avatarSrc: "avatars/rob.png",
   outfits: {
-    metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a" }, sleeve: { item: "cut-long-ago" } },
+    metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-b" }, sleeve: { item: "cut-long-ago" } },
     pop: { top: { item: "crop-jacket-b" } }
   }
 };
@@ -20,7 +20,7 @@ test("does dress the figure in the outfit for its team's genre, read tolerantly"
     avatarSrc: "avatars/rob.png",
     teamId: "team-1",
     genre: "Heavy Metal",
-    outfit: { top: { item: "battle-vest-a", style: "ink" }, prop: { item: "flying-v-a", style: "white" } }
+    outfit: { top: { item: "battle-vest-a", style: "ink" }, prop: { item: "flying-v-b", style: "white" } }
   });
 });
 

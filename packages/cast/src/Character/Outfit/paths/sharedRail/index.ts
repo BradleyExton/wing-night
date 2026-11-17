@@ -102,15 +102,6 @@ export const goldShine = ([cx, cy, w, h, tilt]: Egg): { egg: string; shade: stri
 
 type Chest = { back: number; hem: number; front?: Point; splat: [number, number, number]; drip: number };
 
-// `CHEST`: the lobster bib's back edge, hem, hem front end, sauce splat
-// (centre and radius) and the y its drip's bulb ends on, per body.
-const CHEST: PerBody<Required<Chest>> = {
-  stock: { back: 44, hem: 57, front: [66, 50], splat: [56, 47.5, 5.4], drip: 55.5 },
-  spiky: { back: 44, hem: 54.5, front: [65, 48], splat: [55.3, 46, 4.9], drip: 53 },
-  broody: { back: 45, hem: 60, front: [70, 53], splat: [58, 50, 6], drip: 58.5 },
-  preener: { back: 42, hem: 54, front: [66, 47], splat: [53.5, 44.6, 4.3], drip: 51.2 }
-};
-
 // `PAPER`: the same for the paper bib, which has a square hem.
 const PAPER: PerBody<Chest> = {
   stock: { back: 43, hem: 58, splat: [54.5, 47.5, 5], drip: 55.6 },
@@ -175,18 +166,6 @@ const sauceParts = (c: Chest, dripW: number, bulb: number): string[] => {
   return [splatPath(sx, sy, sr), dropletPath(sx, sy, sr), dripPath(sx - 0.4, sy + sr * 0.35, c.drip, dripW, bulb)];
 };
 
-// `lobsterBibD` and its sauce.
-export const lobsterBib = (silhouette: CharacterSilhouette | undefined, shoulders: number): { bib: string; sauce: string[] } => {
-  const c = CHEST[keyOf(silhouette)];
-  const s = shoulders;
-  const { back, hem, front } = c;
-  const mid = back + (front[0] - back) * 0.42;
-  return {
-    bib: `M ${back} ${s} L ${front[0] + 6} ${s} L ${front[0] + 6} ${front[1] - 2} L ${front[0]} ${front[1]} C ${front[0] - 4} ${hem} ${mid + 5} ${hem} ${mid} ${hem} C ${back + 3} ${hem} ${back} ${hem - 3} ${back} ${hem - 7} Z`,
-    sauce: sauceParts(c, 1.0, 2.2)
-  };
-};
-
 // `paperBib`'s square, its sauce and its tie string.
 export const paperBib = (
   silhouette: CharacterSilhouette | undefined,
@@ -248,96 +227,7 @@ export const sashBand = (silhouette: CharacterSilhouette | undefined, shoulders:
   return poly(belowY(bandPts([c.shoulder[0], shoulders - 4], c.hip, 4.2), Math.max(36.5, shoulders)));
 };
 
-// `KNOT`: where the knot sits along the band, and its tails as
-// [u, v, direction in degrees, length] in the knot's frame.
-const KNOT: PerBody<{ t: number; tails: [number, number, number, number][] }> = {
-  stock: { t: 0.64, tails: [[4.5, -0.6, 125, 7.5]] },
-  spiky: { t: 0.62, tails: [[4.5, -0.6, 125, 6]] },
-  broody: {
-    t: 0.68,
-    tails: [
-      [4, -3.5, 138, 10],
-      [0.5, -3.5, 115, 12]
-    ]
-  },
-  preener: { t: 0.6, tails: [] }
-};
-
-const ribbon = (a: Point, b: Point, hw: number, notch: number): string => {
-  const dx = b[0] - a[0];
-  const dy = b[1] - a[1];
-  const len = Math.hypot(dx, dy);
-  const [ux, uy] = [dx / len, dy / len];
-  const [nx, ny] = [-uy, ux];
-  return poly([
-    [a[0] + nx * hw, a[1] + ny * hw],
-    [b[0] + nx * hw, b[1] + ny * hw],
-    [b[0] - ux * notch, b[1] - uy * notch],
-    [b[0] - nx * hw, b[1] - ny * hw],
-    [a[0] - nx * hw, a[1] - ny * hw]
-  ]);
-};
-
-const roundRect = (c: Point, deg: number, len: number, wid: number, rx: number): string => {
-  const at = frame(c, deg);
-  const [u, v] = [len / 2, wid / 2];
-  const P = (a: number, b: number): string => at([a, b]).map(f).join(" ");
-  return (
-    `M ${P(-u + rx, -v)} L ${P(u - rx, -v)} Q ${P(u, -v)} ${P(u, -v + rx)} L ${P(u, v - rx)} Q ${P(u, v)} ${P(u - rx, v)} ` +
-    `L ${P(-u + rx, v)} Q ${P(-u, v)} ${P(-u, v - rx)} L ${P(-u, -v + rx)} Q ${P(-u, -v)} ${P(-u + rx, -v)} Z`
-  );
-};
-
-// `knottedSash`'s parts: the band, the tails, the 9 x 13 knot, all three as
-// the one region the body's outline is restroked over, and the ink style's two
-// cinch lines across the knot's ends.
-export const knottedSash = (
-  silhouette: CharacterSilhouette | undefined,
-  shoulders: number
-): { band: string; tails: string[]; knot: string; all: string; cinch: string } => {
-  const key = keyOf(silhouette);
-  const line = SASH[key];
-  const c = KNOT[key];
-  const band = poly(belowY(bandPts([line.shoulder[0], shoulders - 4], line.hip, 4.2), Math.max(36.5, shoulders)));
-  // The knot is placed on the costume head's line (shoulder end at y 33).
-  const a: Point = [line.shoulder[0], 33];
-  const b = line.hip;
-  const kc: Point = [a[0] + (b[0] - a[0]) * c.t, a[1] + (b[1] - a[1]) * c.t];
-  const deg = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI;
-  const along = frame(kc, deg);
-  const [kl, kw] = [9, 13];
-  const knot = roundRect(kc, deg, kl, kw, 1.8);
-  const tails = c.tails.map(([u, v, dir, len]) => {
-    const p0 = along([u, v]);
-    return ribbon(p0, [p0[0] + len * Math.cos(rad(dir)), p0[1] + len * Math.sin(rad(dir))], 4, 3.5);
-  });
-  const cinch = [-kl / 2, kl / 2]
-    .map((u) => {
-      const [p, q] = [along([u, -kw / 2]), along([u, kw / 2])];
-      return `M ${f(p[0])} ${f(p[1])} L ${f(q[0])} ${f(q[1])}`;
-    })
-    .join(" ");
-  return { band, tails, knot, all: [band, ...tails, knot].join(" "), cinch };
-};
-
 // ------------------------------------------------------------ golden egg --
-
-// `CLUTCH`: the clutched egg's centre and lean, per body. Run 5's face-crossing
-// sweep (every frame of every Move) moved two: the spiky egg up half a unit,
-// which the chicken dance's drop sank 0.05 through the soft floor, and the
-// preener's up and back to [28, 60], which Night Fever's down point swung out
-// in front of the pitched face.
-const CLUTCH: PerBody<{ c: Point; tilt: number }> = {
-  stock: { c: [36, 63.5], tilt: -18 },
-  spiky: { c: [34, 63.5], tilt: -18 },
-  broody: { c: [37, 63], tilt: -14 },
-  preener: { c: [28, 60], tilt: -20 }
-};
-
-export const clutchedEgg = (silhouette: CharacterSilhouette | undefined): Egg => {
-  const { c, tilt } = CLUTCH[keyOf(silhouette)];
-  return [c[0], c[1], 10.5, 13.5, tilt];
-};
 
 // `TROPHY`: the foot's centre, the axis up toward the egg, and the stem.
 const TROPHY: PerBody<{ base: Point; deg: number; stem?: number }> = {
@@ -401,22 +291,6 @@ const drumstickParts = ({ k, t, r = 5, meat = 0.6, bone = 1.5 }: { k: Point; t: 
   return { at, L, m0, r, meat: meatD, bone: boneD, lobes };
 };
 
-const ellipsePath = (cx: number, cy: number, rx: number, ry: number, deg: number): string => {
-  const at = frame([cx, cy], deg);
-  const pts: Point[] = [];
-  for (let i = 0; i < 16; i += 1) {
-    const t = (i / 16) * Math.PI * 2;
-    pts.push(at([rx * Math.cos(t), ry * Math.sin(t)]));
-  }
-  return smooth(pts);
-};
-
-// `sauceOnMeat`'s ink style: two char blotches on the meat's rim.
-const charBlotches = ({ at, L, r }: Drumstick): string[] => {
-  const [c1, c2] = [at([L - r * 1.55, -r * 0.8]), at([L - r * 0.3, r * 0.6])];
-  return [ellipsePath(c1[0], c1[1], 1.6, 1.1, 25), ellipsePath(c2[0], c2[1], 1.2, 0.9, 25)];
-};
-
 // `sauceOnMeat`'s glaze: a cap over the tip end of the meat, its top edge wavy.
 const glazeCap = ({ at, L, m0, r }: Drumstick, cover: number): string => {
   const len = L - m0;
@@ -430,26 +304,7 @@ const glazeCap = ({ at, L, m0, r }: Drumstick, cover: number): string => {
   return poly([...edge, [L + 3, span] as Point, [L + 3, -span] as Point].map(at));
 };
 
-const glazeDrip = (t: Point, end: number): string => {
-  const w = 0.7;
-  return `M ${f(t[0] - 1.6)} ${f(t[1] - 1.2)} L ${f(t[0] + 1.4)} ${f(t[1] - 1.2)} L ${f(t[0] + w)} ${f(end - w * 1.4)} A ${f(w)} ${f(w)} 0 0 1 ${f(t[0] - w)} ${f(end - w * 1.4)} Z`;
-};
-
-// `DROP`: the mic drop's knuckle, meat tip and where its glaze drip ends.
-const DROP: PerBody<{ k: Point; t: Point; glazeEnd: number }> = {
-  stock: { k: [26, 46], t: [19, 59.5], glazeEnd: 63.1 },
-  spiky: { k: [26, 46], t: [18.5, 59], glazeEnd: 62.6 },
-  broody: { k: [25, 46], t: [20.5, 60.5], glazeEnd: 64.1 },
-  preener: { k: [25, 46], t: [20.5, 60.5], glazeEnd: 64.1 }
-};
-
 export type DrumstickPaths = { bone: string; lobes: string[]; meat: string; drip: string; cap: string; char: string[] };
-
-export const micDrop = (silhouette: CharacterSilhouette | undefined): DrumstickPaths => {
-  const { k, t, glazeEnd } = DROP[keyOf(silhouette)];
-  const p = drumstickParts({ k, t, r: 5.5, meat: 0.55 });
-  return { bone: p.bone, lobes: p.lobes, meat: p.meat, drip: glazeDrip(t, glazeEnd), cap: glazeCap(p, 0.45), char: charBlotches(p) };
-};
 
 // `RAISED`: the raised drumstick's knuckle and axis.
 const RAISED: PerBody<{ k: Point; deg: number }> = {
@@ -522,25 +377,3 @@ export const CLUTCH_FRONT: Egg[] = [
   [67, 63.5, 10, 12.8, 6],
   [76, 66, 8.5, 10.5, 16]
 ];
-
-// The straw nest's eggs, back to front: middle, small, then the big one.
-export const NEST_EGGS: Egg[] = [
-  [-1.6, 64.4, 11, 13.5, -24],
-  [14.2, 64.6, 10, 12.5, 14],
-  [5.6, 64, 14, 17, -8]
-];
-
-// `NEST_WALL` written out: a lumpy woven wall from x -7.5 to 22, three round
-// bumps on the rim (`bumps(-7.5, 22, 67, 2.5, 3)`) and three under it.
-export const NEST_WALL =
-  "M -7.5 67 C -7.5 63.67 2.33 63.67 2.33 67 C 2.33 63.67 12.17 63.67 12.17 67 C 12.17 63.67 22 63.67 22 67 C 23.6 68.2 23.6 71.2 21 72.5 C 21 75.17 11.83 75.17 11.83 72.5 C 11.83 75.17 2.67 75.17 2.67 72.5 C 2.67 75.17 -6.5 75.17 -6.5 72.5 C -8 71.6 -8 68.4 -7.5 67 Z";
-
-// `NEST_CURL` written out: `strand([-2, 67], [-6.5, 64.5], [-7.8, 56], 4)`, the
-// one straw curl tapering up and back.
-export const NEST_CURL =
-  "M -0.03 63.52 L -0.61 63.55 L -1.21 63.5 L -1.85 63.34 L -2.52 63.05 L -3.22 62.63 L -3.93 62.07 L -4.63 61.37 L -5.32 60.54 L -5.99 59.59 L -6.63 58.51 L -7.23 57.31 L -7.8 56 L -7.8 56 L -7.89 57.44 L -7.93 58.82 L -7.91 60.16 L -7.83 61.46 L -7.69 62.71 L -7.47 63.93 L -7.17 65.12 L -6.76 66.28 L -6.25 67.41 L -5.62 68.5 L -4.85 69.53 L -3.97 70.48 Z";
-
-// The big one: the giant egg leaning back on the pad, and one small egg.
-export const GIANT_EGG: Egg = [7.5, 64.9, 16.5, 27, -60];
-
-export const SMALL_EGG: Egg = [71, 65.3, 9, 11.5, 12];

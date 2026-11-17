@@ -33,7 +33,7 @@ test("does list what the bird has on in slot order, names keeping their capitals
   assert.equal(resolveOutfitSummary({ top: { item: "battle-vest-a" } }), "Battle vest.");
   assert.equal(
     resolveOutfitSummary({
-      prop: { item: "flying-v-a", style: "white" },
+      prop: { item: "flying-v-b", style: "white" },
       sleeve: { item: "leather-sleeve-a" },
       top: { item: "battle-vest-a" }
     }),
@@ -63,26 +63,26 @@ test("does deal no boots to a country bird and only the shared rail to a genre w
 });
 
 test("does put a tapped item on in its default style and take the slot off for None", () => {
-  const dressed = dressOutfitSlot({}, "prop", "flying-v-a");
+  const dressed = dressOutfitSlot({}, "prop", "flying-v-b");
 
-  assert.deepEqual(dressed, { prop: { item: "flying-v-a", style: "white" } });
+  assert.deepEqual(dressed, { prop: { item: "flying-v-b", style: "white" } });
   assert.deepEqual(dressOutfitSlot(dressed, "prop", null), {});
 });
 
 test("does keep a picked style when the tile already on is tapped again", () => {
-  const gold = { prop: { item: "flying-v-a", style: "gold" } } as const;
+  const gold = { prop: { item: "flying-v-b", style: "gold" } } as const;
 
-  assert.deepEqual(dressOutfitSlot(gold, "prop", "flying-v-a"), gold);
+  assert.deepEqual(dressOutfitSlot(gold, "prop", "flying-v-b"), gold);
 });
 
 test("does refuse an item tapped into another slot's grid", () => {
-  assert.deepEqual(dressOutfitSlot({}, "top", "flying-v-a"), {});
+  assert.deepEqual(dressOutfitSlot({}, "top", "flying-v-b"), {});
 });
 
 test("does restyle the slot's item only to a style it offers", () => {
-  const worn = { prop: { item: "flying-v-a", style: "white" } } as const;
+  const worn = { prop: { item: "flying-v-b", style: "white" } } as const;
 
-  assert.deepEqual(restyleOutfitSlot(worn, "prop", "gold"), { prop: { item: "flying-v-a", style: "gold" } });
+  assert.deepEqual(restyleOutfitSlot(worn, "prop", "gold"), { prop: { item: "flying-v-b", style: "gold" } });
   assert.deepEqual(restyleOutfitSlot(worn, "prop", "team"), worn);
   assert.deepEqual(restyleOutfitSlot({}, "prop", "gold"), {});
 });

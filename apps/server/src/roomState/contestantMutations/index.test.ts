@@ -145,7 +145,7 @@ test("does refuse a host-only action from the contestant's own phone", () => {
   assert.equal(hostViewOf("FAPPY").legIndex, 0);
 });
 
-test("does refuse JOUST's next shot from a phone — the host paces the room", () => {
+test("does refuse JOUST's next shot from a phone — only the server's clock calls it", () => {
   const shooter = playArcadeTurn("JOUST");
 
   assert.equal(
@@ -402,6 +402,41 @@ test("does time a FAPPY relay out on the server's clock with the phone that flew
 
   assert.equal(view.phase, "timedOut");
   assert.equal(view.timedOutAtMs, clock);
+  assert.equal(readMinigameDeadline(), null);
+});
+
+test("does call JOUST's next shooter up on the server's clock and leave Undo on the shot", () => {
+  mock.timers.enable({ apis: ["Date"], now: T0 });
+  playArcadeTurn("JOUST", { deviceMode: "tablet" });
+  assert.equal(readMinigameDeadline(), null, "no clock on a band nobody has pulled");
+
+  // A shot that leaves somebody standing, so there is a next shooter to call: the arcade night
+  // racks two, one on each of two shelves, and this pull takes at most the near one on every
+  // sample lane (a steep lob can rake both shelves, clear the rack and end the turn).
+  dispatchMinigameAction("JOUST", "launch", { x: -0.7, y: 0.2 });
+  assert.equal(hostViewOf("JOUST").phase, "resolved");
+
+  const deadline = readMinigameDeadline();
+
+  assert.equal(deadline?.minigameId, "JOUST");
+  assert.equal(deadline?.actionType, "nextShot");
+  assert.ok((deadline?.atMs ?? 0) > T0, "the replay and the plaque's beat come first");
+
+  applyRoomStateMutation(() =>
+    dispatchServerMinigameAction("JOUST", "nextShot", (deadline?.atMs ?? 0) + 25)
+  );
+
+  assert.equal(hostViewOf("JOUST").phase, "aiming");
+  assert.equal(hostViewOf("JOUST").shotIndex, 1);
+  assert.equal(readMinigameDeadline(), null);
+
+  // Undo takes back the shot itself, not just the clock's call: the band is back in the first
+  // shooter's hands with nothing fired.
+  redoLastScoringMutation();
+
+  assert.equal(hostViewOf("JOUST").phase, "aiming");
+  assert.equal(hostViewOf("JOUST").shotIndex, 0);
+  assert.deepEqual(hostViewOf("JOUST").shots, []);
   assert.equal(readMinigameDeadline(), null);
 });
 

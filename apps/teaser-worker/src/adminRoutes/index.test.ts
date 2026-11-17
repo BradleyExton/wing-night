@@ -27,7 +27,7 @@ import { mintEmailLink, mintPersonalLink } from "../signInLinks/index.ts";
 import { INVITE_ALL_BATCH_SIZE } from "./index.ts";
 
 
-const ROB_OUTFITS = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-a", style: "gold" } } };
+const ROB_OUTFITS = { metal: { top: { item: "battle-vest-a" }, prop: { item: "flying-v-b", style: "gold" } } };
 const ADMIN_ROUTES: { method: string; path: string; body?: unknown }[] = [
   { method: "GET", path: "/api/admin/guests" },
   { method: "POST", path: "/api/admin/guests", body: { displayName: "Kim", email: null } },

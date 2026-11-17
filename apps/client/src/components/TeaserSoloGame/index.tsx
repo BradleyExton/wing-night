@@ -3,9 +3,9 @@ import { wakeAudio } from "@wingnight/audio";
 import { CONTESTANT_CONTROLLERS } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { useRuntimeDeadline } from "../../minigames/useRuntimeDeadline";
 import type { TeaserRoster } from "../../utils/parseTeaserRoster";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
+import { useRuntimeDeadline } from "../../utils/useRuntimeDeadline";
 import { useServerOrigin } from "../../utils/useServerOrigin";
 import { PhoneGameFrame } from "../PhoneGameFrame";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
@@ -107,8 +107,12 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
     );
   };
 
-  // The page is its own server for a game's clock too (Streets of Barrie steps on a pulse).
-  useRuntimeDeadline(runtimePlugin, { state: runtimeState, rules, content }, handleDispatchAction);
+  // The page is the server, so it keeps the server's deadline clock too: JOUST's next shooter
+  // steps up on it, with nobody to press anything.
+  useRuntimeDeadline(
+    selectorInput === null ? null : (runtimePlugin.selectDeadlineAction?.(selectorInput) ?? null),
+    handleDispatchAction
+  );
 
   const isNewBest =
     result !== null &&

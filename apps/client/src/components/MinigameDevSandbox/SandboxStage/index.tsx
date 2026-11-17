@@ -10,7 +10,6 @@ import type {
 import { CONTESTANT_CONTROLLERS, Phase, resolveMinigameDefinition, type MinigameType, type RoomTimerState } from "@wingnight/shared";
 
 import { hostCopy } from "../../../copy/host";
-import { useRuntimeDeadline } from "../../../minigames/useRuntimeDeadline";
 import { RoomStateProvider } from "../../../context/RoomStateContext";
 import { HostActionBarSurface } from "../../HostControlPanel/HostActionBarSurface";
 import { HostMiniRail } from "../../HostControlPanel/HostMiniRail";
@@ -29,6 +28,7 @@ import {
   resolveSandboxHostRoomState
 } from "./resolveSandboxHostRoomState";
 import { initializeRuntimeState, selectRoundMemory } from "./bootRuntime";
+import { useRuntimeDeadline } from "../../../utils/useRuntimeDeadline";
 import * as styles from "./styles";
 
 type SandboxStageProps = {
@@ -128,11 +128,15 @@ export const SandboxStage = ({
     rules: devManifest.rules,
     content: devManifest.content
   };
+  // The sandbox is its own server, deadline clock included, so a game paced by it (JOUST's next
+  // shooter, FAPPY's relay limit) runs here as it does in a room. Only in play: the server keeps
+  // no deadline outside MINIGAME_PLAY either.
+  useRuntimeDeadline(
+    phase === "play" ? (runtimePlugin.selectDeadlineAction?.(selectorInput) ?? null) : null,
+    handleDispatchAction
+  );
   const minigameHostView = runtimePlugin.selectHostView(selectorInput);
   const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
-
-  // The sandbox is its own server for a game's clock too.
-  useRuntimeDeadline(runtimePlugin, selectorInput, handleDispatchAction);
 
   const activeTeamName =
     activeTeamId === null ? null : (devManifest.teamNameByTeamId[activeTeamId] ?? null);

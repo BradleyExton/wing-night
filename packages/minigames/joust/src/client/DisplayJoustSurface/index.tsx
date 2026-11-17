@@ -6,6 +6,8 @@ import type { JoustMinigameDisplayView, JoustMinigameShot } from "@wingnight/sha
 import { JoustArenaScene } from "../JoustArenaScene/index.js";
 import { isReplayFinished, resolveJoustScene } from "../resolveJoustScene/index.js";
 import { resolveShotCopy } from "../shotResultCopy/index.js";
+import { resolveUpNextName } from "../resolveUpNext/index.js";
+import { UpCallout } from "../UpCallout/index.js";
 import { useJoustSounds } from "../useJoustSounds/index.js";
 import { useShotReplay } from "../useShotReplay/index.js";
 import { displayJoustSurfaceCopy } from "./copy.js";
@@ -55,9 +57,17 @@ const resolveStatusLine = (view: JoustMinigameDisplayView, replayFinished: boole
   }
 
   if (view.lastShot !== null) {
-    return replayFinished
+    if (!replayFinished) {
+      return displayJoustSurfaceCopy.flyingPrompt;
+    }
+
+    // The plaque says how the shot went; the line under the lane says who is coming up, so the
+    // room has them moving before the server calls them.
+    const upNextName = resolveUpNextName(view);
+
+    return upNextName === null
       ? resolveShotCopy(view.lastShot).title
-      : displayJoustSurfaceCopy.flyingPrompt;
+      : displayJoustSurfaceCopy.upNextPrompt(upNextName);
   }
 
   if (aimMagnitude(view.aim) > 0.05) {
@@ -182,6 +192,15 @@ const JoustPlayBody = ({
             {view.lastShot !== null && replayFinished && (
               <ShotResult shot={view.lastShot} nameByPlayerId={nameByPlayerId} />
             )}
+            <UpCallout
+              surface="display"
+              shooterName={
+                view.teammates.find((figure) => figure.playerId === view.activeShooterPlayerId)?.name ?? null
+              }
+              shotIndex={view.shotIndex}
+              isAiming={view.phase === "aiming"}
+              aim={view.aim}
+            />
           </>
         )}
       </div>

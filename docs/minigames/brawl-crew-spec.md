@@ -461,10 +461,10 @@ gone from the runtime, the views and the lists. 25 runtime tests, 8 through the 
   shell to mount it. That came next (below).
 - **No sound.** The relay's sound hooks read its mirror and went with it; the cue table
   (`client/audio`) is kept. Step 5 wires it to the frame's `events`.
-- **A page that is its own server now keeps a game's clock.** `useRuntimeDeadline`
-  (`apps/client/src/minigames`) fires `selectDeadlineAction` in the dev sandbox and the teaser,
-  as the server's scheduler does. FAPPY's relay limit is fired there too now, beside the tablet's
-  own `timeOut`, exactly as on a real night.
+- **A page that is its own server keeps a game's clock.** `useRuntimeDeadline`
+  (`apps/client/src/utils`) fires `selectDeadlineAction` in the dev sandbox and the teaser, as
+  the server's scheduler does. Main gained that hook the same night, for Slingshlong's next
+  shooter (`f0da918a`); this branch had written its own and dropped it for main's at the merge.
 - **E2E.** The relay's 724-line sandbox spec is replaced by five tests of the pipeline
   (`tests/e2e/brawl-sandbox.spec.ts`); the relay-on-a-phone BRAWL test in
   `contestant-phones.spec.ts` is removed. Step 7 writes the real ones, phones included.

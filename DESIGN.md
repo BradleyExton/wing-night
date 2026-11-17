@@ -1384,6 +1384,13 @@ are still told apart from the sofa by the hour:
     so the bird on the balcony still wins the eye. Lettering only appears on
     a façade at least 30 units wide, and only on the wall under the plank,
     never where a bird stands.
+    The sample lanes stand three such towers a lane, 23.7 to 37.4 units
+    wide and no two lanes to the same plan, stepping up away from the
+    slingshot, with a short group of players on the
+    sand between each tower's own legs (in a landmark's doorway, where there
+    is a façade), and one piece of beach or street furniture in front of the
+    first leg. A `dock` named at tower height is drawn as a pier on tall
+    pilings, and its plank carries the points tag like any other shelf.
 -   **Whoever is shooting walks up, and walks off.** The bench stands in
     turn order, not roster order (`resolveBenchOrder`): whoever shoots next
     is nearest the post, then the one after, and when the next shot opens the

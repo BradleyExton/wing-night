@@ -5,7 +5,6 @@ export const contestantPhoneMonitorCopy = {
     skipRun: "Skip run",
     skipBlock: "Skip block",
     skipShot: "Skip shot",
-    nextShot: "Next shot →",
     resetTurn: "Reset turn"
   },
   onPhone: (name: string | null): string => (name === null ? "On a phone" : `On ${name}'s phone`),

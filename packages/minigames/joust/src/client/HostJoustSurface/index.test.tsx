@@ -152,8 +152,8 @@ test("drops the host's skip and the TV, and offers a restart, when it plays solo
   assert.match(renderSurface(hostView({ phase: "done" })), /advance the phase/);
 });
 
-// On a guest's phone at the party the host keeps every hatch on the tablet and calls the next
-// shot from there; the phone aims, picks its kind and lets go, and the room watches the TV.
+// On a guest's phone at the party the host keeps every hatch on the tablet, and the server calls
+// the next shot; the phone aims, picks its kind and lets go, and the room watches the TV.
 test("drops every hatch, the next shot and the room's totals when it sits on the contestant's phone", () => {
   const aiming = renderSurface(hostView(), "play", true, "contestant");
 
@@ -222,11 +222,30 @@ test("draws every prop in the lane", () => {
   assert.equal(propCount, 2);
 });
 
-test("holds next shot until a shot has resolved", () => {
-  assert.equal(isDisabled(renderSurface(hostView()), "Next shot"), true);
-  assert.equal(
-    isDisabled(renderSurface(hostView({ phase: "resolved", lastShot: oneDown })), "Next shot"),
-    false
+// The server calls the next shooter up on its own clock, so there is nothing to press: the hint
+// names who is coming while the shot lands, and the callout names them once they are up.
+test("does offer no next-shot button and name who is up next while a shot lands", () => {
+  const replaying = renderSurface(hostView({ phase: "resolved", lastShot: oneDown, shots: [oneDown] }));
+
+  assert.equal(buttonFor(renderSurface(hostView()), "Next shot"), null);
+  assert.equal(buttonFor(replaying, "Next shot"), null);
+  assert.match(replaying, /Watch the TV… Caitlin is up next\./);
+  assert.doesNotMatch(
+    renderSurface(hostView({ phase: "resolved", lastShot: oneDown, shotIndex: 2 })),
+    /is up next/,
+    "the turn's last shot calls nobody up"
+  );
+});
+
+test("does call the shooter up over the lane on a slack band, and not once it is drawn", () => {
+  const fresh = renderSurface(hostView({ shotIndex: 1, activeShooterPlayerId: "p2" }));
+
+  assert.match(fresh, /data-joust-up-callout="host"/);
+  assert.match(fresh, /Up now/);
+  assert.doesNotMatch(renderSurface(hostView({ aim: { x: -0.5, y: 0 } })), /data-joust-up-callout/);
+  assert.doesNotMatch(
+    renderSurface(hostView({ phase: "resolved", lastShot: oneDown })),
+    /data-joust-up-callout/
   );
 });
 
@@ -347,7 +366,6 @@ test("lists every team's running total, not just the active one", () => {
 test("disables every control when the host cannot act", () => {
   const html = renderSurface(hostView({ phase: "resolved", lastShot: oneDown }), "play", false);
 
-  assert.equal(isDisabled(html, "Next shot"), true);
   assert.equal(isDisabled(html, "Reset turn"), true);
   assert.match(html, /Waiting for the host to open the round|Watch the TV/);
 });
@@ -446,7 +464,6 @@ test("does float the beat-enders and the hint in the actions slot", () => {
     html.match(/<div class="pointer-events-none absolute bottom-[^"]*left-[^"]*">([\s\S]*?)$/)?.[1] ??
     "";
 
-  assert.match(actions, /Next shot/);
   assert.match(actions, /Skip shot/);
   assert.match(actions, /Reset turn/);
   assert.match(actions, /Drag back on the lane/);

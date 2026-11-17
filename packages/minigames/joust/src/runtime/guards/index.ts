@@ -135,6 +135,7 @@ export const isJoustRuntimeState = (
     Array.isArray(state.shots) &&
     state.shots.every(isShotResult) &&
     isLastShotOrNull(state.lastShot) &&
+    (state.resolvedAtMs === null || isFiniteNumber(state.resolvedAtMs)) &&
     isFiniteNumber(state.turnStartPoints) &&
     isNumberRecord(state.pendingPointsByTeamId)
   );

@@ -19,11 +19,11 @@ const drawn = { body: "round", comb: "none", tail: "fan", dance: "bounce" } as c
 // The metal bird in every slot the run 2 port draws.
 const METAL_KIT: Outfit = {
   top: { item: "battle-vest-a", style: "ink" },
-  sleeve: { item: "flame-sleeve-a", style: "ink" },
+  sleeve: { item: "flame-sleeve-b", style: "ink" },
   tail: { item: "chain-loop-b", style: "team" },
   boots: { item: "combat-boots-a", style: "white" },
-  prop: { item: "flying-v-a", style: "gold" },
-  stage: { item: "lava-disc-a", style: "ink" }
+  prop: { item: "flying-v-b", style: "gold" },
+  stage: { item: "lava-disc-c", style: "ink" }
 };
 
 const dressed = { ...drawn, outfit: METAL_KIT };
@@ -52,7 +52,7 @@ test("does mark each worn item with its slot, item, style and side", () => {
   const html = renderToStaticMarkup(<Character appearance={dressed} silhouette="spiky" showpieces />);
 
   assert.match(html, /data-outfit-slot="top" data-outfit-item="battle-vest-a" data-outfit-style="ink"/);
-  assert.match(html, /data-outfit-slot="prop" data-outfit-item="flying-v-a" data-outfit-style="gold"/);
+  assert.match(html, /data-outfit-slot="prop" data-outfit-item="flying-v-b" data-outfit-style="gold"/);
   assert.match(html, /data-outfit-slot="boots" data-outfit-item="combat-boots-a" data-outfit-style="white" data-outfit-side="far"/);
   assert.match(html, /data-outfit-slot="boots" data-outfit-item="combat-boots-a" data-outfit-style="white" data-outfit-side="near"/);
 });

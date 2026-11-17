@@ -15,6 +15,7 @@ export const displayJoustSurfaceCopy = {
   aimingPrompt: "Pull back… and let it fly",
   aimingDrawnPrompt: "Steady…",
   flyingPrompt: "It's away!",
+  upNextPrompt: (name: string): string => `${name} is up next`,
   resultPoints: (points: number): string => `+${points}`,
   toppledNames: (names: string[]): string => names.join(" · "),
   donePrompt: "That's the turn",

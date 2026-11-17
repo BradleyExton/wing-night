@@ -224,6 +224,66 @@ the stack after one. On 2026-10-30 the dry run showed one guest (Brad, a head, n
 outfit) and no outfit changes, so the pull waits until guests have dressed. It merges, so
 pulling again later is safe.
 
+## Variant collapse: one tile per idea (2026-11-16)
+
+Gate 1 kept up to three drawings of the same idea, and each became its own tile: 123 drawn items
+for 63 ideas, so a guest saw 36 to 50 tiles and three near-identical Star mics. The catalogue now
+holds one drawing per idea: **63 items and the 9 Moves, 72 entries**, about 23 tiles a team.
+
+- **Which one stayed.** The variant a Look already wore; where no Look wore one, picked by eye.
+  The sheets in [screenshots/wardrobe/variant-collapse/](screenshots/wardrobe/variant-collapse/)
+  show every idea with its kept and cut drawings side by side.
+- **Ids did not change.** A survivor keeps its letter (`flying-v-b`), so nothing stored needs
+  migrating. Anyone wearing a cut variant goes back to None in that slot (the tolerant reader).
+- **Three Looks moved** to the surviving variant of an item they already wore: Honky-tonk
+  (sawdust-ring a), Farmhand (lasso b, still ink) and Roller (open-shirt b).
+- **The cast lost 60 drawings** and the path helpers only they used. The harness under
+  `mockups/cast/outfit-items/` still holds every variant, so a cut one can be ported back from
+  there; `check-outfit` reads the catalogue and checks the 63 that remain.
+
+Kept, by rail: metal battle-vest a, biker-jacket a, leather-sleeve a, flame-sleeve b, lava-tips b,
+combat-boots a, flying-v b, battle-axe a, lava-disc c, bolt-disc a. Pop crop-jacket b,
+tracksuit-top b, little-black-dress b, union-jack-dress b, stripe-sleeve b, puff-sleeve a,
+big-bow b, ribbon-streamers b, platform-trainers a, go-go-boots b, star-mic a, corded-mic a,
+pom-pom a, union-jack-flag c, led-star-riser a, spotlight b. Country bandana b, western-yoke b,
+trophy-buckle a, fringed-vest a, fringe-sleeve b, suede-sleeve a, tail-bandana a, rope-coil a,
+lasso b, corn-cob a, acoustic-guitar a, sawdust-ring a. Disco open-shirt b, flare-sleeve c,
+satin-sleeve b, feather-boa b, roller-skates a, mirror-ball-egg c, lit-floor a, neon-flames b.
+Shared wing-night-bib b, team-sash a, golden-egg b, drumstick b, egg-nest a. The 12 ideas that
+only ever had one drawing are untouched.
+
+## One page, opening on Looks (2026-11-16)
+
+After the variant collapse a team's rail is about 23 tiles, short enough to drop the seven slot
+tabs. `/me/wardrobe` is now one scrolling page:
+
+1. **The stage, pinned.** The bird sticks to the top of the screen (on a screen at least 520px
+   tall), so a tap anywhere on the page shows on it. It is shorter than it was (28svh, down from
+   40svh) to leave the page room. The status line sits under it, held to two lines.
+2. **Looks.** Two across, each the guest's own bird wearing the whole Look, with its name under
+   it. The dice takes the cell an odd number of Looks leaves, or a bar under an even number.
+3. **Mix your own.** Every slot under its own heading, kit first and showpieces after, each group
+   under its one line about where it is worn. The grid is still three across with None first. The
+   worn item's style swatches sit beside the slot's name.
+4. **Your team**, unchanged.
+
+Nothing about the data or the saves changed. This departs from `mockups/cast/wardrobe-picker.html`
+(a Looks row and slot tabs), which was not redrawn. Screenshots are in
+`docs/screenshots/wardrobe/one-page/`.
+
+## Page chrome stripped (2026-11-16)
+
+Cut from `/me/wardrobe`, as things a guest does not need to dress a bird:
+
+- **The TV-size pill** and its 130px and 76px previews. It was a way to judge an item's
+  legibility, which is a design question; the harness still answers it.
+- **The "All teams" badge** on shared-rail tiles.
+- **The fine print under the team** about live wardrobes and the last pull. The line for a team
+  of one ("Your teammates dance in here once they pick the team.") stays.
+
+The two group lines on the rail are shorter: "Kit: worn in every game." and "Showpieces: parade
+and lineup only." With the pill gone the status line has the stage card's full width again.
+
 ## Rules every agent brief carries
 
 - **Process hygiene.** Stop only processes you started, by the PID you captured. Never `pkill`,
