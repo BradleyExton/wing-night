@@ -154,7 +154,7 @@ export const resolveContestantLegForAction = (
 };
 
 // One log writer per leg. While the phone holds the leg in hand, the tablet's input for it is
-// refused — its hatches (skip, reset, take back, JOUST's next shot) are not inputs and always land.
+// refused — its hatches (skip, reset, take back) are not inputs and always land.
 // A phone that dropped mid-leg still owns the log it began: the tablet gets the leg only through
 // the take-back, which restarts it with a fresh log, never by writing into the phone's.
 export const isLegHeldByPhone = (

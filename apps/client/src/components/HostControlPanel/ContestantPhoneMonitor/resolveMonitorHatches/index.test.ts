@@ -20,20 +20,18 @@ test("does offer each arcade game its own skip when the game is SCHLONIC or BRAW
   assert.equal(resolveMonitorHatches(viewOf("BRAWL", "ready"))[0]?.actionType, "skipBlock");
 });
 
-test("does let the host call JOUST's next shot only when the shot has landed", () => {
+test("does offer JOUST a skip only while aiming and never a next shot, which the server calls", () => {
   const aiming = resolveMonitorHatches(viewOf("JOUST", "aiming"));
   const resolved = resolveMonitorHatches(viewOf("JOUST", "resolved"));
 
   assert.deepEqual(
     aiming.map((hatch) => [hatch.actionType, hatch.isEnabled]),
     [
-      ["nextShot", false],
       ["skipShot", true],
       ["resetTurn", true]
     ]
   );
-  assert.equal(resolved[0]?.isEnabled, true);
-  assert.equal(resolved[1]?.isEnabled, false);
+  assert.equal(resolved[0]?.isEnabled, false);
 });
 
 test("does offer nothing when there is no view or the game has no phone turns", () => {

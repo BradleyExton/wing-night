@@ -25,8 +25,8 @@ type ContestantPhoneMonitorProps = {
 
 // The tablet while a contestant's phone plays the leg in hand. The tablet must not run the game's
 // runner — the phone is the leg's one log writer — so it shows the TV's picture instead, silent
-// (the TV is the room's only speaker), and keeps every hatch: Take it back, skip, reset, and
-// JOUST's next shot. When the phone drops mid-leg, the leg waits and Take it back is the prompt.
+// (the TV is the room's only speaker), and keeps every hatch: Take it back, skip and reset.
+// When the phone drops mid-leg, the leg waits and Take it back is the prompt.
 export const ContestantPhoneMonitor = ({ turn, activeTeamName }: ContestantPhoneMonitorProps): JSX.Element => {
   const roomState = useHostRoomState();
   const handlers = useHostHandlers();

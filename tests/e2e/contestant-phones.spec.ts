@@ -428,9 +428,11 @@ test("does load a kind, drag the band and launch a Slingshlong shot from a sidew
   await shooter.page.mouse.move(forkX - 11 * scale, forkY + 6 * scale, { steps: 8 });
   await shooter.page.mouse.up();
 
-  // The server simulated the shot and the TV replays it; the next shot is the host's to call.
+  // The server simulated the shot and the TV replays it; then the server's own clock calls the
+  // next shooter up, with nobody pressing anything on the tablet.
   await expect(displayPage.locator("[data-joust-result]").first()).toBeVisible({ timeout: 10_000 });
-  await expect(hostPage.getByRole("button", { name: "Next shot →" })).toBeEnabled();
+  await expect(hostPage.getByRole("button", { name: "Next shot →" })).toHaveCount(0);
+  await expect(displayPage.getByText("Shot 2 of", { exact: false })).toBeVisible({ timeout: 12_000 });
 
   await ensureSetupPhase(hostPage);
 });

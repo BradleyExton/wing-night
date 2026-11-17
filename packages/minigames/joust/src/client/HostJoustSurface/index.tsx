@@ -3,8 +3,10 @@ import type { JoustMinigameHostView, JoustShotResult } from "@wingnight/shared";
 import { RunningTotals, TakeoverCanvas, useVerdictDispatch } from "@wingnight/surface";
 
 import { isReplayFinished } from "../resolveJoustScene/index.js";
+import { resolveUpNextName } from "../resolveUpNext/index.js";
 import { resolveShotCopy } from "../shotResultCopy/index.js";
 import { useJoustSounds } from "../useJoustSounds/index.js";
+import { UpCallout } from "../UpCallout/index.js";
 import { useShotReplay } from "../useShotReplay/index.js";
 import { AimArena } from "./AimArena/index.js";
 import { Loadout } from "./Loadout/index.js";
@@ -176,23 +178,10 @@ export const HostJoustSurface = ({
       }
       actions={
         <>
-          {/* Only the host advances the phase. Solo, whoever is playing says what happens next and
-              calls their own next shot; on a contestant's phone the host calls it from the tablet. */}
-          {isDone ? (
-            seat === "host" && <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
-          ) : (
-            seat !== "contestant" && (
-              <button
-                className={styles.primaryButton}
-                type="button"
-                disabled={!canAct || !isResolved || isVerdictSettling}
-                onClick={(): void => {
-                  dispatchVerdict("nextShot", {});
-                }}
-              >
-                {hostJoustSurfaceCopy.nextShotButtonLabel}
-              </button>
-            )
+          {/* Nobody calls the next shot: the server does, once the replay has landed and the
+              plaque has had its beat. Only the host advances the phase once the turn is over. */}
+          {isDone && seat === "host" && (
+            <p className={styles.doneNote}>{hostJoustSurfaceCopy.turnOverLabel}</p>
           )}
           {/* The escape hatches stay on the canvas, not in the override dock:
               skipping a pull and resetting the turn are the host's ordinary
@@ -224,7 +213,9 @@ export const HostJoustSurface = ({
             </button>
           )}
           {(seat === "host" || !isDone) && (
-            <span className={styles.hint}>{resolveHint(seat, joustPhase, canAct)}</span>
+            <span className={styles.hint}>
+              {resolveHint(seat, joustPhase, canAct, joustView === null ? null : resolveUpNextName(joustView))}
+            </span>
           )}
         </>
       }
@@ -280,6 +271,13 @@ export const HostJoustSurface = ({
             }}
           />
           <LanePlate arenaName={arena.name} shooterName={shooter?.name ?? null} />
+          <UpCallout
+            surface="host"
+            shooterName={shooter?.name ?? null}
+            shotIndex={joustView.shotIndex}
+            isAiming={isAimingPhase}
+            aim={joustView.aim}
+          />
           {isSpeakerSeat(seat) && <SoloSpeaker view={joustView} serverOrigin={serverOrigin} />}
           {/* The strategy layer: which kind is on the band. Rides in the sky
               like the plate, and only its buttons take the pointer, so a pull

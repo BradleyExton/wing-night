@@ -76,24 +76,24 @@ test("joust sandbox fires a shot, replays it on the display and moves to the nex
   // with what they have loaded, because the fixture carries the sample loadout.
   await expect(page.getByText("Alex is up with The Standard")).toBeVisible();
   await expect(page.getByText("Alex is up", { exact: true })).toBeVisible();
-
-  const nextShotButton = page.getByRole("button", { name: "Next shot" });
-
-  await expect(nextShotButton).toBeDisabled();
+  // ...and both call them up over the lane on a fresh band.
+  await expect(page.locator("[data-joust-up-callout]")).toHaveCount(2);
+  // Nobody calls the next shot: there is nothing to press.
+  await expect(page.getByRole("button", { name: "Next shot" })).toHaveCount(0);
 
   await pullAndRelease(page);
 
   // The real reducer simulated the shot: the host deck names the outcome
   // and the display replays the track before showing its plaque.
   await expect(page.locator("[data-joust-result]").first()).toBeVisible();
-  await expect(nextShotButton).toBeEnabled();
   await expect(page.locator("[data-joust-result]")).toHaveCount(2, { timeout: 8000 });
+  // While the plaque holds, both screens say who is coming up.
+  await expect(page.getByText(/Caitlin is up next/).first()).toBeVisible();
 
-  await nextShotButton.click();
-
-  await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
+  // The clock calls Caitlin up on its own once the replay and the plaque's beat are over.
+  await expect(page.getByText("Shot 2 of 3")).toHaveCount(2, { timeout: 12_000 });
   await expect(page.getByText("Caitlin is up", { exact: true })).toBeVisible();
-  await expect(nextShotButton).toBeDisabled();
+  await expect(page.locator('[data-joust-up-callout] >> text="Caitlin"')).toHaveCount(2);
   // The first shot's arc stays on both lanes for Caitlin to adjust off.
   await expect(page.locator("[data-joust-ghost]")).toHaveCount(2);
 
@@ -119,15 +119,14 @@ test("the bench steps up a spot and the last shooter walks off when the next sho
   await expect(page.locator('[data-joust-walking="true"]')).toHaveCount(0);
   await expect(page.locator('[data-joust-bench-slot][data-joust-facing="-1"]')).toHaveCount(0);
 
-  const nextShotButton = page.getByRole("button", { name: "Next shot" });
-
   await pullAndRelease(page);
 
   // The shooter stays at the post to watch the replay.
-  await expect(nextShotButton).toBeEnabled();
+  await expect(page.locator("[data-joust-result]").first()).toBeVisible();
   await expect(benchFigure(page, "Alex", 0)).toHaveCount(2);
 
-  await nextShotButton.click();
+  // Nobody presses anything: once the shot has landed and held, the line walks on its own.
+  await expect(page.locator('[data-joust-walking="true"]')).not.toHaveCount(0, { timeout: 12_000 });
 
   // The line is walking: Caitlin to the post, Dan up a spot, Alex off to the far end...
   await expect(page.locator('[data-joust-walking="true"]')).not.toHaveCount(0);
@@ -164,7 +163,7 @@ test("a barely drawn band does not spend a shot", async ({ page }) => {
   await page.mouse.up();
 
   await expect(page.getByText("Shot 1 of 3")).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "Next shot" })).toBeDisabled();
+  await expect(page.locator("[data-joust-result]")).toHaveCount(0);
 });
 
 // A lane is picked by the shooting team's slot in the turn order, so the sandbox's team switcher
@@ -217,10 +216,9 @@ test("picking a kind fires it, draws it on both screens and spends it for the tu
   await expect(logButton).toBeDisabled();
   await expect(page.locator("[data-joust-result]")).toHaveCount(2, { timeout: 8000 });
 
-  await page.getByRole("button", { name: "Next shot" }).click();
-
-  // The next band reloads with the Standard; the Log is spent for the rest of the turn.
-  await expect(page.getByText("Shot 2 of 3")).toHaveCount(2);
+  // The next band reloads with the Standard once the clock calls it; the Log is spent for the rest
+  // of the turn.
+  await expect(page.getByText("Shot 2 of 3")).toHaveCount(2, { timeout: 12_000 });
   await expect(page.locator('[data-joust-shooter-kind="standard"]')).toHaveCount(2);
   await expect(logButton).toHaveAttribute("data-joust-loadout-spent", "true");
   await expect(logButton).toBeDisabled();

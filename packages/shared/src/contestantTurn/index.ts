@@ -94,7 +94,7 @@ export const PLAYER_MINIGAME_ACTION_REFUSAL_REASONS = {
   WRONG_PHASE: "wrong_phase",
   // The turn was locked to the tablet, or the game has no phone turns.
   TABLET_MODE: "tablet_mode",
-  // An action only the host sends: a skip, a reset, JOUST's next shot.
+  // An action only the host (or the server's own clock) sends: a skip, a reset, JOUST's next shot.
   HOST_ONLY_ACTION: "host_only_action",
   // Somebody else's leg, or no leg in hand.
   NOT_CONTESTANT: "not_contestant",

@@ -38,6 +38,7 @@ import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   JOUST_MIN_LAUNCH_PULL,
   JOUST_RACK_CLEARED_BONUS,
+  JOUST_SHOT_HOLD_MS,
   JOUST_SIMULATION_OPTIONS,
   SLACK_JOUST_AIM,
   type JoustRuntimeContent,
@@ -155,6 +156,12 @@ const resolveContestantShotIndex = (state: JoustRuntimeState): number | null => 
   return null;
 };
 
+// How long the room's replay of a shot runs: the track is cut the moment the scene settles, so
+// its last keyframe is the last bird landing and the last tower leg going over.
+const resolveReplayMs = (run: JoustShotTrack): number => {
+  return (Math.max(0, run.keyframes.length - 1) / run.keyframeHz) * 1000;
+};
+
 // Shared by `nextShot` and the `skipShot` escape hatch: both land on a fresh
 // band, or on `done` once the team's shots are spent — or once there is nobody
 // left to knock over, because firing at an empty lane is not a shot. The track
@@ -177,6 +184,7 @@ const advanceToNextShot = (
       aim: { ...SLACK_JOUST_AIM },
       selectedShooterId: resolveDefaultShooterId(content.shooters, state.usedShooterIds),
       lastShot: hasNextShot ? null : state.lastShot,
+      resolvedAtMs: null,
       previousShotGhost:
         hasNextShot && state.lastShot !== null
           ? resolveShotGhost(state.lastShot, JOUST_WORLD.floorY)
@@ -190,7 +198,9 @@ const launch = (
   state: JoustRuntimeState,
   content: JoustRuntimeContent,
   aim: JoustAim,
-  pointsMax: number
+  pointsMax: number,
+  // Null for an envelope with no stamp (a fixture), which leaves the shot with no clock on it.
+  receivedAtMs: number | null
 ): MinigameRuntimeReductionResult => {
   const unchanged = { state, didMutate: false };
   const arena = resolveCurrentArena(state, content);
@@ -271,6 +281,7 @@ const launch = (
         pinPlayerIds: standing.map((pin) => pin.playerId),
         rubblePerchIndices: [...state.collapsedPerchIndices]
       },
+      resolvedAtMs: receivedAtMs,
       pendingPointsByTeamId: withPendingPoints(state, teamPointsBefore + points, pointsMax)
     },
     didMutate: true
@@ -279,7 +290,10 @@ const launch = (
 
 export const joustRuntimePlugin: MinigameRuntimePlugin = {
   id: "JOUST",
-  transientActionTypes: ["setAim", "pickShooter"],
+  // `nextShot` is the server's own clock (`selectDeadlineAction`), not a move anybody made, so it
+  // leaves the undo point on the launch: the host's Undo takes back the whole shot, rather than
+  // landing back on the plaque only for the clock to call the next shooter straight up again.
+  transientActionTypes: ["setAim", "pickShooter", "nextShot"],
   content: joustContentAdapter,
   isRules: isJoustRules,
   initialize: (input) => {
@@ -318,6 +332,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       aim: { ...SLACK_JOUST_AIM },
       shots: [],
       lastShot: null,
+      resolvedAtMs: null,
       turnStartPoints:
         activeTurnTeamId === null ? 0 : (input.pendingPointsByTeamId[activeTurnTeamId] ?? 0),
       pendingPointsByTeamId: { ...input.pendingPointsByTeamId }
@@ -376,7 +391,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
         return unchanged;
       }
 
-      return launch(state, content, actionPayload, input.pointsMax);
+      return launch(state, content, actionPayload, input.pointsMax, input.envelope.receivedAtMs ?? null);
     }
 
     if (actionType === "nextShot") {
@@ -422,6 +437,7 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
           usedShooterIds: [],
           shots: [],
           lastShot: null,
+          resolvedAtMs: null,
           pendingPointsByTeamId: withPendingPoints(
             state,
             state.turnStartPoints,
@@ -434,9 +450,10 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
 
     return unchanged;
   },
-  // The shooter's phone aims, loads and lets go; the host still calls the next shot, because that
-  // is the room's beat — the replay has to land on the TV first. No retake: a shot is atomic, so
-  // taking one back just hands the shot about to be aimed to the tablet.
+  // The shooter's phone aims, loads and lets go; nobody calls the next shot — the server does, once
+  // the replay has landed on the TV and the room has read the plaque (`selectDeadlineAction`). No
+  // retake: a shot is atomic, so taking one back just hands the shot about to be aimed to the
+  // tablet.
   contestantActionTypes: ["setAim", "pickShooter", "launch"],
   contestantResetActionType: "resetTurn",
   selectContestant: (input) => {
@@ -454,6 +471,24 @@ export const joustRuntimePlugin: MinigameRuntimePlugin = {
       legIndex: shotIndex,
       playerId: resolveShooterIdAt(input.state, shotIndex),
       nextPlayerId: resolveShooterIdAt(input.state, shotIndex + 1)
+    };
+  },
+  // The next shooter steps up on the server's clock: the replay's own length, then a beat on the
+  // plaque. Nobody has to find a button, and the walk-off, the line stepping up and the "is up"
+  // callout all start from the one moment every screen agrees on.
+  selectDeadlineAction: (input) => {
+    if (
+      !isJoustRuntimeState(input.state) ||
+      input.state.phase !== "resolved" ||
+      input.state.lastShot === null ||
+      input.state.resolvedAtMs === null
+    ) {
+      return null;
+    }
+
+    return {
+      actionType: "nextShot",
+      atMs: input.state.resolvedAtMs + resolveReplayMs(input.state.lastShot.run) + JOUST_SHOT_HOLD_MS
     };
   },
   syncPendingPoints: (input) => {

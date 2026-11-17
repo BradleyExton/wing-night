@@ -20,8 +20,9 @@ export const hostJoustSurfaceCopy = {
   replayingHint: "Watch the TV…",
   // Solo (the online teaser) there is no TV: the lane on the phone is the replay.
   soloReplayingHint: "Watch it fly…",
+  // The replaying hint with whoever the server calls up next once the shot has landed.
+  upNextHint: (replaying: string, name: string): string => `${replaying} ${name} is up next.`,
   resultPoints: (points: number): string => `+${points}`,
-  nextShotButtonLabel: "Next shot →",
   turnOverLabel: "Turn over — advance the phase when the room is ready.",
   skipShotButtonLabel: "Skip shot",
   resetTurnButtonLabel: "Reset turn",

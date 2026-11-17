@@ -17,6 +17,7 @@ import { isJoustRules, resolveJoustRules } from "./rules/index.js";
 import {
   DEFAULT_JOUST_SHOTS_PER_PLAYER,
   JOUST_RACK_CLEARED_BONUS,
+  JOUST_SHOT_HOLD_MS,
   type JoustRuntimeState
 } from "./types/index.js";
 
@@ -457,6 +458,53 @@ test("moves to the next shot and drops the replayed track on the way", () => {
   assert.equal(next.shotIndex, 1);
   assert.equal(next.lastShot, null);
   assert.equal(next.shots.length, 1);
+});
+
+const LAUNCHED_AT_MS = 1_700_000_000_000;
+
+const launchAt = (state: SerializableValue, aim: { x: number; y: number }): SerializableValue => {
+  return joustRuntimePlugin.reduceAction({
+    state,
+    envelope: { actionType: "launch", actionPayload: aim, receivedAtMs: LAUNCHED_AT_MS },
+    pointsMax: 15,
+    rules: { shotsPerPlayer: 1 },
+    content: contentFixture
+  }).state;
+};
+
+const deadlineOf = (state: SerializableValue) => {
+  return (
+    joustRuntimePlugin.selectDeadlineAction?.({ state, rules: { shotsPerPlayer: 1 }, content: contentFixture }) ??
+    null
+  );
+};
+
+test("does call the next shot once the replay has landed and the plaque has had its beat", () => {
+  const resolved = launchAt(initializeState(), SINGLE_AIM);
+  const run = asState(resolved).lastShot?.run;
+
+  assert.notEqual(run, undefined);
+
+  const replayMs = (((run?.keyframes.length ?? 1) - 1) / (run?.keyframeHz ?? 1)) * 1000;
+
+  assert.deepEqual(deadlineOf(resolved), {
+    actionType: "nextShot",
+    atMs: LAUNCHED_AT_MS + replayMs + JOUST_SHOT_HOLD_MS
+  });
+});
+
+test("does not set a deadline while aiming, once the turn is over, or for an unstamped launch", () => {
+  const fresh = initializeState();
+
+  assert.equal(deadlineOf(fresh), null);
+  assert.equal(deadlineOf(reduce(launchAt(fresh, SINGLE_AIM), "nextShot").state), null);
+  assert.equal(deadlineOf(reduce(launchAt(fresh, TIMBER_AIM), "nextShot").state), null);
+  assert.equal(deadlineOf(reduce(fresh, "launch", SINGLE_AIM).state), null);
+});
+
+test("does keep the undo point on the launch when the next shot is called", () => {
+  assert.ok(joustRuntimePlugin.transientActionTypes?.includes("nextShot"));
+  assert.equal(joustRuntimePlugin.transientActionTypes?.includes("launch"), false);
 });
 
 test("ends the turn early once the rack is empty", () => {

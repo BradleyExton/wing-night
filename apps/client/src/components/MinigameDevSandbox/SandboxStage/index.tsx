@@ -28,6 +28,7 @@ import {
   resolveSandboxHostRoomState
 } from "./resolveSandboxHostRoomState";
 import { initializeRuntimeState, selectRoundMemory } from "./bootRuntime";
+import { useRuntimeDeadline } from "../../../utils/useRuntimeDeadline";
 import * as styles from "./styles";
 
 type SandboxStageProps = {
@@ -127,6 +128,13 @@ export const SandboxStage = ({
     rules: devManifest.rules,
     content: devManifest.content
   };
+  // The sandbox is its own server, deadline clock included, so a game paced by it (JOUST's next
+  // shooter, FAPPY's relay limit) runs here as it does in a room. Only in play: the server keeps
+  // no deadline outside MINIGAME_PLAY either.
+  useRuntimeDeadline(
+    phase === "play" ? (runtimePlugin.selectDeadlineAction?.(selectorInput) ?? null) : null,
+    handleDispatchAction
+  );
   const minigameHostView = runtimePlugin.selectHostView(selectorInput);
   const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
   const activeTeamName =
