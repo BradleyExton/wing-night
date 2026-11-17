@@ -780,3 +780,6 @@ job, and the fix is more geese per hen, not a wider camera.
    deserves a second look on a pad). The parked "spectators' phones send reinforcements" idea is
    the obvious one for a game where everyone already holds a phone, and it runs against his
    2026-11-16 ruling that phones on the night are for the arcade games only — his call.
+   **First concrete candidate (2026-11-17):** the last block as a swappable finale level, the
+   first of them indoors at Crossover's — [ideas/brawl-back-room-finale.md](ideas/brawl-back-room-finale.md).
+   An idea file with options and a prototype to play first; nothing built.
