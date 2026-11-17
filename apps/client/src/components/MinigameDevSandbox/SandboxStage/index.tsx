@@ -10,6 +10,7 @@ import type {
 import { CONTESTANT_CONTROLLERS, Phase, resolveMinigameDefinition, type MinigameType, type RoomTimerState } from "@wingnight/shared";
 
 import { hostCopy } from "../../../copy/host";
+import { useRuntimeDeadline } from "../../../minigames/useRuntimeDeadline";
 import { RoomStateProvider } from "../../../context/RoomStateContext";
 import { HostActionBarSurface } from "../../HostControlPanel/HostActionBarSurface";
 import { HostMiniRail } from "../../HostControlPanel/HostMiniRail";
@@ -129,6 +130,10 @@ export const SandboxStage = ({
   };
   const minigameHostView = runtimePlugin.selectHostView(selectorInput);
   const minigameDisplayView = runtimePlugin.selectDisplayView(selectorInput);
+
+  // The sandbox is its own server for a game's clock too.
+  useRuntimeDeadline(runtimePlugin, selectorInput, handleDispatchAction);
+
   const activeTeamName =
     activeTeamId === null ? null : (devManifest.teamNameByTeamId[activeTeamId] ?? null);
   const teamOptions = devManifest.teamIds.map((teamId) => ({

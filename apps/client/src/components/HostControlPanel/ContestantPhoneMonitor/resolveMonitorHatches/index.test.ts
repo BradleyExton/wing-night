@@ -15,9 +15,12 @@ test("does offer skip leg and reset when the game is FAPPY, and skip only while 
   assert.equal(resolveMonitorHatches(viewOf("FAPPY", "finished"))[0]?.isEnabled, false);
 });
 
-test("does offer each arcade game its own skip when the game is SCHLONIC or BRAWL", () => {
+test("does offer each arcade relay its own skip when the game is SCHLONIC", () => {
   assert.equal(resolveMonitorHatches(viewOf("SCHLONIC", "running"))[0]?.actionType, "skipRun");
-  assert.equal(resolveMonitorHatches(viewOf("BRAWL", "ready"))[0]?.actionType, "skipBlock");
+});
+
+test("does offer no relay hatch for a crew game: its tablet surface is its own monitor", () => {
+  assert.deepEqual(resolveMonitorHatches(viewOf("BRAWL", "ready")), []);
 });
 
 test("does let the host call JOUST's next shot only when the shot has landed", () => {

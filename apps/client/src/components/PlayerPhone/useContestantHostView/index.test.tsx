@@ -12,6 +12,7 @@ const holding = (view: ContestantMinigameHostView | null): ContestantLegControll
   getHostView: () => view,
   subscribe: () => () => undefined,
   dispatch: () => undefined,
+  dispatchTo: () => undefined,
   forgetHostView: () => undefined,
   dispose: () => undefined
 });

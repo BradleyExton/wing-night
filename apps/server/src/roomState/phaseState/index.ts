@@ -7,6 +7,7 @@ import {
 } from "../../minigames/runtime/index.js";
 import { getNextPhase } from "../../utils/getNextPhase/index.js";
 import { applyContestantTurnPhaseEffects } from "../contestantTurnState/index.js";
+import { applyCrewTurnPhaseEffects } from "../crewTurnState/index.js";
 import { setMusicForPhase } from "../musicState/index.js";
 import {
   createRunningTimer,
@@ -130,6 +131,7 @@ export const applyPhaseTransitionEffects = (
   setMusicForPhase(state, nextPhase);
   // After the runtime is seated, so the first leg is already in hand to derive.
   applyContestantTurnPhaseEffects(state, nextPhase);
+  applyCrewTurnPhaseEffects(state, nextPhase);
 };
 
 export const resolveNextPhase = (state: RoomState, previousPhase: Phase): Phase => {

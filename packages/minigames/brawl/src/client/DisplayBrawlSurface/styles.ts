@@ -18,8 +18,12 @@ export const stage = "relative flex h-full w-full flex-col gap-[clamp(0.6rem,1.1
 // the street runs the whole width of the TV and the only edge is the arena's own rounded corner.
 export const arenaArea = "relative flex min-h-0 flex-1 overflow-hidden rounded-2xl bg-bg";
 
-// Each block's street slides in as the last one wipes; the remount keys it (`scene-enter`).
-export const blockEnter = "h-full w-full motion-safe:animate-[scene-enter_420ms_ease-out_both]";
+// The marquee's readout: the block, and the worth banked over what the street holds, in gold.
+export const readout = "flex items-baseline gap-[0.8em] font-score tabular-nums";
+
+export const tally = "font-extrabold text-gold";
+
+export const tallyLabel = "text-[0.7em] uppercase tracking-[0.16em] text-muted";
 
 // The turn's result, centred over the street once the team is through.
 export const resultOverlay =

@@ -29,7 +29,8 @@ const ENVELOPE: RoleScopedStateSnapshotEnvelope = {
     activeRoundTeamId: null,
     activeTurnTeamId: null,
     claimedPlayerIds: ["player-1"],
-    contestantTurn: null
+    contestantTurn: null,
+    crewTurn: null
   }
 } as RoleScopedStateSnapshotEnvelope;
 
@@ -80,6 +81,7 @@ const holdingNoView: ContestantLegController = {
   getHostView: () => null,
   subscribe: () => () => undefined,
   dispatch: () => undefined,
+  dispatchTo: () => undefined,
   forgetHostView: () => undefined,
   dispose: () => undefined
 };

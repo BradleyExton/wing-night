@@ -64,6 +64,7 @@ export type StageViewModel = {
   // An arcade turn's locked device mode and whose leg it is, or null outside one: the TV tells
   // the team to grab the tablet or their phones, and an arcade wall says it at each handoff.
   contestantTurn: DisplayRoomStateSnapshot["contestantTurn"];
+  crewTurn: DisplayRoomStateSnapshot["crewTurn"];
   // Faces a phone holds: a phones briefing only sends the team to their phones when they have one.
   claimedPlayerIds: string[];
   eatingTimerSnapshot: NonNullable<DisplayRoomStateSnapshot["timer"]> | null;
@@ -226,6 +227,7 @@ export const resolveStageViewModel = (
     activeTeamPlayers,
     minigameDisplayView,
     contestantTurn: roomState?.contestantTurn ?? null,
+    crewTurn: roomState?.crewTurn ?? null,
     claimedPlayerIds: roomState?.claimedPlayerIds ?? [],
     eatingTimerSnapshot,
     minigameTimerSnapshot,

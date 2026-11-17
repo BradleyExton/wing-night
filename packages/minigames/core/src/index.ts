@@ -6,6 +6,8 @@ import {
 } from "@wingnight/shared";
 import type {
   ContestantController,
+  CrewPad,
+  CrewStageStatus,
   MinigameDisplayView,
   MinigameHostView,
   MinigameType,
@@ -31,6 +33,11 @@ export type MinigameRuntimeActionEnvelope = {
   // its tests pass literal timestamps. Optional because the fixtures written
   // before it omit it; a reducer that needs it refuses an action without it.
   receivedAtMs?: number;
+  // The player whose phone sent this, stamped by the server from the face the sending socket
+  // holds — never read from the payload, so nothing a phone sends can name another player.
+  // Absent on a host action and on the server's own (a deadline). A crew game maps it to the
+  // player's piece on the board; the relays, which know whose leg it is, never look.
+  actorPlayerId?: string;
 };
 
 export type MinigameRuntimeInitializationInput = {
@@ -136,6 +143,12 @@ export type MinigameRuntimePlugin = {
   // run's own end, never a skip, a reset or anything that paces the turn for the room.
   selectContestant?: (input: MinigameRuntimeSelectorInput) => MinigameContestant | null;
   contestantActionTypes?: readonly string[];
+  // The crew hook, implemented by the games a whole team plays at once from its phones
+  // (`CREW_MINIGAME_TYPES`) in place of `selectContestant`: whose phones may send
+  // `contestantActionTypes` now, where the stage in hand is, and what each of those players' pads
+  // should show. Null when no stage is in hand (the turn is over). A crew game's inputs arrive
+  // with `actorPlayerId` on the envelope; its phones never see the game's views.
+  selectCrew?: (input: MinigameRuntimeSelectorInput) => MinigameCrew | null;
   // Optional, beside the two above: the host action that restarts the leg in hand when the host
   // takes it back from a phone, so the tablet starts it clean rather than inheriting a log it
   // could never continue. Absent for a game whose legs are atomic (a JOUST shot): taking one
@@ -160,6 +173,14 @@ export type MinigameContestant = {
   legIndex: number;
   playerId: string | null;
   nextPlayerId: string | null;
+};
+
+// A crew stage in hand (`MinigameRuntimePlugin.selectCrew`): the players whose phones are pads
+// for it, in roster order, where it is, and each one's pad as their phone should draw it.
+export type MinigameCrew = {
+  status: CrewStageStatus;
+  playerIds: string[];
+  pads: Record<string, CrewPad>;
 };
 
 export type MinigameDeadlineAction = {
@@ -274,9 +295,23 @@ export type MinigameDisplayRendererProps = {
 // phone turns, and every harness with no room, says "tablet".
 export type MinigameHandset = ContestantController;
 
+// What a crew game's pad is handed: this player's own pad and where the stage is, and the one
+// way to send. Nothing of the game's views — a pad is a controller, and the wall is the picture.
+export type MinigamePadRendererProps = {
+  minigameType: MinigameType;
+  playerId: string;
+  pad: CrewPad;
+  status: CrewStageStatus | null;
+  canDispatchAction: boolean;
+  onDispatchAction: MinigameActionDispatch;
+};
+
 export type MinigameRendererBundle = {
   HostSurface: ComponentType<MinigameHostRendererProps>;
   DisplaySurface: ComponentType<MinigameDisplayRendererProps>;
+  // A crew game's gamepad, drawn on each team player's phone in place of the game
+  // (`MinigameRuntimePlugin.selectCrew`). Absent for every game that is not one.
+  PadSurface?: ComponentType<MinigamePadRendererProps>;
   // Whether the TV is the room's speaker for the game is NOT here: the display
   // decides on its audio overlay before it downloads a renderer, so that flag
   // lives beside the loader in the client's registry (`requiresDisplayAudio`).

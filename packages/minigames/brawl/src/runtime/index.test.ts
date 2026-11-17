@@ -1,45 +1,53 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { BrawlBestTurn, BrawlInput, BrawlMinigameHostView, Player, Team } from "@wingnight/shared";
-import { BRAWL_WORLD, resolveBrawlBlockWorth, resolveBrawlCourseTotal, runBrawlRun } from "@wingnight/shared";
+import type { BrawlBestTurn, BrawlCrewFrame, BrawlMinigameBlock, BrawlMinigameHostView, Player, Team } from "@wingnight/shared";
+import {
+  BRAWL_CREW_WORLD,
+  advanceBrawlCrew,
+  brawlCrewBrawler,
+  resolveBrawlCrewBlock,
+  resolveBrawlCrewBotInputs,
+  resolveBrawlCrewCourseTotal,
+  type BrawlCrewBot
+} from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import { canBuyBrawlHeart, isBrawlRuntimeState } from "./guards/index.js";
+import { isBrawlRuntimeState } from "./guards/index.js";
 import { isBrawlRules, resolveBrawlRules } from "./rules/index.js";
-import { resolveBrawlPoints, resolveGoonsDown, resolveHeartsPaid } from "./scoring/index.js";
-import { DEFAULT_BRAWL_RULES, type BrawlRuntimeState } from "./types/index.js";
+import { resolveBrawlPoints } from "./scoring/index.js";
+import { BRAWL_PULSE_TICKS, BRAWL_READY_HOLD_MS, DEFAULT_BRAWL_RULES } from "./types/index.js";
 import { brawlRuntimePlugin } from "./index.js";
 
 const PLAYERS: Player[] = [
   { id: "p1", name: "Alex" },
   { id: "p2", name: "Caitlin" },
-  { id: "p3", name: "Dan" }
+  { id: "p3", name: "Dan" },
+  { id: "p9", name: "Rival" }
 ];
 
 const TEAMS: Team[] = [
   { id: "team-a", name: "Team A", playerIds: ["p1", "p2", "p3"], totalScore: 0 },
-  { id: "team-b", name: "Team B", playerIds: [], totalScore: 0 }
+  { id: "team-b", name: "Team B", playerIds: ["p9"], totalScore: 0 }
 ];
 
 const RULES = { blocksPerTurn: 2, courseSeed: 20261001 };
 const POINTS_MAX = 15;
+// The server clock when the test's first block starts.
+const T0 = 1_800_000_000_000;
+/** The server clock at a tick of a block that started at `startedAtMs`: the first millisecond of it. */
+const atTick = (startedAtMs: number, tick: number): number => startedAtMs + Math.ceil((tick * 1000) / 60);
 
 const initialize = (
-  rules: SerializableValue = RULES,
-  options: {
-    activeRoundTeamId?: string;
-    roundMemory?: SerializableValue | null;
-    pendingPointsByTeamId?: Record<string, number>;
-  } = {}
+  options: { roundMemory?: SerializableValue | null; pendingPointsByTeamId?: Record<string, number>; teams?: Team[] } = {}
 ): SerializableValue => {
   const state = brawlRuntimePlugin.initialize({
     teamIds: ["team-a", "team-b"],
     players: PLAYERS,
-    teams: TEAMS,
-    activeRoundTeamId: options.activeRoundTeamId ?? "team-a",
+    teams: options.teams ?? TEAMS,
+    activeRoundTeamId: "team-a",
     pointsMax: POINTS_MAX,
     pendingPointsByTeamId: options.pendingPointsByTeamId ?? { "team-a": 0, "team-b": 0 },
-    rules,
+    rules: RULES,
     content: null,
     roundMemory: options.roundMemory ?? null
   });
@@ -49,26 +57,23 @@ const initialize = (
   return state;
 };
 
-const reduce = (
-  state: SerializableValue,
-  actionType: string,
-  actionPayload: SerializableValue = {}
-): { state: SerializableValue; didMutate: boolean } => {
+type Send = { at?: number; actor?: string; payload?: SerializableValue };
+
+const reduce = (state: SerializableValue, actionType: string, { at = T0, actor, payload = {} }: Send = {}) => {
   return brawlRuntimePlugin.reduceAction({
     state,
-    envelope: { actionType, actionPayload, receivedAtMs: 1000 },
+    envelope:
+      actor === undefined
+        ? { actionType, actionPayload: payload, receivedAtMs: at }
+        : { actionType, actionPayload: payload, receivedAtMs: at, actorPlayerId: actor },
     pointsMax: POINTS_MAX,
     rules: RULES,
     content: null
   });
 };
 
-// The state itself, for the tests that need no view: a view reads the course's total off the
-// sim, and these are about the reducer's own bookkeeping.
-const runtimeState = (state: SerializableValue): BrawlRuntimeState => {
-  assert.ok(isBrawlRuntimeState(state));
-
-  return state;
+const send = (state: SerializableValue, actionType: string, options: Send = {}): SerializableValue => {
+  return reduce(state, actionType, options).state;
 };
 
 const hostView = (state: SerializableValue): BrawlMinigameHostView => {
@@ -79,558 +84,424 @@ const hostView = (state: SerializableValue): BrawlMinigameHostView => {
   return view;
 };
 
-// A mashing log: hold right from the line and peck twice a second for the whole block. It is what
-// everyone does first, so it is what the referee should be seen to score.
-const MASH: BrawlInput[] = [
-  { tick: 0, kind: "walk", dir: 1 },
-  ...Array.from({ length: Math.floor(BRAWL_WORLD.blockTicks / 30) }, (_unused, index) => ({
-    tick: index * 30,
-    kind: "peck" as const
-  }))
-];
+const blockOf = (state: SerializableValue, index?: number): BrawlMinigameBlock => {
+  const view = hostView(state);
+  const block = view.blocks[index ?? view.blockIndex];
 
-const sendInput = (state: SerializableValue, input: BrawlInput): SerializableValue => {
-  return input.kind === "walk"
-    ? reduce(state, "walk", { tick: input.tick, dir: input.dir }).state
-    : reduce(state, "peck", { tick: input.tick }).state;
+  assert.ok(block !== undefined);
+
+  return block;
 };
 
-const playBlock = (state: SerializableValue, inputs: readonly BrawlInput[]): SerializableValue => {
-  const logged = inputs.reduce(sendInput, state);
+const frameOf = (state: SerializableValue, index?: number): BrawlCrewFrame => {
+  const { frame } = blockOf(state, index);
 
-  return reduce(logged, "endBlock").state;
+  assert.ok(frame !== null, "the block has no frame");
+
+  return frame;
 };
 
-const roundMemory = (state: SerializableValue): SerializableValue | null => {
-  return brawlRuntimePlugin.selectRoundMemory?.({ state, rules: RULES, content: null }) ?? null;
+const crewOf = (state: SerializableValue) => brawlRuntimePlugin.selectCrew?.({ state, rules: RULES, content: null }) ?? null;
+
+const deadlineOf = (state: SerializableValue) => {
+  return brawlRuntimePlugin.selectDeadlineAction?.({ state, rules: RULES, content: null }) ?? null;
 };
 
 const memoryBestTurn = (state: SerializableValue): BrawlBestTurn | null => {
-  const memory = roundMemory(state);
+  const memory = brawlRuntimePlugin.selectRoundMemory?.({ state, rules: RULES, content: null }) ?? null;
 
-  assert.ok(memory !== null && typeof memory === "object" && !Array.isArray(memory) && "bestTurn" in memory);
+  assert.ok(memory !== null && typeof memory === "object" && !Array.isArray(memory));
 
-  return memory.bestTurn as BrawlBestTurn | null;
+  return (memory as { bestTurn: BrawlBestTurn | null }).bestTurn;
 };
 
-test("does deal one block to each seated player, in seating order, when the turn opens", () => {
-  const state = runtimeState(initialize({ ...RULES, blocksPerTurn: 3 }));
+/** Steps everybody out who is named, in that order, then has the host start the block. */
+const startWith = (state: SerializableValue, crew: string[], at = T0): SerializableValue => {
+  const out = crew.reduce((next, actor) => send(next, "stepOut", { at, actor }), state);
 
-  assert.deepEqual(
-    state.blocks.map((block) => block.player?.name),
-    ["Alex", "Caitlin", "Dan"]
-  );
-  assert.deepEqual(
-    state.blocks.map((block) => block.status),
-    ["ready", "ready", "ready"]
-  );
-  assert.equal(state.blockIndex, 0);
-  assert.equal(state.courseSeed, RULES.courseSeed);
-  assert.equal(state.bestTurn, null);
-});
+  return send(out, "startBlock", { at });
+};
 
-test("does cycle a short roster when the course has more blocks than players", () => {
-  const state = runtimeState(initialize({ ...RULES, blocksPerTurn: 5 }));
+/**
+ * Fights the block in hand to its end through the reducer alone, a bot per hen: every tick each
+ * bot's changed thumbs go in as that player's phone would send them (or the tablet's, for a
+ * tablet block), and a tick with no thumb is the server's pulse.
+ */
+const fight = (state: SerializableValue, bot: BrawlCrewBot): { state: SerializableValue; endedAt: number } => {
+  let next = state;
+  let at = 0;
+  const index = hostView(state).blockIndex;
 
-  assert.deepEqual(
-    state.blocks.map((block) => block.player?.name),
-    ["Alex", "Caitlin", "Dan", "Alex", "Caitlin"]
-  );
-});
+  for (;;) {
+    const block = blockOf(next, index);
 
-test("does fight with the house hen when nobody on the team is seated", () => {
-  const state = runtimeState(initialize(RULES, { activeRoundTeamId: "team-b" }));
+    if (block.status === "done") {
+      return { state: next, endedAt: at };
+    }
 
-  assert.deepEqual(
-    state.blocks.map((block) => block.player),
-    [null, null]
-  );
-});
+    assert.ok(block.frame !== null && block.crewSize !== null && block.startedAtMs !== null);
 
-test("does log a walk and start the block when the left thumb lands", () => {
-  const walked = reduce(initialize(), "walk", { tick: 0, dir: 1 });
-  const block = runtimeState(walked.state).blocks[0];
+    const layout = resolveBrawlCrewBlock({ ...{ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn }, block: index, crew: block.crewSize });
+    const thumbs = resolveBrawlCrewBotInputs(block.frame, layout, Array.from({ length: block.crewSize }, () => bot));
 
-  assert.equal(walked.didMutate, true);
-  assert.equal(block?.status, "running");
-  assert.deepEqual(block?.inputs, [{ tick: 0, kind: "walk", dir: 1 }]);
-});
+    at = atTick(block.startedAtMs, block.frame.tick + 1);
 
-test("does log a walk and a peck on the same tick when both thumbs land together", () => {
-  const walked = reduce(initialize(), "walk", { tick: 12, dir: -1 });
-  const pecked = reduce(walked.state, "peck", { tick: 12 });
-  const lifted = reduce(pecked.state, "walk", { tick: 40, dir: 0 });
+    if (thumbs.length === 0) {
+      const pulsed = reduce(next, "pulse", { at });
 
-  assert.equal(pecked.didMutate, true);
-  assert.deepEqual(runtimeState(lifted.state).blocks[0]?.inputs, [
-    { tick: 12, kind: "walk", dir: -1 },
-    { tick: 12, kind: "peck" },
-    { tick: 40, kind: "walk", dir: 0 }
-  ]);
-});
+      assert.ok(pulsed.didMutate, `the fight did not move at tick ${block.frame.tick}`);
+      next = pulsed.state;
+      continue;
+    }
 
-test("does refuse an input when its tick is earlier than the log's last", () => {
-  const pecked = reduce(initialize(), "peck", { tick: 10 });
+    for (const thumb of thumbs) {
+      const actor = block.tablet ? undefined : (block.crew[thumb.hen]?.player?.playerId ?? undefined);
+      const options = { at, ...(actor === undefined ? {} : { actor }) };
 
-  assert.equal(reduce(pecked.state, "peck", { tick: 9 }).didMutate, false);
-  assert.equal(reduce(pecked.state, "walk", { tick: 4, dir: 1 }).didMutate, false);
-});
+      next =
+        thumb.kind === "walk"
+          ? send(next, "walk", { ...options, payload: { dir: thumb.dir } })
+          : send(next, "peck", { ...options, payload: { held: thumb.held } });
+    }
+  }
+};
 
-test("does refuse a thumb when its payload is malformed", () => {
-  const state = initialize();
-
-  assert.equal(reduce(state, "peck", {}).didMutate, false);
-  assert.equal(reduce(state, "peck", { tick: -1 }).didMutate, false);
-  assert.equal(reduce(state, "peck", { tick: 1.5 }).didMutate, false);
-  assert.equal(reduce(state, "walk", { tick: 0 }).didMutate, false);
-  assert.equal(reduce(state, "walk", { tick: 0, dir: 2 }).didMutate, false);
-  assert.equal(reduce(state, "walk", { tick: 0, dir: "right" }).didMutate, false);
-  assert.equal(reduce(state, "walk", [] as SerializableValue).didMutate, false);
-  assert.equal(reduce(state, "punch", { tick: 0 }).didMutate, false);
-});
-
-test("does refuse to end a block when nobody has started it", () => {
-  assert.equal(reduce(initialize(), "endBlock").didMutate, false);
-});
-
-test("does ignore state when it is not its own", () => {
-  assert.equal(brawlRuntimePlugin.selectHostView({ state: { nope: true }, rules: null, content: null }), null);
-  assert.equal(brawlRuntimePlugin.selectDisplayView({ state: null, rules: null, content: null }), null);
-  assert.equal(brawlRuntimePlugin.selectRoundMemory?.({ state: { nope: true }, rules: null, content: null }), null);
-  assert.equal(reduce({ nope: true }, "peck", { tick: 0 }).didMutate, false);
-});
-
-test("does score the worth put down against the course's whole worth", () => {
-  assert.equal(resolveBrawlPoints(0, 27, 15), 0);
-  assert.equal(resolveBrawlPoints(24, 27, 15), 13);
-  assert.equal(resolveBrawlPoints(27, 27, 15), 15);
-  // The course is the ceiling.
-  assert.equal(resolveBrawlPoints(40, 27, 15), 15);
-  assert.equal(
-    resolveGoonsDown(
-      [
-        { blockIndex: 0, player: null, status: "done", inputs: [], skipped: false, result: { outcome: "ko", endTick: 10, goons: 5, hearts: 0 }, heartBought: false },
-        { blockIndex: 1, player: null, status: "done", inputs: [], skipped: true, result: null, heartBought: false }
-      ],
-      3
-    ),
-    5
-  );
-});
-
-test("does bank each heart she walked off with when a block was cleared, and none from the bay or the bell", () => {
-  const block = (result: { outcome: "cleared" | "ko" | "timeout"; goons: number; hearts: number }) => ({
-    blockIndex: 0,
-    player: null,
-    status: "done" as const,
-    inputs: [],
-    skipped: false,
-    result: { endTick: 10, ...result },
-    heartBought: false
-  });
-
-  assert.equal(resolveGoonsDown([block({ outcome: "cleared", goons: 11, hearts: 2 })], 3), 11 + 2 * BRAWL_WORLD.heartWorth);
-  assert.equal(resolveGoonsDown([block({ outcome: "ko", goons: 4, hearts: 0 })], 3), 4);
-  assert.equal(resolveGoonsDown([block({ outcome: "timeout", goons: 4, hearts: 3 })], 3), 4);
-  assert.equal(
-    resolveGoonsDown([block({ outcome: "cleared", goons: 11, hearts: 3 }), block({ outcome: "ko", goons: 6, hearts: 0 })], 3),
-    11 + 3 * BRAWL_WORLD.heartWorth + 6
-  );
-});
-
-test("does take each bought heart's price off the bank and never bank a fourth heart back when it scores", () => {
-  const block = (blockIndex: number, heartBought: boolean, result: { outcome: "cleared" | "ko"; goons: number; hearts: number } | null) => ({
-    blockIndex,
-    player: null,
-    status: "done" as const,
-    inputs: [],
-    skipped: result === null,
-    result: result === null ? null : { endTick: 10, ...result },
-    heartBought
-  });
-  // Block 0 banks 11 and three hearts; block 1 buys a heart and walks off with all four of them.
-  const turn = [block(0, false, { outcome: "cleared", goons: 11, hearts: 3 }), block(1, true, { outcome: "cleared", goons: 15, hearts: 4 })];
-
-  assert.equal(resolveHeartsPaid(turn, 3), 3);
-  assert.equal(resolveGoonsDown(turn, 3), 11 + 3 + (15 + 3) - 3);
-  // A heart bought for a block that was then skipped stays paid.
-  assert.equal(resolveGoonsDown([turn[0]!, block(1, true, null)], 3), 11 + 3 - 3);
-  assert.equal(resolveGoonsDown([turn[0]!, block(1, true, null)], 5), 11 + 3 - 5);
-});
-
-test("does take the round's rules and fall back to the defaults when a field is missing", () => {
-  assert.deepEqual(resolveBrawlRules(null), DEFAULT_BRAWL_RULES);
-  assert.equal(DEFAULT_BRAWL_RULES.heartPrice, 3);
-  assert.deepEqual(resolveBrawlRules({ blocksPerTurn: 4 }), { ...DEFAULT_BRAWL_RULES, blocksPerTurn: 4 });
-  assert.equal(resolveBrawlRules({ heartPrice: 5 }).heartPrice, 5);
-  assert.equal(resolveBrawlRules({ heartPrice: 0 }).heartPrice, DEFAULT_BRAWL_RULES.heartPrice);
-  assert.equal(resolveBrawlRules({ heartPrice: "3" }).heartPrice, DEFAULT_BRAWL_RULES.heartPrice);
-  // A seed is a hash input, not a count: negative is fine.
-  assert.equal(resolveBrawlRules({ courseSeed: -12 }).courseSeed, -12);
-  assert.equal(resolveBrawlRules({ blocksPerTurn: 0 }).blocksPerTurn, DEFAULT_BRAWL_RULES.blocksPerTurn);
-});
-
-test("does refuse a rules block at config-load time when the pack got it wrong", () => {
-  assert.equal(isBrawlRules({}), true);
-  assert.equal(isBrawlRules({ blocksPerTurn: 3, courseSeed: 20261001 }), true);
-  assert.equal(isBrawlRules({ courseSeed: -5 }), true);
-  assert.equal(isBrawlRules({ blocksPerTurn: 0 }), false);
-  assert.equal(isBrawlRules({ blocksPerTurn: 2.5 }), false);
-  assert.equal(isBrawlRules({ courseSeed: 1.5 }), false);
-  assert.equal(isBrawlRules({ courseSeed: "seed" }), false);
-  assert.equal(isBrawlRules({ heartPrice: 3 }), true);
-  assert.equal(isBrawlRules({ heartPrice: 0 }), false);
-  assert.equal(isBrawlRules({ heartPrice: 2.5 }), false);
-  assert.equal(isBrawlRules({ heartPrice: "3" }), false);
-  assert.equal(isBrawlRules([]), false);
-  assert.equal(isBrawlRules(null), false);
-});
-
-test("does re-read the round's running totals without touching the blocks", () => {
-  const state = reduce(initialize(), "peck", { tick: 0 }).state;
-  const synced = brawlRuntimePlugin.syncPendingPoints?.({
-    state,
-    pendingPointsByTeamId: { "team-a": 9, "team-b": 3 }
-  });
-
-  assert.ok(synced !== undefined);
-  assert.deepEqual(runtimeState(synced).pendingPointsByTeamId, { "team-a": 9, "team-b": 3 });
-  assert.equal(runtimeState(synced).blocks[0]?.status, "running");
-});
-
-// Everything below reads a view or ends a block, so it runs the shared sim.
-
-test("does carry the course's whole worth and nothing banked when the turn opens", () => {
+test("does put every block on the line with nobody out and the street dealt for one hen when a turn starts", () => {
   const view = hostView(initialize());
 
   assert.equal(view.phase, "ready");
   assert.equal(view.blockIndex, 0);
-  assert.equal(view.blocksPerTurn, 2);
-  assert.equal(view.goonsDown, 0);
-  assert.equal(view.goonsTotal, resolveBrawlCourseTotal({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn }));
+  assert.deepEqual(view.roster.map((figure) => figure.playerId), ["p1", "p2", "p3"]);
+  assert.ok(view.blocks.every((block) => block.status === "ready" && block.crew.length === 0 && block.frame === null));
+  assert.equal(view.banked, 0);
+  assert.equal(view.total, resolveBrawlCrewCourseTotal({ seed: RULES.courseSeed, blocks: 2, crew: 1 }));
   assert.equal(view.points, null);
-  assert.equal(view.bestTurn, null);
 });
 
-test("does referee the block from its own re-run of the log when the tablet ends it", () => {
-  const ended = reduce(MASH.reduce(sendInput, initialize()), "endBlock");
-  const view = hostView(ended.state);
-  const refereed = runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block: 0 }, MASH);
+test("does give each player who steps out the next slot, and deal the street for the crew as it grows", () => {
+  const one = send(initialize(), "stepOut", { actor: "p2" });
+  const two = send(one, "stepOut", { actor: "p1" });
 
-  assert.equal(ended.didMutate, true);
+  assert.deepEqual(
+    blockOf(two).crew.map((member) => [member.player?.playerId, member.slot]),
+    [
+      ["p2", 0],
+      ["p1", 1]
+    ]
+  );
+  assert.equal(hostView(two).total, resolveBrawlCrewCourseTotal({ seed: RULES.courseSeed, blocks: 2, crew: 2 }));
+});
+
+test("does refuse a step out from a rival, from nobody, a second time and once the fight has started", () => {
+  const ready = initialize();
+
+  assert.equal(reduce(ready, "stepOut", { actor: "p9" }).didMutate, false);
+  assert.equal(reduce(ready, "stepOut").didMutate, false);
+
+  const out = send(ready, "stepOut", { actor: "p1" });
+
+  assert.equal(reduce(out, "stepOut", { actor: "p1" }).didMutate, false);
+  assert.equal(reduce(send(out, "startBlock"), "stepOut", { actor: "p2" }).didMutate, false);
+});
+
+test("does start block one on the host's Start with the crew that stepped out, and on nobody's thumb", () => {
+  const out = [..."12"].reduce((next, id) => send(next, "stepOut", { actor: `p${id}` }), initialize());
+
+  // Block one is the host's to start: a crew thumb on the line does nothing, and neither does a
+  // phone asking.
+  assert.equal(reduce(out, "walk", { actor: "p1", payload: { dir: 1 }, at: T0 + 60_000 }).didMutate, false);
+  assert.equal(reduce(out, "startBlock", { actor: "p1" }).didMutate, false);
+
+  const block = blockOf(send(out, "startBlock", { at: T0 + 5 }));
+
+  assert.equal(block.status, "running");
+  assert.equal(block.tablet, false);
+  assert.equal(block.crewSize, 2);
+  assert.equal(block.startedAtMs, T0 + 5);
+  assert.equal(block.frame?.tick, 0);
+  assert.equal(block.frame?.hens.length, 2);
+  assert.equal(block.total, resolveBrawlCrewBlock({ seed: RULES.courseSeed, blocks: 2, block: 0, crew: 2 }).total);
+});
+
+test("does make the block the tablet's own, with the roster's player for it, when nobody stepped out", () => {
+  const started = send(initialize(), "startBlock");
+  const block = blockOf(started);
+
+  assert.equal(block.tablet, true);
+  assert.deepEqual(block.crew.map((member) => [member.player?.playerId, member.slot]), [["p1", 0]]);
+  assert.equal(block.crewSize, 1);
+
+  // No phone is a pad for it; the tablet's thumbs, which carry no face, are its hen's.
+  assert.equal(reduce(started, "walk", { actor: "p1", payload: { dir: 1 }, at: T0 + 100 }).didMutate, false);
+  assert.equal(frameOf(send(started, "walk", { payload: { dir: 1 }, at: T0 + 100 })).hens[0]?.walk, 1);
+});
+
+test("does play the house hen on the tablet when the team has no roster", () => {
+  const empty = TEAMS.map((team) => (team.id === "team-a" ? { ...team, playerIds: [] } : team));
+  const block = blockOf(send(initialize({ teams: empty }), "startBlock"));
+
+  assert.deepEqual(block.crew, [{ player: null, slot: 0 }]);
+});
+
+test("does stamp a thumb at the tick the server's clock reads and hand back a frame that already has it", () => {
+  const started = startWith(initialize(), ["p1", "p2"]);
+  const moved = send(started, "walk", { actor: "p2", payload: { dir: 1, tick: 9999 }, at: atTick(T0, 60) });
+  const frame = frameOf(moved);
+
+  // A second in: sixty ticks, and the step that read the thumb. Nothing a pad says about time counts.
+  assert.equal(frame.tick, 61);
+  assert.equal(frame.hens[1]?.walk, 1);
+  assert.equal(frame.hens[0]?.walk, 0, "the thumb is its sender's hen's and nobody else's");
+  assert.ok((frame.hens[1]?.x ?? 0) > (frameOf(started).hens[1]?.x ?? 0));
+});
+
+test("does count a quarter of a second as fifteen ticks exactly when the clock lands on a tick's first millisecond", () => {
+  const started = startWith(initialize(), ["p1"]);
+
+  // 250 ms is tick 15 on the nose; dividing by a tick's length instead floors it to 14.
+  assert.equal(frameOf(send(started, "pulse", { at: T0 + 250 })).tick, 15);
+  assert.equal(frameOf(send(started, "pulse", { at: T0 + 249 })).tick, 14);
+  assert.equal(frameOf(send(started, "pulse", { at: T0 + 1000 })).tick, 60);
+});
+
+test("does refuse a thumb that is malformed, a repeat, a rival's, or without the server's clock", () => {
+  const started = startWith(initialize(), ["p1"]);
+  const walking = send(started, "walk", { actor: "p1", payload: { dir: 3 }, at: T0 + 200 });
+
+  assert.equal(reduce(started, "walk", { actor: "p1", payload: { dir: 9 } }).didMutate, false);
+  assert.equal(reduce(started, "walk", { actor: "p1", payload: {} }).didMutate, false);
+  assert.equal(reduce(started, "peck", { actor: "p1", payload: { held: "yes" } }).didMutate, false);
+  assert.equal(reduce(walking, "walk", { actor: "p1", payload: { dir: 3 }, at: T0 + 400 }).didMutate, false);
+  assert.equal(reduce(started, "walk", { actor: "p9", payload: { dir: 1 } }).didMutate, false);
+  assert.equal(reduce(started, "walk", { actor: "p2", payload: { dir: 1 } }).didMutate, false, "a teammate who did not step out has no hen");
+  assert.equal(
+    brawlRuntimePlugin.reduceAction({
+      state: started,
+      envelope: { actionType: "walk", actionPayload: { dir: 1 }, actorPlayerId: "p1" },
+      pointsMax: POINTS_MAX,
+      rules: RULES,
+      content: null
+    }).didMutate,
+    false
+  );
+});
+
+test("does step the fight to the server's clock on a pulse, exactly as a screen stepping the same frame would", () => {
+  const started = startWith(initialize(), ["p1", "p2"]);
+  const walking = send(started, "walk", { actor: "p1", payload: { dir: 1 }, at: atTick(T0, 10) });
+  const pulsed = send(walking, "pulse", { at: atTick(T0, 200) });
+  const layout = resolveBrawlCrewBlock({ seed: RULES.courseSeed, blocks: 2, block: 0, crew: 2 });
+
+  assert.equal(frameOf(pulsed).tick, 200);
+  assert.deepEqual(frameOf(pulsed), advanceBrawlCrew(frameOf(walking), layout, [], 200));
+  assert.equal(reduce(pulsed, "pulse", { at: atTick(T0, 200) }).didMutate, false, "no time has passed");
+  assert.equal(reduce(initialize(), "pulse").didMutate, false, "nothing is running");
+});
+
+test("does ask the server for a pulse half a second past the frame it holds, only while a block runs", () => {
+  const started = startWith(initialize(), ["p1"], T0);
+
+  assert.equal(deadlineOf(initialize()), null);
+  assert.deepEqual(deadlineOf(started), { actionType: "pulse", atMs: atTick(T0, BRAWL_PULSE_TICKS) });
+
+  const later = send(started, "pulse", { at: atTick(T0, 90) });
+
+  assert.deepEqual(deadlineOf(later), { actionType: "pulse", atMs: atTick(T0, 90 + BRAWL_PULSE_TICKS) });
+});
+
+test("does bank a cleared block, keep its last frame for the beat and put the next on the line with the same crew", () => {
+  const { state, endedAt } = fight(startWith(initialize(), ["p1", "p2"]), brawlCrewBrawler);
+  const view = hostView(state);
+  const done = blockOf(state, 0);
+  const next = blockOf(state, 1);
+
+  assert.equal(done.status, "done");
+  assert.equal(done.outcome, "cleared");
+  assert.equal(done.frame?.outcome, "cleared");
+  assert.equal(done.banked, done.frame?.banked);
+  assert.ok(done.banked > 0 && done.banked <= done.total);
   assert.equal(view.blockIndex, 1);
   assert.equal(view.phase, "ready");
-  assert.equal(view.blocks[0]?.status, "done");
-  assert.deepEqual(view.blocks[0]?.result, {
-    outcome: refereed.outcome,
-    endTick: refereed.endTick,
-    goons: refereed.goons,
-    hearts: refereed.frame.hearts
+  assert.equal(view.points, null, "the turn is not over");
+  assert.equal(view.pendingPointsByTeamId["team-a"], resolveBrawlPoints(view.banked, view.total, POINTS_MAX));
+  assert.deepEqual(next.crew.map((member) => member.player?.playerId), ["p1", "p2"]);
+  assert.equal(next.readyAtMs, endedAt + BRAWL_READY_HOLD_MS);
+  assert.equal(next.frame, null);
+});
+
+test("does start a later block on the first crew thumb once the beat has been held, and not before", () => {
+  const { state, endedAt } = fight(startWith(initialize(), ["p1", "p2"]), brawlCrewBrawler);
+  const early = { actor: "p1", payload: { dir: 1 }, at: endedAt + BRAWL_READY_HOLD_MS - 1 };
+  const onTime = { actor: "p1", payload: { dir: 1 }, at: endedAt + BRAWL_READY_HOLD_MS };
+
+  assert.equal(reduce(state, "walk", early).didMutate, false);
+  assert.equal(reduce(state, "walk", { ...onTime, actor: "p3" }).didMutate, false, "a teammate who is not out cannot start it");
+
+  const block = blockOf(send(state, "walk", onTime));
+
+  assert.equal(block.status, "running");
+  assert.equal(block.startedAtMs, onTime.at);
+  assert.equal(block.crewSize, 2);
+  assert.equal(block.frame?.hens[0]?.walk, 1, "the thumb that started it is already in the fight");
+  assert.ok(block.frame?.hens.every((hen) => hen.hearts === BRAWL_CREW_WORLD.heartsMax && hen.state === "up"));
+});
+
+test("does let a late phone step out before the next block and deal that block for the bigger crew", () => {
+  const { state } = fight(startWith(initialize(), ["p1", "p2"]), brawlCrewBrawler);
+  const joined = send(state, "stepOut", { actor: "p3" });
+  const block = blockOf(joined);
+
+  assert.deepEqual(block.crew.map((member) => [member.player?.playerId, member.slot]), [["p1", 0], ["p2", 1], ["p3", 2]]);
+  assert.equal(block.total, resolveBrawlCrewBlock({ seed: RULES.courseSeed, blocks: 2, block: 1, crew: 3 }).total);
+  assert.equal(blockOf(joined, 0).total, resolveBrawlCrewBlock({ seed: RULES.courseSeed, blocks: 2, block: 0, crew: 2 }).total);
+});
+
+test("does lose the block and keep what it banked when the whole crew goes down, and stand everyone up for the next", () => {
+  // One hen who walks into the wall and never pecks: the geese take her three hearts.
+  const walker: BrawlCrewBot = () => ({ dir: 5, held: false });
+  const { state, endedAt } = fight(startWith(initialize(), ["p1"]), walker);
+  const lost = blockOf(state, 0);
+
+  assert.equal(lost.outcome, "wipe");
+  assert.equal(lost.banked, 0);
+  assert.equal(hostView(state).blockIndex, 1);
+
+  const next = blockOf(send(state, "peck", { actor: "p1", payload: { held: true }, at: endedAt + BRAWL_READY_HOLD_MS }));
+
+  assert.equal(next.frame?.hens[0]?.hearts, BRAWL_CREW_WORLD.heartsMax);
+  assert.equal(next.frame?.hens[0]?.state, "up");
+});
+
+test("does finish the turn on the last block with the points, each player's numbers and a turn to beat", () => {
+  const first = fight(startWith(initialize(), ["p1", "p2"]), brawlCrewBrawler);
+  const second = fight(send(first.state, "walk", { actor: "p2", payload: { dir: 1 }, at: first.endedAt + BRAWL_READY_HOLD_MS }), brawlCrewBrawler);
+  const view = hostView(second.state);
+
+  assert.equal(view.phase, "finished");
+  assert.equal(view.points, resolveBrawlPoints(view.banked, view.total, POINTS_MAX));
+  assert.ok(view.points !== null && view.points >= 13, `two brawlers banked ${view.banked} of ${view.total}`);
+  assert.deepEqual(Object.keys(view.turnStats ?? {}).sort(), ["p1", "p2"]);
+  assert.ok(Object.values(view.turnStats ?? {}).reduce((total, stats) => total + stats.worth, 0) > 0);
+  assert.deepEqual(memoryBestTurn(second.state), { teamId: "team-a", teamName: "Team A", banked: view.banked, total: view.total });
+  assert.equal(crewOf(second.state), null);
+  assert.equal(deadlineOf(second.state), null);
+  // Only the last block's frame is still the room's to draw.
+  assert.equal(view.blocks[0]?.frame, null);
+  assert.ok(view.blocks[1]?.frame !== null);
+});
+
+test("does keep the turn to beat by the bigger share of its own street, not the bigger sum", () => {
+  const standing: BrawlBestTurn = { teamId: "team-b", teamName: "Team B", banked: 30, total: 32 };
+  const beaten = fight(startWith(initialize({ roundMemory: { bestTurn: standing } }), ["p1"]), () => ({ dir: 5, held: false }));
+  const afterSkip = send(beaten.state, "skipBlock", { at: beaten.endedAt });
+
+  assert.deepEqual(hostView(afterSkip).bestTurn, standing);
+  assert.deepEqual(memoryBestTurn(afterSkip), standing, "a turn that banked nothing is nobody's number to beat");
+
+  const small: BrawlBestTurn = { teamId: "team-b", teamName: "Team B", banked: 1, total: 200 };
+  const first = fight(startWith(initialize({ roundMemory: { bestTurn: small } }), ["p1"]), brawlCrewBrawler);
+  const through = send(first.state, "skipBlock", { at: first.endedAt });
+
+  assert.equal(memoryBestTurn(through)?.teamId, "team-a");
+});
+
+test("does bank nothing for a skipped block and put the next on the line with no beat to hold", () => {
+  const started = startWith(initialize(), ["p1", "p2"]);
+  const skipped = send(send(started, "pulse", { at: atTick(T0, 300) }), "skipBlock", { at: T0 + 6000 });
+
+  assert.equal(blockOf(skipped, 0).skipped, true);
+  assert.equal(blockOf(skipped, 0).banked, 0);
+  assert.equal(blockOf(skipped, 0).frame, null);
+  assert.equal(blockOf(skipped).readyAtMs, T0 + 6000);
+  assert.equal(blockOf(send(skipped, "peck", { actor: "p2", payload: { held: true }, at: T0 + 6001 })).status, "running");
+  // The skipped block is still part of what the course held.
+  assert.equal(hostView(skipped).total, resolveBrawlCrewCourseTotal({ seed: RULES.courseSeed, blocks: 2, crew: 2 }));
+});
+
+test("does put the whole team back on block one and hand back exactly the turn's points on a reset", () => {
+  const { state } = fight(startWith(initialize({ pendingPointsByTeamId: { "team-a": 4, "team-b": 9 } }), ["p1", "p2"]), brawlCrewBrawler);
+
+  assert.ok((hostView(state).pendingPointsByTeamId["team-a"] ?? 0) > 4);
+
+  const reset = hostView(send(state, "resetTurn"));
+
+  assert.equal(reset.blockIndex, 0);
+  assert.ok(reset.blocks.every((block) => block.status === "ready" && block.crew.length === 0 && block.frame === null));
+  assert.deepEqual(reset.pendingPointsByTeamId, { "team-a": 4, "team-b": 9 });
+});
+
+test("does tell every team phone its pad: out, or its slot and hearts as the fight has them", () => {
+  const out = send(initialize(), "stepOut", { actor: "p2" });
+
+  assert.deepEqual(crewOf(out), {
+    status: "ready",
+    playerIds: ["p1", "p2", "p3"],
+    pads: {
+      p1: { state: "out", slot: null, hearts: 0 },
+      p2: { state: "up", slot: 0, hearts: 3 },
+      p3: { state: "out", slot: null, hearts: 0 }
+    }
   });
-  // The view banks the referee's worth and, if she walked off, her hearts.
-  assert.equal(
-    view.goonsDown,
-    resolveBrawlBlockWorth({ outcome: refereed.outcome === "running" ? "timeout" : refereed.outcome, goons: refereed.goons, hearts: refereed.frame.hearts })
-  );
+
+  const walker: BrawlCrewBot = () => ({ dir: 5, held: false });
+  let state = send(out, "startBlock");
+
+  // Until her first heart goes.
+  while ((frameOf(state).hens[0]?.hearts ?? 0) === 3) {
+    const frame = frameOf(state);
+    const thumbs = walker(frame, resolveBrawlCrewBlock({ seed: RULES.courseSeed, blocks: 2, block: 0, crew: 1 }), 0);
+
+    state =
+      frame.hens[0]?.walk === thumbs.dir
+        ? send(state, "pulse", { at: atTick(T0, frame.tick + 30) })
+        : send(state, "walk", { actor: "p2", payload: { dir: thumbs.dir }, at: atTick(T0, frame.tick + 1) });
+  }
+
+  assert.equal(crewOf(state)?.status, "running");
+  assert.deepEqual(crewOf(state)?.pads.p2, { state: "up", slot: 0, hearts: 2 });
 });
 
-test("does referee each block on its own stretch of street when the tablet changes hands", () => {
-  const played = playBlock(playBlock(initialize(), MASH), MASH);
-  const view = hostView(played);
-  const refereed = (block: number) => runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block }, MASH);
-  const worth = (block: number) => {
-    const run = refereed(block);
+test("does give no phone a pad for a block the tablet is playing", () => {
+  const crew = crewOf(send(initialize(), "startBlock"));
 
-    return resolveBrawlBlockWorth({ outcome: run.outcome === "running" ? "timeout" : run.outcome, goons: run.goons, hearts: run.frame.hearts });
-  };
-
-  assert.equal(view.phase, "finished");
-  assert.equal(view.blocks[0]?.result?.goons, refereed(0).goons);
-  assert.equal(view.blocks[1]?.result?.goons, refereed(1).goons);
-  assert.equal(view.goonsDown, worth(0) + worth(1));
-  assert.equal(view.points, resolveBrawlPoints(view.goonsDown, view.goonsTotal, POINTS_MAX));
-  assert.equal(view.pendingPointsByTeamId["team-a"], view.points);
+  assert.ok(crew !== null);
+  assert.ok(Object.values(crew.pads).every((pad) => pad.state === "out" && pad.slot === null));
 });
 
-test("does bank nothing and move on when the host skips a block", () => {
-  const skipped = reduce(initialize(), "skipBlock");
-  const view = hostView(skipped.state);
+test("does show the display exactly what it shows the host", () => {
+  const { state } = fight(startWith(initialize(), ["p1", "p2"]), brawlCrewBrawler);
 
-  assert.equal(skipped.didMutate, true);
-  assert.equal(view.blockIndex, 1);
-  assert.equal(view.blocks[0]?.skipped, true);
-  assert.equal(view.blocks[0]?.result, null);
-  assert.equal(view.goonsDown, 0);
-});
-
-test("does finish the turn and refuse more input when every block is behind the team", () => {
-  const finished = reduce(reduce(initialize(), "skipBlock").state, "skipBlock").state;
-  const view = hostView(finished);
-
-  assert.equal(view.phase, "finished");
-  assert.equal(view.points, 0);
-  assert.equal(reduce(finished, "peck", { tick: 0 }).didMutate, false);
-  assert.equal(reduce(finished, "skipBlock").didMutate, false);
-  assert.equal(reduce(finished, "endBlock").didMutate, false);
-});
-
-test("does hand back exactly what the turn banked when the host resets it", () => {
-  const start = initialize(RULES, { pendingPointsByTeamId: { "team-a": 4, "team-b": 0 } });
-  const played = playBlock(start, MASH);
-
-  assert.ok(hostView(played).goonsDown > 0, "the mashing log must put a goon down");
-  assert.ok((hostView(played).pendingPointsByTeamId["team-a"] ?? 0) > 4);
-
-  const reset = reduce(played, "resetTurn");
-  const view = hostView(reset.state);
-
-  assert.equal(reset.didMutate, true);
-  assert.equal(view.blockIndex, 0);
-  assert.equal(view.phase, "ready");
-  assert.equal(view.goonsDown, 0);
-  assert.equal(view.pendingPointsByTeamId["team-a"], 4);
-  assert.deepEqual(
-    view.blocks.map((block) => block.inputs),
-    [[], []]
-  );
-  // A reset keeps the seating it was dealt.
-  assert.deepEqual(
-    view.blocks.map((block) => block.player?.name),
-    ["Alex", "Caitlin"]
-  );
-});
-
-test("does keep the display view free of anything the host view does not also carry", () => {
-  const state = reduce(initialize(), "peck", { tick: 0 }).state;
-  const host = brawlRuntimePlugin.selectHostView({ state, rules: RULES, content: null });
-  const display = brawlRuntimePlugin.selectDisplayView({ state, rules: RULES, content: null });
-
-  assert.deepEqual(display, host);
-});
-
-const ONE_BLOCK = { blocksPerTurn: 1, courseSeed: RULES.courseSeed };
-const MASH_GOONS = (): number => runBrawlRun({ seed: ONE_BLOCK.courseSeed, blocks: 1, block: 0 }, MASH).goons;
-const inherited = (goons: number): SerializableValue => ({
-  bestTurn: { teamId: "team-b", teamName: "Team B", goons }
-});
-
-test("does start a round with nothing to beat when no turn has finished", () => {
-  assert.deepEqual(roundMemory(initialize()), { bestTurn: null });
-});
-
-test("does hand a finished turn on as the one to beat when it put something down", () => {
-  const played = playBlock(initialize(ONE_BLOCK), MASH);
-
-  assert.ok(MASH_GOONS() > 0, "the mashing log must put a goon down");
-  // The turn in hand never sees itself as the one to beat.
-  assert.equal(hostView(played).bestTurn, null);
-  assert.deepEqual(memoryBestTurn(played), { teamId: "team-a", teamName: "Team A", goons: MASH_GOONS() });
-});
-
-test("does keep whichever of the inherited turn and its own put down more when the turn ends", () => {
-  const goons = MASH_GOONS();
-  const beaten = playBlock(initialize(ONE_BLOCK, { roundMemory: inherited(goons - 1) }), MASH);
-  const standing = playBlock(initialize(ONE_BLOCK, { roundMemory: inherited(goons + 1) }), MASH);
-  // A draw keeps the standing one: a target should not move for a tie.
-  const tied = playBlock(initialize(ONE_BLOCK, { roundMemory: inherited(goons) }), MASH);
-
-  assert.equal(memoryBestTurn(beaten)?.teamId, "team-a");
-  assert.equal(memoryBestTurn(beaten)?.goons, goons);
-  assert.equal(memoryBestTurn(standing)?.teamId, "team-b");
-  assert.equal(memoryBestTurn(tied)?.teamId, "team-b");
-});
-
-test("does hand on nothing of its own when the turn is unfinished or put nothing down", () => {
-  const halfway = playBlock(initialize(), MASH);
-  const skippedAll = reduce(initialize(ONE_BLOCK), "skipBlock").state;
-
-  assert.equal(hostView(halfway).phase, "ready");
-  assert.equal(memoryBestTurn(halfway), null);
-  assert.equal(hostView(skippedAll).phase, "finished");
-  assert.equal(memoryBestTurn(skippedAll), null);
-});
-
-test("does show the next team the number to beat when the round's memory carries one", () => {
-  const memory = roundMemory(playBlock(initialize(ONE_BLOCK), MASH));
-  const view = hostView(initialize(ONE_BLOCK, { activeRoundTeamId: "team-b", roundMemory: memory }));
-
-  assert.equal(view.activeTurnTeamId, "team-b");
-  assert.deepEqual(view.bestTurn, { teamId: "team-a", teamName: "Team A", goons: MASH_GOONS() });
-  assert.equal(view.blockIndex, 0);
-  assert.equal(view.goonsDown, 0);
-});
-
-test("does ignore a memory when it is not its own", () => {
-  assert.equal(runtimeState(initialize(RULES, { roundMemory: { towers: [1, 2] } })).bestTurn, null);
-  assert.equal(runtimeState(initialize(RULES, { roundMemory: "yes" })).bestTurn, null);
-  assert.equal(runtimeState(initialize(RULES, { roundMemory: { bestTurn: { wings: 3 } } })).bestTurn, null);
-});
-
-test("does leave the memory as it inherited it when the turn is put back on the street", () => {
-  const played = playBlock(initialize(ONE_BLOCK, { roundMemory: inherited(0) }), MASH);
-
-  assert.equal(memoryBestTurn(played)?.teamId, "team-a");
-
-  const reset = reduce(played, "resetTurn").state;
-
-  assert.equal(memoryBestTurn(reset)?.teamId, "team-b");
-  assert.equal(memoryBestTurn(reset)?.goons, 0);
-});
-
-// The handoff pick (spec §0.3): a fourth heart for `heartPrice` of the bank, on a block after the
-// first, before its first touch. The mashing log banks five on block 0, so block 1 can afford one.
-const HEART_PRICE = DEFAULT_BRAWL_RULES.heartPrice;
-const onBlockOne = (): SerializableValue => playBlock(initialize(), MASH);
-
-test("does offer the heart only on a ready block after the first, once, and only to a team that can pay", () => {
-  const ready = { blockIndex: 1, status: "ready" as const, heartBought: false };
-
-  assert.equal(canBuyBrawlHeart({ block: ready, banked: HEART_PRICE, heartPrice: HEART_PRICE }), true);
-  assert.equal(canBuyBrawlHeart({ block: { ...ready, blockIndex: 0 }, banked: 10, heartPrice: HEART_PRICE }), false);
-  assert.equal(canBuyBrawlHeart({ block: { ...ready, status: "running" }, banked: 10, heartPrice: HEART_PRICE }), false);
-  assert.equal(canBuyBrawlHeart({ block: { ...ready, status: "done" }, banked: 10, heartPrice: HEART_PRICE }), false);
-  assert.equal(canBuyBrawlHeart({ block: { ...ready, heartBought: true }, banked: 10, heartPrice: HEART_PRICE }), false);
-  assert.equal(canBuyBrawlHeart({ block: ready, banked: HEART_PRICE - 1, heartPrice: HEART_PRICE }), false);
-  assert.equal(canBuyBrawlHeart({ block: null, banked: 10, heartPrice: HEART_PRICE }), false);
-});
-
-test("does start the block on four hearts and take the price off the bank when the teammate on the line buys a heart", () => {
-  const before = hostView(onBlockOne());
-  const bought = reduce(onBlockOne(), "buyHeart");
-  const view = hostView(bought.state);
-
-  assert.ok(before.goonsDown >= HEART_PRICE, "the mashing log must bank enough to buy with");
-  assert.equal(bought.didMutate, true);
-  assert.equal(view.heartPrice, HEART_PRICE);
-  assert.equal(view.blocks[1]?.heartBought, true);
-  assert.equal(view.blocks[1]?.status, "ready");
-  assert.equal(view.goonsDown, before.goonsDown - HEART_PRICE);
-  assert.equal(view.pendingPointsByTeamId["team-a"], resolveBrawlPoints(view.goonsDown, view.goonsTotal, POINTS_MAX));
-  // The course's whole worth does not move: a bought heart only lowers the numerator.
-  assert.equal(view.goonsTotal, before.goonsTotal);
-
-  // The referee re-runs the bought block from four hearts.
-  const ended = hostView(playBlock(bought.state, MASH));
-  const refereed = runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block: 1, hearts: 4 }, MASH);
-
-  assert.equal(ended.blocks[1]?.result?.endTick, refereed.endTick);
-  assert.equal(ended.blocks[1]?.result?.goons, refereed.goons);
-  assert.notEqual(refereed.endTick, runBrawlRun({ seed: RULES.courseSeed, blocks: RULES.blocksPerTurn, block: 1 }, MASH).endTick);
-});
-
-test("does refuse a heart on the first block, once the block has started, a second time and when the bank cannot cover it", () => {
-  // The first block: nothing banked to spend, and no handoff before it.
-  assert.equal(reduce(initialize(), "buyHeart").didMutate, false);
-  // The first thumb on the street closed the offer.
-  assert.equal(reduce(reduce(onBlockOne(), "peck", { tick: 0 }).state, "buyHeart").didMutate, false);
-  // Once is the whole offer.
-  assert.equal(reduce(reduce(onBlockOne(), "buyHeart").state, "buyHeart").didMutate, false);
-  // A skipped first block banks nothing, so there is nothing to pay with.
-  assert.equal(reduce(reduce(initialize(), "skipBlock").state, "buyHeart").didMutate, false);
-  // A dearer heart than the bank holds.
-  const dear = playBlock(initialize({ ...RULES, heartPrice: 50 }), MASH);
-
-  assert.equal(reduce(dear, "buyHeart").didMutate, false);
-  // A payload that is not a record, and a turn that is over.
-  assert.equal(reduce(onBlockOne(), "buyHeart", [] as SerializableValue).didMutate, false);
-  assert.equal(reduce(reduce(onBlockOne(), "skipBlock").state, "buyHeart").didMutate, false);
-});
-
-test("does keep the price paid when the host skips a block the team bought a heart for", () => {
-  const before = hostView(onBlockOne());
-  const skipped = hostView(reduce(reduce(onBlockOne(), "buyHeart").state, "skipBlock").state);
-
-  assert.equal(skipped.phase, "finished");
-  assert.equal(skipped.blocks[1]?.heartBought, true);
-  assert.equal(skipped.blocks[1]?.skipped, true);
-  assert.equal(skipped.goonsDown, before.goonsDown - HEART_PRICE);
-});
-
-test("does unbuy every heart and refund its price when the host resets the turn", () => {
-  const bought = reduce(onBlockOne(), "buyHeart").state;
-  const reset = hostView(reduce(bought, "resetTurn").state);
-
-  assert.deepEqual(
-    reset.blocks.map((block) => block.heartBought),
-    [false, false]
-  );
-  assert.equal(reset.goonsDown, 0);
-  assert.equal(reset.pendingPointsByTeamId["team-a"], 0);
-});
-
-test("does hand on the finished turn's worth after its purchases as the one to beat", () => {
-  const kept = playBlock(onBlockOne(), MASH);
-  const bought = playBlock(reduce(onBlockOne(), "buyHeart").state, MASH);
-  const keptWorth = hostView(kept).goonsDown;
-  const boughtWorth = hostView(bought).goonsDown;
-
-  assert.equal(memoryBestTurn(kept)?.goons, keptWorth);
-  assert.equal(memoryBestTurn(bought)?.goons, boughtWorth);
-  assert.equal(
-    boughtWorth,
-    resolveGoonsDown(runtimeState(bought).blocks, HEART_PRICE),
-    "the turn to beat is the bank after the heart's price"
-  );
-  assert.ok(runtimeState(bought).blocks[1]?.heartBought);
-});
-
-const contestantOf = (state: SerializableValue) => {
-  return brawlRuntimePlugin.selectContestant?.({ state, rules: RULES, content: null }) ?? null;
-};
-
-test("does name the block in hand and the next brawler for the contestant's phone", () => {
-  let state = initialize();
-
-  assert.deepEqual(contestantOf(state), { legIndex: 0, playerId: "p1", nextPlayerId: "p2" });
-
-  state = reduce(state, "skipBlock").state;
-  assert.deepEqual(contestantOf(state), { legIndex: 1, playerId: "p2", nextPlayerId: null });
-
-  state = reduce(state, "skipBlock").state;
-  assert.equal(hostView(state).phase, "finished");
-  assert.equal(contestantOf(state), null);
-});
-
-test("does let a phone send its thumbs, its block's end and the handoff pick but no hatch", () => {
-  assert.deepEqual(brawlRuntimePlugin.contestantActionTypes, ["walk", "peck", "endBlock", "buyHeart"]);
-  assert.equal(brawlRuntimePlugin.contestantRetakeActionType, "retakeBlock");
-});
-
-test("does put a taken-back block back at its start with an empty log and its heart still bought", () => {
-  const banked = { "team-a": 0, "team-b": 0 };
-  const running = runtimeState(
-    reduce(reduce(initialize(RULES, { pendingPointsByTeamId: banked }), "walk", { tick: 0, dir: 1 }).state, "peck", {
-      tick: 5
-    }).state
-  );
-  const withHeart: BrawlRuntimeState = {
-    ...running,
-    blocks: running.blocks.map((block, index) => (index === 0 ? { ...block, heartBought: true } : block))
-  };
-  const retaken = reduce(withHeart, "retakeBlock");
-  const view = hostView(retaken.state);
-
-  assert.equal(retaken.didMutate, true);
-  assert.equal(view.blockIndex, 0);
-  assert.equal(view.blocks[0]?.status, "ready");
-  assert.equal(view.blocks[0]?.player?.playerId, "p1");
-  assert.deepEqual(view.blocks[0]?.inputs, []);
-  assert.equal(view.blocks[0]?.heartBought, true);
-  assert.deepEqual(view.pendingPointsByTeamId, hostView(withHeart).pendingPointsByTeamId);
-  assert.equal(reduce(initialize(), "retakeBlock").didMutate, false);
-});
-
-test("does carry no answer in the host view a contestant's phone is handed", () => {
-  const states: SerializableValue[] = [initialize()];
-
-  states.push(reduce(states[0] as SerializableValue, "walk", { tick: 0, dir: 1 }).state);
-  states.push(reduce(states[1] as SerializableValue, "endBlock").state);
-  states.push(reduce(states[2] as SerializableValue, "skipBlock").state);
-
-  for (const state of states) {
+  for (const candidate of [initialize(), startWith(initialize(), ["p1"]), state]) {
     assert.deepEqual(
-      brawlRuntimePlugin.selectHostView({ state, rules: RULES, content: null }),
-      brawlRuntimePlugin.selectDisplayView({ state, rules: RULES, content: null })
+      brawlRuntimePlugin.selectDisplayView({ state: candidate, rules: RULES, content: null }),
+      brawlRuntimePlugin.selectHostView({ state: candidate, rules: RULES, content: null })
     );
   }
+});
+
+test("does keep a turn's state its own game's and serialisable through a whole block", () => {
+  const { state } = fight(startWith(initialize(), ["p1", "p2", "p3"]), brawlCrewBrawler);
+
+  assert.ok(isBrawlRuntimeState(state));
+  assert.deepEqual(JSON.parse(JSON.stringify(state)), state);
+  assert.equal(isBrawlRuntimeState({ minigame: "FAPPY" }), false);
+  assert.equal(isBrawlRuntimeState(null), false);
+});
+
+test("does read the block count and the seed from the rules, and load a pack still carrying the relay's heart price", () => {
+  assert.deepEqual(resolveBrawlRules(null), DEFAULT_BRAWL_RULES);
+  assert.deepEqual(resolveBrawlRules({ blocksPerTurn: 5, courseSeed: -7 }), { blocksPerTurn: 5, courseSeed: -7 });
+  assert.deepEqual(resolveBrawlRules({ blocksPerTurn: 0, courseSeed: 1.5 }), DEFAULT_BRAWL_RULES);
+  assert.equal(isBrawlRules({ blocksPerTurn: 3, courseSeed: 20261001, heartPrice: 3 }), true);
+  assert.equal(isBrawlRules({ blocksPerTurn: 0 }), false);
+  assert.equal(isBrawlRules({ courseSeed: "abc" }), false);
+  assert.equal(isBrawlRules([]), false);
+});
+
+test("does score the share of the street the team banked, to the point", () => {
+  assert.equal(resolveBrawlPoints(0, 100, 15), 0);
+  assert.equal(resolveBrawlPoints(100, 100, 15), 15);
+  assert.equal(resolveBrawlPoints(87, 100, 15), 13);
+  assert.equal(resolveBrawlPoints(5, 0, 15), 15);
+  assert.equal(resolveBrawlPoints(120, 100, 15), 15);
 });

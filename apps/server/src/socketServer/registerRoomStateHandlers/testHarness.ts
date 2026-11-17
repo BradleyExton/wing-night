@@ -73,7 +73,8 @@ export const buildRoomState = (phase: RoomState["phase"], currentRound = 0): Roo
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null
+    contestantTurn: null,
+    crewTurn: null
   };
 };
 

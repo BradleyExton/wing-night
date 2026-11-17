@@ -23,7 +23,8 @@ export const resolveLegHandset = (turn: ContestantTurn | null): MinigameHandset 
 // turn is on phones AND someone on the team has a phone seated. A phones turn nobody joined from
 // is a tablet turn in all but name, and the TV must not send the team hunting for phones.
 export const resolveBriefingHandset = (
-  turn: ContestantTurn | null,
+  // An arcade relay's turn or a crew game's: either is locked to a device mode at its briefing.
+  turn: Pick<ContestantTurn, "deviceMode"> | null,
   teamPlayerIds: readonly string[],
   claimedPlayerIds: readonly string[]
 ): MinigameHandset => {

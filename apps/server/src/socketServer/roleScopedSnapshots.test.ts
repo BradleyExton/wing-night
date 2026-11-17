@@ -60,7 +60,8 @@ const createRoomStateFixture = (): RoomState => {
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null
+    contestantTurn: null,
+    crewTurn: null
   };
 };
 
@@ -173,4 +174,23 @@ test("does give the display claimed ids but not who is asleep", () => {
 
   assert.deepEqual(displaySnapshot.claimedPlayerIds, ["player-1", "player-2"]);
   assert.equal("connectedPlayerIds" in displaySnapshot, false);
+});
+
+test("does carry a crew's pads to the TV and to every phone, and nothing else of the game to a phone", () => {
+  const crewTurn = {
+    minigame: "BRAWL" as const,
+    deviceMode: "phones" as const,
+    status: "running" as const,
+    playerIds: ["player-1", "player-2"],
+    pads: {
+      "player-1": { state: "up" as const, slot: 0, hearts: 2 },
+      "player-2": { state: "down" as const, slot: 1, hearts: 0 }
+    }
+  };
+  const roomState = { ...createRoomStateFixture(), crewTurn };
+
+  assert.deepEqual(toPlayerRoomStateSnapshot(roomState).crewTurn, crewTurn);
+  assert.deepEqual(toDisplayRoomStateSnapshot(roomState).crewTurn, crewTurn);
+  assert.equal("minigameHostView" in toPlayerRoomStateSnapshot(roomState), false);
+  assert.equal("minigameDisplayView" in toPlayerRoomStateSnapshot(roomState), false);
 });

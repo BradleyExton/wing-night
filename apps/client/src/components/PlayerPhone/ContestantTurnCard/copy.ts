@@ -7,7 +7,23 @@ type CardLines = { eyebrow: string; title: string; voice: string; tv: string | n
 // Everything a phone says during its own team's turn when it is not the one playing. Never the
 // game: only the contestant's phone draws it.
 export const contestantTurnCardCopy = {
-  lines: (turn: Exclude<PhoneTurn, { role: "play" }>, contestantName: string | null): CardLines => {
+  lines: (turn: Exclude<PhoneTurn, { role: "play" | "pad" }>, contestantName: string | null): CardLines => {
+    if (turn.role === "crewBriefing") {
+      return turn.deviceMode === MINIGAME_DEVICE_MODES.PHONES
+        ? {
+            eyebrow: "Your team is up",
+            title: "Grab your phone",
+            voice: "Everybody plays this one at once. Turn it sideways — it becomes your gamepad.",
+            tv: "The game is on the TV, not here."
+          }
+        : {
+            eyebrow: "Your team is up",
+            title: "Grab the tablet",
+            voice: "This one's played on the tablet, passed hand to hand.",
+            tv: "Eyes on the TV."
+          };
+    }
+
     if (turn.role === "briefing") {
       return turn.deviceMode === MINIGAME_DEVICE_MODES.PHONES
         ? {

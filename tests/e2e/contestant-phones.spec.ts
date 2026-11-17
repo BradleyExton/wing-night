@@ -342,7 +342,43 @@ test("does run a Dunlop Dash leg end to end on the contestant's phone when SETUP
   await ensureSetupPhase(hostPage);
 });
 
-test("does run a Streets of Barrie block end to end on the contestant's phone", async ({ browser }) => {
+// Streets of Barrie is a CREW game (docs/minigames/brawl-crew-spec.md): every phone on the team
+// is a gamepad at once, the TV is the one picture, and no phone is sent the game's view.
+const crewPad = (page: Page) => page.locator("[data-crew-pad]");
+
+// A thumb on a crew phone's pad, as pointer events on the pad itself: `at` is a fraction of its
+// box, and a `to` drags it there before the thumb stays down.
+const padThumbDown = (page: Page, pointerId: number, at: [number, number], to?: [number, number]): Promise<void> => {
+  return page.evaluate(
+    ({ pointerId: id, at: from, to: target }) => {
+      const pad = document.querySelector("[data-brawl-pad]");
+
+      if (!pad) {
+        throw new Error("no pad on this phone");
+      }
+
+      const box = pad.getBoundingClientRect();
+      const init = (point: [number, number]): PointerEventInit => ({
+        bubbles: true,
+        cancelable: true,
+        pointerId: id,
+        isPrimary: id === 1,
+        pointerType: "touch",
+        clientX: box.left + box.width * point[0],
+        clientY: box.top + box.height * point[1]
+      });
+
+      pad.dispatchEvent(new PointerEvent("pointerdown", init(from)));
+
+      if (target) {
+        pad.dispatchEvent(new PointerEvent("pointermove", init(target)));
+      }
+    },
+    { pointerId, at, to }
+  );
+};
+
+test("does put a whole team on the street at once, each on their own phone, in Streets of Barrie", async ({ browser }) => {
   test.setTimeout(150_000);
 
   const { hostPage, displayPage, joinUrl } = await openRoom(browser);
@@ -352,42 +388,55 @@ test("does run a Streets of Barrie block end to end on the contestant's phone", 
   });
 
   const [firstPlayerId, secondPlayerId] = await readBriefedTeam(displayPage);
-  const brawler = await seatPhone(browser, joinUrl, firstPlayerId ?? "");
-  const nextBrawler = await seatPhone(browser, joinUrl, secondPlayerId ?? "");
+  const first = await seatPhone(browser, joinUrl, firstPlayerId ?? "");
+  const second = await seatPhone(browser, joinUrl, secondPlayerId ?? "");
+
+  // The briefing sends the whole team to their phones, on the TV and on each phone.
+  await expect(displayPage.locator("[data-turn-handset='phone']")).toBeVisible();
+  await expect(first.page.locator("[data-contestant-phone='crewBriefing']")).toContainText("Grab your phone");
+  await expect(second.page.locator("[data-contestant-phone='crewBriefing']")).toContainText("Everybody plays");
 
   await hostPage.getByRole("button", { name: "Start Mini-Game" }).click();
-  await brawler.page.setViewportSize(PHONE_SIDEWAYS);
-  await expect(contestantGame(brawler.page, 0)).toBeAttached();
-  await expect(brawler.page.locator('[data-brawl-scene="host-brawl"]')).toBeVisible();
-  await expect(hostPage.locator("[data-contestant-mirror='BRAWL'] [data-brawl-display-arena]")).toBeVisible();
+  await first.page.setViewportSize(PHONE_SIDEWAYS);
+  await second.page.setViewportSize(PHONE_SIDEWAYS);
 
-  // One peck starts the block's clock; a hen nobody steers is carried into the bay, which ends
-  // the block on the phone and hands the next one to the next phone.
-  await brawler.page.waitForTimeout(2_000);
-  await brawler.page.evaluate(() => {
-    const zone = document.querySelector("[data-brawl-peck-zone]");
-    const rect = zone?.getBoundingClientRect();
+  // Both phones are pads at once, and neither is on the street until it steps out.
+  await expect(crewPad(first.page)).toHaveAttribute("data-crew-pad", "out");
+  await expect(crewPad(second.page)).toHaveAttribute("data-crew-pad", "out");
+  await expect(first.page.locator("[data-brawl-scene]")).toHaveCount(0);
 
-    if (!zone || !rect) {
-      throw new Error("no peck zone");
-    }
+  const wall = displayPage.locator("[data-brawl-display-arena] [data-brawl-scene]");
 
-    const init = {
-      bubbles: true,
-      cancelable: true,
-      pointerId: 9,
-      isPrimary: true,
-      pointerType: "touch",
-      clientX: rect.left + rect.width / 2,
-      clientY: rect.top + rect.height / 2
-    };
+  await expect(wall.locator("[data-brawl-hen]")).toHaveCount(0);
 
-    zone.dispatchEvent(new PointerEvent("pointerdown", init));
-    zone.dispatchEvent(new PointerEvent("pointerup", init));
-  });
+  // The second player steps out first: she is slot 0, and the TV shows the team assembling.
+  await second.page.locator("[data-brawl-step-out]").click();
+  await expect(crewPad(second.page)).toHaveAttribute("data-crew-pad-slot", "0");
+  await expect(wall.locator("[data-brawl-hen]")).toHaveCount(1);
+  await expect(displayPage.locator("[data-brawl-status]")).toContainText("waiting on");
 
-  await expect(contestantGame(nextBrawler.page, 1)).toBeAttached({ timeout: 90_000 });
-  await expect(brawler.page.locator("[data-contestant-phone='watch']")).toBeVisible();
+  await first.page.locator("[data-brawl-step-out]").click();
+  await expect(crewPad(first.page)).toHaveAttribute("data-crew-pad-slot", "1");
+  await expect(wall.locator("[data-brawl-hen]")).toHaveCount(2);
+
+  // The tablet is the host's monitor, not a pad: it starts the fight and nothing else.
+  await expect(hostPage.locator("[data-brawl-crew-out='2']")).toBeVisible();
+  await hostPage.locator("[data-brawl-start]").click();
+  await expect(hostPage.locator("[data-brawl-street-mode]")).toHaveAttribute("data-brawl-street-mode", "monitor");
+  await expect(crewPad(first.page)).toHaveAttribute("data-crew-pad-status", "running");
+
+  // Each thumb moves its own hen on the TV, at the same time: the first player (slot 1) walks
+  // down the street while the second (slot 0) walks up it.
+  const readHen = async (slot: number, attribute: string): Promise<number> =>
+    Number(await wall.locator(`[data-brawl-hen='${slot}']`).getAttribute(attribute));
+  const startX = await readHen(1, "data-brawl-x");
+  const startZ = await readHen(0, "data-brawl-z");
+
+  await padThumbDown(first.page, 1, [0.2, 0.5], [0.34, 0.5]);
+  await padThumbDown(second.page, 1, [0.2, 0.6], [0.2, 0.3]);
+
+  await expect.poll(() => readHen(1, "data-brawl-x"), { timeout: 10_000 }).toBeGreaterThan(startX + 8);
+  await expect.poll(() => readHen(0, "data-brawl-z"), { timeout: 10_000 }).toBeLessThan(startZ - 3);
 
   await ensureSetupPhase(hostPage);
 });

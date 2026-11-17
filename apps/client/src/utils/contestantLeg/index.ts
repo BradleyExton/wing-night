@@ -3,6 +3,7 @@ import {
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
   type ContestantMinigameHostView,
+  type MinigameType,
   type PlayerMinigameHostViewPayload
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
@@ -22,6 +23,9 @@ export type ContestantLegController = {
   getHostView: () => ContestantMinigameHostView | null;
   subscribe: (listener: () => void) => () => void;
   dispatch: (actionType: string, actionPayload: SerializableValue) => void;
+  // A crew player's pad: the same road, for a game this phone is sent no view of — the room's
+  // `crewTurn` names the game, and the server decides whether this face is on its crew.
+  dispatchTo: (minigameId: MinigameType, actionType: string, actionPayload: SerializableValue) => void;
   forgetHostView: () => void;
   dispose: () => void;
 };
@@ -71,6 +75,14 @@ export const createContestantLegController = (socket: ContestantLegSocket): Cont
 
       socket.emit(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, {
         minigameId: hostView.minigame,
+        minigameApiVersion: MINIGAME_API_VERSION,
+        actionType,
+        actionPayload
+      });
+    },
+    dispatchTo: (minigameId, actionType, actionPayload) => {
+      socket.emit(CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION, {
+        minigameId,
         minigameApiVersion: MINIGAME_API_VERSION,
         actionType,
         actionPayload

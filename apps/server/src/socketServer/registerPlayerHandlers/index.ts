@@ -94,8 +94,9 @@ export const PLAYER_ACTIONS_PER_SECOND = 2;
 // A contestant playing their leg on the phone, on a bucket of its own so play never spends the
 // claim bucket. Sized from what the runners actually send, one action per touch: FAPPY a flap per
 // tap (a frantic tapper is ~10 a second); SCHLONIC a press AND a release per tap (~16 a second
-// mashing); BRAWL a walk per change of direction plus a peck per tap, two thumbs at once (~15–20
-// a second in a brawl); JOUST an aim every 80 ms while the band is drawn (12.5 a second). Thirty a
+// mashing); BRAWL a walk per change of the eight-way stick plus a press and a release per peck,
+// two thumbs at once (~15–20 a second in a brawl, from EACH player of a crew — the bucket is per
+// face); JOUST an aim every 80 ms while the band is drawn (12.5 a second). Thirty a
 // second sustained is half again the busiest human, and a burst of forty absorbs over a second of
 // mashing on top. A script flooding the room is held to thirty a second — the rate a tablet runs
 // at on a normal night anyway.

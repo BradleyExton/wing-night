@@ -15,7 +15,8 @@ import type {
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import { isContestantPhoneLeg, type ContestantTurn, type RoundDeviceModes } from "../contestantTurn/index.js";
-import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
+import type { CrewTurn } from "../crewTurn/index.js";
+import type { BrawlCrewFrame, BrawlCrewHenStats, BrawlCrewOutcome } from "../brawl/crew/types.js";
 import type {
   MountClimbRules,
   MountInputSample,
@@ -582,67 +583,76 @@ export type BrawlBlockStatus = "ready" | "running" | "done";
 
 export type BrawlPhase = "ready" | "running" | "finished";
 
-// The server's own re-run of one block's input log: the only reading of a block that scores.
-// `goons` is the worth put down, whatever the outcome — a KO keeps what it earned — and `hearts`
-// is what the hen walked off with.
-export type BrawlBlockResult = {
-  outcome: BrawlOutcome;
-  endTick: number;
-  goons: number;
-  hearts: number;
-};
-
 // One player as the brawler needs them named, SCHLONIC's twin: `avatarSrc` stays pack-relative
 // and the surface resolves it against the server origin; team id and genre are the hen's colour
 // and silhouette.
 export type BrawlPlayerFigure = CastPlayerFigure;
 
-// One player's block of the street. There is no second attempt: a block ends at the handoff, in
-// the bay, or at the bell, and either way the tablet moves on to the next teammate. The input log
-// is what the display re-runs the shared sim from, and what the server refereed the result out of.
-export type BrawlMinigameBlock = {
-  blockIndex: number;
-  // Whose block it is; null fights with the house hen in the team colour.
+// One hen of a block's crew: whose she is and her slot — her index in the frame's `hens`, and the
+// colour she and her player's phone share. A null player is the house hen (a team with no roster).
+export type BrawlCrewMember = {
   player: BrawlPlayerFigure | null;
-  status: BrawlBlockStatus;
-  inputs: BrawlInput[];
-  skipped: boolean;
-  result: BrawlBlockResult | null;
-  // The handoff pick: the teammate on the line bought a fourth heart for `heartPrice` of the
-  // team's banked worth before their first touch. The block starts with four hearts on all three
-  // machines (`resolveBrawlStartHearts`), and the price stays paid if the block is then skipped.
-  heartBought: boolean;
+  slot: number;
 };
 
-// The turn to beat: the finished turn that put down the most worth over the whole course, from
-// any team BEFORE this one, carried from turn to turn by the plugin's round memory. A brawl has
-// nothing to race, so there is no ghost — only the number and whose it was.
+// One block of the street as the room sees it (docs/minigames/brawl-crew-spec.md §0.6). While it
+// is `ready` the crew is assembling: `crew` grows as players step out. Started, its size is
+// locked and `frame` is the server's own reading of the fight at `frame.tick`, with `startedAtMs`
+// the server clock at tick nought; every screen steps a copy forward from the latest one it was
+// sent. Only the block in hand and the one just finished carry a frame — the frame is the heavy
+// part of the view, and an older block's is nobody's to draw.
+export type BrawlMinigameBlock = {
+  blockIndex: number;
+  status: BrawlBlockStatus;
+  // The tablet's own block: one hen, played on the host tablet (a turn locked to the tablet, a
+  // team with nobody stepped out, the teaser). No phone is a pad for it.
+  tablet: boolean;
+  crew: BrawlCrewMember[];
+  // The crew's size once the block has started; null while it is still assembling.
+  crewSize: number | null;
+  startedAtMs: number | null;
+  // From block two on, the server clock from which a crew thumb may start the block: the beat
+  // after the last one is held until then. Null on the first block, which is the host's to start.
+  readyAtMs: number | null;
+  frame: BrawlCrewFrame | null;
+  outcome: BrawlCrewOutcome | null;
+  // What the block banked (live while it runs) and everything it could: the kit it was dealt for
+  // its crew, or — not yet started — for the crew as it stands.
+  banked: number;
+  total: number;
+  skipped: boolean;
+};
+
+// The turn to beat: the finished turn that banked the biggest SHARE of what it was dealt, from
+// any team before this one, carried from turn to turn by the plugin's round memory. A share and
+// not a sum, because a crew of five is dealt a bigger street than a crew of three.
 export type BrawlBestTurn = {
   teamId: string | null;
   teamName: string | null;
-  goons: number;
+  banked: number;
+  total: number;
 };
 
 // Nothing about a block is secret — the whole street is on the TV as it happens — so the host
-// and display carry the same fields, as SCHLONIC does. The course is a RULE, not a roll: every
-// team in the round fights the same `blocksPerTurn` blocks off `courseSeed`, so the night is a
-// contest rather than a lottery. Block `n` is block `n` of it.
+// and display carry the same fields. The course is a RULE, not a roll: every team fights the same
+// `blocksPerTurn` blocks off `courseSeed`, each furnished for the crew that showed up.
 export type BrawlMinigameViewFields = {
   minigame: "BRAWL";
   phase: BrawlPhase;
   blockIndex: number;
   blocksPerTurn: number;
   courseSeed: number;
+  // The team's players in roster order: who could step out, for the ready beat's "not out yet".
+  roster: BrawlPlayerFigure[];
   blocks: BrawlMinigameBlock[];
-  // The worth banked over the turn so far — every bought heart's price already taken off it —
-  // and the worth of the whole course.
-  goonsDown: number;
-  goonsTotal: number;
-  // What a fourth heart costs at a handoff, in banked worth (the `heartPrice` rule).
-  heartPrice: number;
+  // The worth banked over the turn so far and everything the course holds for this team.
+  banked: number;
+  total: number;
   points: number | null;
   // The turn to beat, fixed for the whole turn; null until a team before this one has banked.
   bestTurn: BrawlBestTurn | null;
+  // Once the turn is over: what each player did, by player id, for the results card.
+  turnStats: Record<string, BrawlCrewHenStats> | null;
 };
 
 export type BrawlMinigameHostView = MinigameHostViewBase & BrawlMinigameViewFields;
@@ -719,13 +729,12 @@ export type MinigameHostView =
   | DrawingMinigameHostView
   | EmojiCharadesMinigameHostView;
 
-// The host views a contestant's phone may be handed (`player:minigameHostView`): the four arcade
+// The host views a contestant's phone may be handed (`player:minigameHostView`): the three arcade
 // relays, and nothing else. Each carries the same fields as its display view — no answer, no
-// secret — which the runtimes' tests pin.
+// secret — which the runtimes' tests pin. A crew game's phones are pads and are handed no view.
 export type ContestantMinigameHostView =
   | FappyMinigameHostView
   | SchlonicMinigameHostView
-  | BrawlMinigameHostView
   | JoustMinigameHostView;
 
 export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
@@ -916,6 +925,10 @@ export type RoomState = {
   // The arcade turn in hand — its locked device mode, whose leg it is and which device writes
   // it — from the turn's briefing to its results. Null outside one, and for every other game.
   contestantTurn: ContestantTurn | null;
+  // The crew turn in hand — a game the whole active team plays at once from its phones: the
+  // locked device mode, whose phones may play, and each one's pad. Null outside one, and for
+  // every game that is not a crew game (`CREW_MINIGAME_TYPES`).
+  crewTurn: CrewTurn | null;
 };
 
 type DisplaySafeRoomStateKeys =
@@ -948,7 +961,8 @@ type DisplaySafeRoomStateKeys =
   | "canAdvancePhase"
   | "claimedPlayerIds"
   | "roundDeviceModes"
-  | "contestantTurn";
+  | "contestantTurn"
+  | "crewTurn";
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
@@ -980,7 +994,8 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "canAdvancePhase",
   "claimedPlayerIds",
   "roundDeviceModes",
-  "contestantTurn"
+  "contestantTurn",
+  "crewTurn"
 ] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
@@ -994,7 +1009,8 @@ type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 // out too until a game's phone surface asks for exactly the fields it needs.
 // `contestantTurn` is the one game field here: whose leg it is and which device
 // writes it, so a phone knows to play, to get ready, or to watch the TV. It is
-// ids, a leg number and a mode — nothing a turn could cheat with.
+// ids, a leg number and a mode — nothing a turn could cheat with. `crewTurn` is its twin for a
+// game the whole team plays at once: whose phones are pads, and each pad's slot, hearts and state.
 // Anything only one player may see goes over that player's own channel
 // (`player:self`, and the contestant's `player:minigameHostView`), never into
 // this shared snapshot.
@@ -1009,7 +1025,8 @@ export const PLAYER_SAFE_ROOM_STATE_KEYS = [
   "activeRoundTeamId",
   "activeTurnTeamId",
   "claimedPlayerIds",
-  "contestantTurn"
+  "contestantTurn",
+  "crewTurn"
 ] as const satisfies readonly (keyof RoomState)[];
 
 type PlayerSafeRoomStateKey = (typeof PLAYER_SAFE_ROOM_STATE_KEYS)[number];
@@ -1076,7 +1093,9 @@ export const toDisplayRoomStateSnapshot = (
     claimedPlayerIds: roomState.claimedPlayerIds,
     // The TV's briefing says "grab your phone" or "grab the tablet" from these.
     roundDeviceModes: roomState.roundDeviceModes,
-    contestantTurn: roomState.contestantTurn
+    contestantTurn: roomState.contestantTurn,
+    // The TV's crew strip and its ready beat read who has stepped out from this.
+    crewTurn: roomState.crewTurn
   } satisfies DisplayRoomStateSnapshot;
 
   return displaySnapshot;
@@ -1111,7 +1130,8 @@ export const toPlayerRoomStateSnapshot = (
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
     claimedPlayerIds: roomState.claimedPlayerIds,
-    contestantTurn: roomState.contestantTurn
+    contestantTurn: roomState.contestantTurn,
+    crewTurn: roomState.crewTurn
   } satisfies PlayerRoomStateSnapshot;
 
   return playerSnapshot;

@@ -241,8 +241,8 @@ export type {
   SchlonicRunResult,
   SchlonicRunStatus,
   BrawlBestTurn,
-  BrawlBlockResult,
   BrawlBlockStatus,
+  BrawlCrewMember,
   BrawlMinigameBlock,
   BrawlMinigameDisplayView,
   BrawlMinigameHostView,
@@ -515,6 +515,15 @@ export type {
   PlayerMinigameActionResult,
   RoundDeviceModes
 } from "./contestantTurn/index.js";
+export {
+  CREW_MINIGAME_TYPES,
+  CREW_PAD_STATES,
+  CREW_STAGE_STATUSES,
+  isCrewMinigameType,
+  isCrewPhoneTurn,
+  isPhoneMinigameType
+} from "./crewTurn/index.js";
+export type { CrewPad, CrewPadState, CrewStageStatus, CrewTurn } from "./crewTurn/index.js";
 export {
   CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,

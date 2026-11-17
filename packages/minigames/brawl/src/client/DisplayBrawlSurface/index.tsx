@@ -1,22 +1,10 @@
-import { useMemo, useRef, type ReactNode } from "react";
-import type { MinigameDisplayRendererProps, MinigameHandset } from "@wingnight/minigames-core";
+import type { MinigameDisplayRendererProps } from "@wingnight/minigames-core";
 import type { BrawlMinigameDisplayView } from "@wingnight/shared";
 import { NeonMarquee, ResultPlaque } from "@wingnight/surface";
 
-import { MIRROR_HOLD_SLACK_MS } from "../beats/index.js";
-import { TV_CAMERA_FIT } from "../BrawlScene/camera/index.js";
-import { BrawlScene, type BrawlSceneHandle } from "../BrawlScene/index.js";
-import { resolveGoonsBanked } from "../goonsTally/index.js";
-import { resolveViewCourse, useBrawlBlock } from "../useBrawlBlock/index.js";
-import { useBrawlMirror } from "../useBrawlMirror/index.js";
-import { useBrawlSounds } from "../useBrawlSounds/index.js";
-import { useHeldBlock, type BlockHold } from "../useHeldBlock/index.js";
-import { useHeartCallout } from "../useHeartCallout/index.js";
-import { useHenFigure } from "../useHenFigure/index.js";
-import { BeatCallout } from "./BeatCallout/index.js";
-import { HeartCallout } from "./HeartCallout/index.js";
-import { MarqueeReadout } from "./MarqueeReadout/index.js";
-import { WaveMeter } from "./WaveMeter/index.js";
+import { CrewScene } from "../CrewScene/index.js";
+import { resolveLiveBanked, resolveShownBlock } from "../shownBlock/index.js";
+import { useCrewFrame } from "../useCrewFrame/index.js";
 import { displayBrawlSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -27,82 +15,40 @@ const BrawlIntro = (): JSX.Element => (
   </div>
 );
 
-// The team's result once it is through: the house `<ResultPlaque>` (DESIGN.md §2.2E). `silent`,
-// because the street's own board has just rung the last beat and a sting on top is a second voice.
-// The running totals are not here: standings are the results screens' job, never mid-round.
-const FinishPlaque = ({ view }: { view: BrawlMinigameDisplayView }): JSX.Element => (
-  <div className={styles.resultOverlay} data-brawl-result="finished">
-    <ResultPlaque
-      tone={(view.points ?? 0) > 0 ? "hit" : "neutral"}
-      silent
-      title={displayBrawlSurfaceCopy.finishedTitle}
-      detail={displayBrawlSurfaceCopy.finishedBlurb(view.goonsDown, view.goonsTotal)}
-      points={displayBrawlSurfaceCopy.points(view.points ?? 0)}
-    />
-  </div>
-);
+type PlayBodyProps = Pick<MinigameDisplayRendererProps, "activeTeamName" | "clock" | "clockLine" | "serverOrigin"> & {
+  view: BrawlMinigameDisplayView;
+};
 
-const resolveStatusLine = (view: BrawlMinigameDisplayView, playerName: string | null, hold: BlockHold | null): string => {
-  if (hold !== null) {
-    return displayBrawlSurfaceCopy.heldPrompt(playerName);
-  }
-
+/** What the line under the street says: who the room is waiting on, the wave, or how it ended. */
+const resolveStatusLine = (view: BrawlMinigameDisplayView, wave: number | null, waves: number, isWalkingOn: boolean): string => {
   if (view.phase === "finished") {
     return displayBrawlSurfaceCopy.finishedPrompt;
   }
 
-  return view.phase === "running"
-    ? displayBrawlSurfaceCopy.runningPrompt(playerName)
-    : displayBrawlSurfaceCopy.readyPrompt(playerName);
+  const inHand = view.blocks[view.blockIndex];
+
+  if (view.phase === "running" && wave !== null) {
+    return isWalkingOn ? displayBrawlSurfaceCopy.walkOn : displayBrawlSurfaceCopy.running(wave + 1, waves);
+  }
+
+  if (view.blockIndex === 0) {
+    const out = new Set((inHand?.crew ?? []).map((member) => member.player?.playerId));
+
+    return displayBrawlSurfaceCopy.steppingOut(
+      out.size,
+      view.roster.filter((figure) => !out.has(figure.playerId)).map((figure) => figure.name)
+    );
+  }
+
+  return displayBrawlSurfaceCopy.nextBlock(view.blocks[view.blockIndex - 1]?.outcome ?? null);
 };
 
-type PlayBodyProps = {
-  view: BrawlMinigameDisplayView;
-  activeTeamName: string | null;
-  clock: ReactNode;
-  clockLine: ReactNode;
-  serverOrigin: string | null;
-  handset: MinigameHandset;
-};
-
-const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin, handset }: PlayBodyProps): JSX.Element => {
-  const sceneRef = useRef<BrawlSceneHandle>(null);
-  // Written by the mirror's paint loop: the hearts left, the worth down and the wave strip.
-  const heartsRef = useRef<HTMLSpanElement>(null);
-  const tallyRef = useRef<HTMLSpanElement>(null);
-  const waveMeterRef = useRef<HTMLDivElement>(null);
-  // A block stays on the wall while its ending plays, a little longer than the tablet holds it,
-  // because the replay here runs behind; once the team is through the last block stays for good.
-  const { shownBlockIndex, hold } = useHeldBlock(view, MIRROR_HOLD_SLACK_MS);
-  const viewBlock = view.blocks[shownBlockIndex] ?? null;
-  const { block, relay } = useBrawlBlock({ view, blockIndex: shownBlockIndex, serverOrigin });
-  const hen = useHenFigure({ figure: viewBlock?.player ?? null, activeTurnTeamId: view.activeTurnTeamId, serverOrigin });
-  const { courseSeed, blocksPerTurn } = view;
-  const heartBought = viewBlock?.heartBought ?? false;
-  // The referee's own course for the block on the wall, bought heart and all, so a wall that
-  // missed the block re-runs it from the hearts the server did.
-  const course = useMemo(() => {
-    return resolveViewCourse({ courseSeed, blocksPerTurn }, shownBlockIndex, heartBought);
-  }, [courseSeed, blocksPerTurn, shownBlockIndex, heartBought]);
-  const goonsBanked = resolveGoonsBanked(view.blocks, shownBlockIndex, view.heartPrice);
+const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin }: PlayBodyProps): JSX.Element => {
+  const shown = resolveShownBlock(view);
+  const { frame, layout } = useCrewFrame(shown, view);
   const isFinished = view.phase === "finished";
-  // "Caitlin bought a heart", for a couple of seconds once her bought block is on the wall.
-  const isHeartCalloutUp = useHeartCallout(viewBlock, hold === null && !isFinished);
-  // The TV is the room's speaker, so the street's whole soundboard hangs off this one surface.
-  const { onMirrorEvent } = useBrawlSounds({ serverOrigin });
-
-  useBrawlMirror({
-    viewBlock,
-    block,
-    course,
-    sceneRef,
-    heartsRef,
-    tallyRef,
-    waveMeterRef,
-    goonsBanked,
-    goonsTotal: view.goonsTotal,
-    onEvent: onMirrorEvent
-  });
+  const banked = resolveLiveBanked(view, shown, frame?.banked ?? null);
+  const isLive = shown?.status === "running" && frame !== null;
 
   return (
     <div className={styles.stage}>
@@ -110,56 +56,62 @@ const BrawlPlayBody = ({ view, activeTeamName, clock, clockLine, serverOrigin, h
         title={displayBrawlSurfaceCopy.title}
         teamName={activeTeamName}
         readout={
-          <MarqueeReadout
-            view={view}
-            shownBlockIndex={shownBlockIndex}
-            goonsBanked={goonsBanked}
-            heartsRef={heartsRef}
-            tallyRef={tallyRef}
-          />
+          <span className={styles.readout}>
+            <span>{displayBrawlSurfaceCopy.blockCounter(Math.min(view.blockIndex + 1, view.blocksPerTurn), view.blocksPerTurn)}</span>
+            <span className={styles.tally} data-brawl-banked={banked} data-brawl-total={view.total}>
+              {displayBrawlSurfaceCopy.tally(banked, view.total)}
+            </span>
+            <span className={styles.tallyLabel}>{displayBrawlSurfaceCopy.tallyLabel}</span>
+          </span>
         }
         clock={clock}
         clockLine={clockLine}
       />
       <div className={styles.arenaArea} data-brawl-display-arena>
-        <div key={shownBlockIndex} className={styles.blockEnter}>
-          {/* The room's camera, not the tablet's: the same left edge, widened to the arena, so
-              every goon from the right is on the wall before it is on the tablet and the shouting
-              is the team's (docs/minigames/brawl-spec.md §3). */}
-          <BrawlScene
-            ref={sceneRef}
-            block={block}
-            hen={hen}
-            sceneId="display-brawl"
-            label={displayBrawlSurfaceCopy.sceneLabel(hen.playerName)}
-            cameraFit={TV_CAMERA_FIT}
-            relay={relay}
+        {frame !== null && layout !== null && shown !== null ? (
+          <CrewScene
+            frame={frame}
+            layout={layout}
+            crew={shown.crew}
+            activeTurnTeamId={view.activeTurnTeamId}
+            serverOrigin={serverOrigin}
+            label={displayBrawlSurfaceCopy.sceneLabel}
+            fit="cover"
           />
-        </div>
-        <WaveMeter key={`meter-${shownBlockIndex}`} ref={waveMeterRef} block={block} hidden={hold !== null || isFinished} />
-        {hold !== null && (
-          <BeatCallout hold={hold} nextName={view.blocks[hold.blockIndex + 1]?.player?.name ?? null} handset={handset} />
+        ) : (
+          <div className={styles.container}>
+            <p className={styles.hint}>{displayBrawlSurfaceCopy.waitingStreetLabel}</p>
+          </div>
         )}
-        {isHeartCalloutUp && <HeartCallout playerName={viewBlock?.player?.name ?? null} heartPrice={view.heartPrice} />}
-        {isFinished && hold === null && <FinishPlaque view={view} />}
+        {isFinished && (
+          <div className={styles.resultOverlay} data-brawl-result="finished">
+            <ResultPlaque
+              tone={(view.points ?? 0) > 0 ? "hit" : "neutral"}
+              title={displayBrawlSurfaceCopy.finishedTitle}
+              detail={displayBrawlSurfaceCopy.finishedBlurb(view.banked, view.total)}
+              points={displayBrawlSurfaceCopy.points(view.points ?? 0)}
+            />
+          </div>
+        )}
       </div>
-      <p className={styles.statusLine}>{resolveStatusLine(view, viewBlock?.player?.name ?? null, hold)}</p>
+      <p className={styles.statusLine} data-brawl-status>
+        {resolveStatusLine(view, isLive ? frame.waveIndex : null, layout?.waves.length ?? 0, isLive && !frame.cameraLocked)}
+      </p>
     </div>
   );
 };
 
-// BRAWL's display surface (docs/minigames/brawl-spec.md §0.7): the house `<NeonMarquee>` with the
-// shell's `clock` and `clockLine` seated and the block's live counts as its readout, over the
-// street drawn through the room's wider camera — the tablet's block re-run from its own input log
-// (`useBrawlMirror`), with the wave meter over the sky and each ending's callout over the pavement.
+// BRAWL's display surface, INTERIM (docs/minigames/brawl-crew-spec.md §0.7, §0.10): the house
+// `<NeonMarquee>` over the crew's street, drawn from the server's latest frame and stepped on here
+// between frames (`useCrewFrame`). The crew strip, the wave meter and each ending's callout are
+// step 5's; this says the same things in one line under the street.
 export const DisplayBrawlSurface = ({
   phase,
   minigameDisplayView,
   activeTeamName,
   clock,
   clockLine,
-  serverOrigin,
-  handset
+  serverOrigin
 }: MinigameDisplayRendererProps): JSX.Element => {
   const brawlView = minigameDisplayView?.minigame === "BRAWL" ? minigameDisplayView : null;
 
@@ -179,13 +131,6 @@ export const DisplayBrawlSurface = ({
   }
 
   return (
-    <BrawlPlayBody
-      view={brawlView}
-      activeTeamName={activeTeamName}
-      clock={clock}
-      clockLine={clockLine}
-      serverOrigin={serverOrigin}
-      handset={handset}
-    />
+    <BrawlPlayBody view={brawlView} activeTeamName={activeTeamName} clock={clock} clockLine={clockLine} serverOrigin={serverOrigin} />
   );
 };

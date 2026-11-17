@@ -48,7 +48,7 @@ const minigameBriefingContentByType: Record<MinigameType, MinigameBriefingConten
     illustrationPath: `${DISPLAY_ASSET_ROOT}/brawl-illustration.svg`,
     illustrationAlt: "Streets of Barrie mini-game artwork",
     summary:
-      "Your chickens brawl down Dunlop Street to the Spirit Catcher, a block each. Walk with your left thumb, peck with your right, and put down every goose."
+      "The whole team brawls down Dunlop Street at once. Left thumb walks, right thumb pecks. Stand over a fallen friend to get her up."
   },
   MOUNT: {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/mount-illustration.svg`,

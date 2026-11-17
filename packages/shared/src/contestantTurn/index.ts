@@ -28,11 +28,11 @@ export const resolveRoundDeviceMode = (
   return roundDeviceModes[round] ?? DEFAULT_MINIGAME_DEVICE_MODE;
 };
 
-// The games a contestant can play on their own phone: the four arcade relays, whose host views
+// The games a contestant can play on their own phone: the three arcade relays, whose host views
 // carry nothing a turn could cheat with (each runtime's tests pin host view == display view).
 // The server's runtime registry is checked against this list, so a game cannot grow the phone
 // hooks without being added here, and the tablet only offers the phones setting for these.
-export const CONTESTANT_MINIGAME_TYPES = ["FAPPY", "SCHLONIC", "BRAWL", "JOUST"] as const satisfies readonly MinigameType[];
+export const CONTESTANT_MINIGAME_TYPES = ["FAPPY", "SCHLONIC", "JOUST"] as const satisfies readonly MinigameType[];
 
 export type ContestantMinigameType = (typeof CONTESTANT_MINIGAME_TYPES)[number];
 
@@ -98,6 +98,8 @@ export const PLAYER_MINIGAME_ACTION_REFUSAL_REASONS = {
   HOST_ONLY_ACTION: "host_only_action",
   // Somebody else's leg, or no leg in hand.
   NOT_CONTESTANT: "not_contestant",
+  // A crew game, and this player is not on the team whose turn it is.
+  NOT_IN_CREW: "not_in_crew",
   // The contestant's own leg, but the tablet holds it (taken back, or begun on the tablet).
   TABLET_HOLDS_LEG: "tablet_holds_leg",
   // The server hit a fault handling this message and refused it rather than go down with it.

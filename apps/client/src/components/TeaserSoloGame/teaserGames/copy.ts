@@ -18,7 +18,7 @@ export const teaserGamesCopy = {
   points: (points: number): string => `${points} ${points === 1 ? "point" : "points"}`,
   streetsOfBarrieTitle: "Streets of Barrie",
   streetsOfBarriePickerBody:
-    "Your team brawls down Dunlop Street to the Spirit Catcher, a block each. Hold the left side to walk, pull back to turn, tap the right to peck. Put down every goose, and watch behind you.",
+    "Brawl down Dunlop Street to the Spirit Catcher. Drag your left thumb any way to walk, tap or hold the right side to peck. Put down every goose, and watch behind you.",
   streetsOfBarrieFinishKicker: "Street over",
   streetsOfBarrieClearedKicker: "Street cleared",
   goons: (goons: number): string => `${goons} ${goons === 1 ? "goose" : "geese"} down`

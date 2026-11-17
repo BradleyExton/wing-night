@@ -164,6 +164,7 @@ export type ValidRoomStateCheck = Assert<
       connectedPlayerIds: string[];
       roundDeviceModes: RoomState["roundDeviceModes"];
       contestantTurn: RoomState["contestantTurn"];
+      crewTurn: RoomState["crewTurn"];
     },
     RoomState
   >
@@ -206,6 +207,7 @@ export type DisplaySnapshotShapeCheck = Assert<
       claimedPlayerIds: string[];
       roundDeviceModes: RoomState["roundDeviceModes"];
       contestantTurn: RoomState["contestantTurn"];
+      crewTurn: RoomState["crewTurn"];
     },
     DisplayRoomStateSnapshot
   >
@@ -304,4 +306,9 @@ export type MissingTotalScoreCheck = Assert<IsAssignable<{ id: string; name: str
 // goes to that one phone's own room as `player:minigameHostView`.
 export type PlayerSnapshotCarriesContestantTurnCheck = Assert<
   IsAssignable<HasKey<PlayerRoomStateSnapshot, "contestantTurn">, true>
+>;
+
+// A crew's pads reach every phone too: ids, a slot, hearts and a state, and never the game's view.
+export type PlayerSnapshotCarriesCrewTurnCheck = Assert<
+  IsAssignable<HasKey<PlayerRoomStateSnapshot, "crewTurn">, true>
 >;

@@ -149,10 +149,11 @@ already holding a face survive a new code), and refuses anything else with the c
   `setRoomStateFatalError` drop a claim whose id is gone or now names somebody else (name and
   `avatarSrc` both compared). A new player-rewrite site must prune too.
 - **A phone is not a host.** Nothing a PLAYER socket can send may advance a phase or move a
-  turn cursor, lock a question or reveal one. Exactly one kind of phone input reaches a game
-  reducer, and only through `player:minigameAction`: a contestant's own arcade leg (§3.5), which
-  plays the leg and so moves its score as the tablet would. Every other game is tablet-only:
-  there are no phone answers and no side bets on the night.
+  turn cursor, lock a question or reveal one. Phone input reaches a game reducer only through
+  `player:minigameAction`, and only as play: a contestant's own arcade leg, or a crew player's
+  pad in a game the whole team plays at once (§3.5). Either plays the turn and so moves its score
+  as the tablet would. Every other game is tablet-only: there are no phone answers and no side
+  bets on the night.
 - **No phone message can take the server down.** `player:minigameAction` names its game by a
   known `MinigameType` or is malformed, every lookup by a wire-borne game name tolerates an
   unknown one (`findMinigameRuntimePlugin`), and every phone-family listener runs guarded: a fault
@@ -161,7 +162,7 @@ already holding a face survive a new code), and refuses anything else with the c
 
 ## 3.5 The Contestant's Phone (Arcade Turns)
 
-The arcade relays (`CONTESTANT_MINIGAME_TYPES`: FAPPY, SCHLONIC, BRAWL, JOUST) can be played
+The arcade relays (`CONTESTANT_MINIGAME_TYPES`: FAPPY, SCHLONIC, JOUST) can be played
 leg by leg on each contestant's own phone. It is the one place a PLAYER socket changes game
 state, and these rules keep it from becoming a second host:
 
@@ -200,6 +201,37 @@ state, and these rules keep it from becoming a second host:
   keeps Take it back, the game's skip, reset and JOUST's next shot. The host sets each arcade
   round's mode from the deck (`DeviceModeSurface`): every arcade round before the night, the
   round in hand during a turn, the rounds to come between rounds.
+
+**Crew turns** (docs/minigames/brawl-crew-spec.md). A second kind of phone turn, for a game the
+whole active team plays at once with the TV as the one picture: Streets of Barrie
+(`CREW_MINIGAME_TYPES`: BRAWL). Its reducer keeps the fight's clock from each action's
+`receivedAtMs`, and its `selectDeadlineAction` asks the server for a `pulse` while no thumb
+moves.
+
+- **A crew is not a contestant.** A relay has one leg in hand, one player whose leg it is and one
+  device writing its log; a crew has none of the three. A crew game implements `selectCrew` in
+  place of `selectContestant` — whose phones may send `contestantActionTypes` now, where the stage
+  is, and each of those players' pads — and the registry test pins the hook to
+  `CREW_MINIGAME_TYPES` and forbids a game from being both.
+- **`RoomState.crewTurn`** is derived by the server after every mutation
+  (`roomState/crewTurnState`) and is on the display's and the players' allow-lists. It carries the
+  turn's locked device mode, the crew's player ids and a `CrewPad` each (a state, a slot, hearts)
+  and nothing of the game's views. In a turn locked to the tablet it lists no pads.
+- **The server says who sent it.** `MinigameRuntimeActionEnvelope.actorPlayerId` is stamped from
+  the face the sending socket holds on every `player:minigameAction`, and is absent on a host or
+  server action. A payload cannot set it. A crew game tells its players apart by it; nothing a
+  phone sends names a player.
+- **Membership is the whole check.** `player:minigameAction` for a crew game is refused unless the
+  game is in play, the turn is locked to phones, the action is one of the game's
+  `contestantActionTypes`, and the sender is in `crewTurn.playerIds` (`not_in_crew` otherwise).
+  There is no leg to hold, so there is no take-back and no single writer; the tablet's own
+  `minigame:action` is never refused on a crew's account, and the game decides what an action
+  with no actor means.
+- **A crew phone mounts a pad, never the game.** `MinigameRendererBundle.PadSurface` is handed the
+  player's own pad and a dispatch; no host view is ever sent to a crew phone. The phone shell
+  reads `crewTurn` and nothing else (`resolvePhoneTurn`: `crewBriefing`, then `pad` for every
+  player the turn lists, at once), draws the pad full-screen at the phone's own size
+  (`PlayerPhone/CrewPadScreen`), and sends through `contestantLeg.dispatchTo`.
 
 ---
 

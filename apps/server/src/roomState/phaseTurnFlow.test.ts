@@ -76,7 +76,8 @@ test("createInitialRoomState returns setup defaults", () => {
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null
+    contestantTurn: null,
+    crewTurn: null
   });
 });
 

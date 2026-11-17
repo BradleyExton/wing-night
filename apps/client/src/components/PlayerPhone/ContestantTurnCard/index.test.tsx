@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { PhoneTurn } from "../resolvePhoneTurn";
 import { ContestantTurnCard } from "./index";
 
-const render = (turn: Exclude<PhoneTurn, { role: "play" }>, contestantName: string | null = "Alex"): string =>
+const render = (turn: Exclude<PhoneTurn, { role: "play" | "pad" }>, contestantName: string | null = "Alex"): string =>
   renderToStaticMarkup(
     <ContestantTurnCard
       turn={turn}
@@ -53,4 +53,17 @@ test("does tell the team what to pick up when the briefing is up", () => {
 
 test("does never draw the game when the card is up", () => {
   assert.doesNotMatch(render({ role: "watch", contestantPlayerId: null }), /data-contestant-game|data-phone-rotate/);
+});
+
+test("does tell the whole team to grab their phones when a crew game is briefed on phones", () => {
+  const html = render({ role: "crewBriefing", deviceMode: "phones" });
+
+  assert.match(html, /data-contestant-phone="crewBriefing"/);
+  assert.match(html, /Grab your phone/);
+  assert.match(html, /Everybody plays this one at once/);
+  assert.match(html, /The game is on the TV/);
+});
+
+test("does send the team to the tablet when a crew game is briefed on the tablet", () => {
+  assert.match(render({ role: "crewBriefing", deviceMode: "tablet" }), /Grab the tablet/);
 });

@@ -37,3 +37,6 @@ export type {
   BrawlSpawn,
   BrawlWave
 } from "./types.js";
+// The whole team at once, on a street with depth (docs/minigames/brawl-crew-spec.md): built
+// beside the relay's sim until the last surface has moved over to it.
+export * from "./crew/index.js";

@@ -1,6 +1,7 @@
 import type { Phase, RoomState } from "@wingnight/shared";
 
 import { syncContestantTurn } from "../contestantTurnState/index.js";
+import { syncCrewTurn } from "../crewTurnState/index.js";
 import { getRoomStateSnapshot } from "../getRoomStateSnapshot/index.js";
 import { reportRoomStateMutation } from "../mutationResult/index.js";
 import { isRoomInFatalState } from "../selectors/index.js";
@@ -18,7 +19,8 @@ type RoomMutationDefinition<TArgs extends unknown[]> = {
 // A mutation that moved the room also re-derives the arcade turn's leg in hand
 // and its controller (`syncContestantTurn`), so whose leg it is and which
 // device writes it can never lag the change that moved it — a leg ending, a
-// phase advancing, an undo, a phone waking.
+// phase advancing, an undo, a phone waking. A crew game's pads are copied out of the game the
+// same way (`syncCrewTurn`).
 export const defineRoomMutation = <TArgs extends unknown[]>(
   definition: RoomMutationDefinition<TArgs>
 ): ((...args: TArgs) => RoomState) => {
@@ -42,6 +44,7 @@ export const defineRoomMutation = <TArgs extends unknown[]>(
 
     if (definition.run(roomState, ...args)) {
       syncContestantTurn(roomState);
+      syncCrewTurn(roomState);
       reportRoomStateMutation();
     }
 

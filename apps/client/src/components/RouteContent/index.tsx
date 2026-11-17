@@ -63,6 +63,19 @@ const ContraptionUiLab = lazy(() =>
   import("../ContraptionUiLab").then((module) => ({ default: module.ContraptionUiLab }))
 );
 
+const BrawlPadLab = lazy(() =>
+  import("../BrawlProtoLab/Pad").then((module) => ({ default: module.BrawlPadLab }))
+);
+
+const BrawlStreetLab = lazy(() =>
+  import("../BrawlProtoLab/Street").then((module) => ({ default: module.BrawlStreetLab }))
+);
+
+// Throwaway — the four-at-once Streets of Barrie controls prototype: a phone pad and the street
+// it drives on the TV. Deleted when the real game is specced.
+const BRAWL_PAD_LAB_NAME = "brawl-pad";
+const BRAWL_STREET_LAB_NAME = "brawl-street";
+
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
 // (BACKLOG.md § Minigames).
 const ANAMORPH_LAB_NAME = "anamorph";
@@ -146,6 +159,14 @@ const resolveRouteElement = ({
 
   if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
     return <ContraptionUiLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === BRAWL_PAD_LAB_NAME) {
+    return <BrawlPadLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === BRAWL_STREET_LAB_NAME) {
+    return <BrawlStreetLab />;
   }
 
   return <RouteNotFound />;

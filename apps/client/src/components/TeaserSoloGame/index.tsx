@@ -3,6 +3,7 @@ import { wakeAudio } from "@wingnight/audio";
 import { CONTESTANT_CONTROLLERS } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
+import { useRuntimeDeadline } from "../../minigames/useRuntimeDeadline";
 import type { TeaserRoster } from "../../utils/parseTeaserRoster";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useServerOrigin } from "../../utils/useServerOrigin";
@@ -105,6 +106,9 @@ export const TeaserSoloGame = ({ game, roster }: TeaserSoloGameProps): JSX.Eleme
           }).state
     );
   };
+
+  // The page is its own server for a game's clock too (Streets of Barrie steps on a pulse).
+  useRuntimeDeadline(runtimePlugin, { state: runtimeState, rules, content }, handleDispatchAction);
 
   const isNewBest =
     result !== null &&

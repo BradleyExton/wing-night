@@ -91,10 +91,10 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       minigameType={stageViewModel.minigameType}
       minigamePointsMax={stageViewModel.minigamePointsMax}
       handset={
-        stageViewModel.contestantTurn === null
+        stageViewModel.contestantTurn === null && stageViewModel.crewTurn === null
           ? null
           : resolveBriefingHandset(
-              stageViewModel.contestantTurn,
+              stageViewModel.contestantTurn ?? stageViewModel.crewTurn,
               stageViewModel.activeTeamPlayers.map((player) => player.id),
               stageViewModel.claimedPlayerIds
             )

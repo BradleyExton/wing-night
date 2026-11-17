@@ -14,6 +14,8 @@
 // page's own origin is the answer.
 export const SAME_ORIGIN_SERVER_URL = "same-origin";
 
+const DEFAULT_SERVER_PORT = "3000";
+
 export const resolveServerOrigin = (): string => {
   const configuredUrl = import.meta.env.VITE_SOCKET_SERVER_URL;
 
@@ -25,5 +27,12 @@ export const resolveServerOrigin = (): string => {
     return configuredUrl.trim();
   }
 
-  return `${window.location.protocol}//${window.location.hostname}:3000`;
+  // No URL configured: the server is on this page's own host, so a phone that opened the page
+  // at the laptop's Wi-Fi address reaches the server at that address too. `VITE_SOCKET_SERVER_PORT`
+  // moves only the port — for a second stack running beside one that already holds 3000, which a
+  // fixed URL cannot do without pinning every device to one hostname.
+  const configuredPort = import.meta.env.VITE_SOCKET_SERVER_PORT?.trim() ?? "";
+  const port = /^\d+$/.test(configuredPort) ? configuredPort : DEFAULT_SERVER_PORT;
+
+  return `${window.location.protocol}//${window.location.hostname}:${port}`;
 };

@@ -31,6 +31,33 @@
       "url": "http://localhost:5173"
     },
     {
+      "name": "wing-night-second-server",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=3200", "fnm", "exec", "--using=25", "pnpm", "--filter", "@wingnight/server", "dev"],
+      "port": 3200
+    },
+    {
+      "name": "wing-night-second-client",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_SOCKET_SERVER_PORT=3200",
+        "fnm",
+        "exec",
+        "--using=25",
+        "pnpm",
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "--host",
+        "--port",
+        "5373",
+        "--strictPort"
+      ],
+      "port": 5373,
+      "url": "http://localhost:5373"
+    },
+    {
       "name": "wing-night-server",
       "runtimeExecutable": "env",
       "runtimeArgs": [

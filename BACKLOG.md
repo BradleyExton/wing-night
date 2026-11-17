@@ -134,6 +134,15 @@ These are `MinigameRuntimePlugin` packages registered on server and client like
 trivia/geo/drawing. Read `docs/minigame-authoring-guide.md` first — adding a `MinigameType` breaks
 every `Record<MinigameType, …>` in the repo until fully wired, so there's no throwaway half-state.
 
+### Streets of Barrie — the whole team at once
+
+Drafted 2026-11-16, not built: [docs/minigames/brawl-crew-spec.md](docs/minigames/brawl-crew-spec.md).
+The relay becomes every player on the active team on the street together, each on their own phone
+as a gamepad, with up and down movement, teammate revives, and the server sequencing everyone's
+inputs. Its §0.8 is the order of work and its §4 lists what Brad still has to confirm. The controls
+prototype it rests on is throwaway (`/dev/lab/brawl-street`, `/dev/lab/brawl-pad`) and is deleted
+in that spec's step 8.
+
 ### Streets of Barrie — depth pass
 
 Shipped 2026-10-02 as a two-verb relay that is fun for about a block. The research behind what to

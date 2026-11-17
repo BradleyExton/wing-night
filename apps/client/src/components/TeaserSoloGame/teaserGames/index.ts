@@ -144,17 +144,17 @@ export const streetsOfBarrieGame: TeaserGame = {
   content: null,
   title: teaserGamesCopy.streetsOfBarrieTitle,
   pickerBody: teaserGamesCopy.streetsOfBarriePickerBody,
-  // The turn is over when the last block is, however it ended: what the team put down is the
-  // score, and a KO on the last block keeps it.
+  // The turn is over when the last block is, however it ended: what the hen banked is the score,
+  // and a block lost to the bay keeps what it had.
   resolveOutcome: (view) =>
     view.minigame === "BRAWL" && view.phase === "finished"
       ? {
           kicker:
-            view.goonsDown >= view.goonsTotal
+            view.banked >= view.total
               ? teaserGamesCopy.streetsOfBarrieClearedKicker
               : teaserGamesCopy.streetsOfBarrieFinishKicker,
-          headline: teaserGamesCopy.goons(view.goonsDown),
-          result: view.goonsDown
+          headline: teaserGamesCopy.goons(view.banked),
+          result: view.banked
         }
       : null,
   beats: (result, best) => result > best,

@@ -252,8 +252,8 @@ export const advanceToRoundResultsPhase = (round: number): void => {
   advanceUntil(Phase.ROUND_RESULTS, round);
 };
 
-// An arcade night: the four relays in turn, two players a side, so a relay hands the leg from one
-// teammate to the other. Team 1 (Player One, Player Two) opens round 1.
+// An arcade night: the three relays and the crew game in turn, two players a side, so a relay
+// hands the leg from one teammate to the other. Team 1 (Player One, Player Two) opens round 1.
 export const arcadeGameConfigFixture: GameConfigFile = {
   ...gameConfigFixture,
   rounds: [
@@ -266,7 +266,7 @@ export const arcadeGameConfigFixture: GameConfigFile = {
   minigameRules: {
     fappy: { legsPerTurn: 2, gatesPerLeg: 3, parSeconds: 30, limitSeconds: 90 },
     schlonic: { runsPerTurn: 2, zoneSeed: 20260919, zoneChunks: 6, parWingsPerRun: 40 },
-    brawl: { blocksPerTurn: 2, courseSeed: 20261001, heartPrice: 3 },
+    brawl: { blocksPerTurn: 2, courseSeed: 20261001 },
     joust: { shotsPerPlayer: 1 }
   }
 };

@@ -28,7 +28,7 @@ import { resolveMinigameRules } from "../selectors/index.js";
 
 // The phases one team's turn spans. The turn's lock is taken entering the first and dropped
 // leaving the last.
-const TURN_PHASES: readonly Phase[] = [
+export const TURN_PHASES: readonly Phase[] = [
   Phase.MINIGAME_INTRO,
   Phase.EATING,
   Phase.MINIGAME_PLAY,

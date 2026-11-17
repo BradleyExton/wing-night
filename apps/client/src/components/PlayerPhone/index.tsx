@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { MINIGAME_DEVICE_MODES, type Player, type Team, type TeamTheme } from "@wingnight/shared";
+import { MINIGAME_DEVICE_MODES, isCrewPhoneTurn, type Player, type Team, type TeamTheme } from "@wingnight/shared";
 
 import { usePlayerRoomState } from "../../context/RoomStateContext";
 import { useMinigameRendererBundle } from "../../minigames/useMinigameRendererBundle";
@@ -11,6 +11,7 @@ import * as shellStyles from "../PortalShell/styles";
 import { ClaimGoneCard } from "./ClaimGoneCard";
 import { ContestantGame } from "./ContestantGame";
 import { ContestantTurnCard } from "./ContestantTurnCard";
+import { CrewPadScreen } from "./CrewPadScreen";
 import { playerPhoneCopy } from "./copy";
 import { FacePicker } from "./FacePicker";
 import { PlayerIdleCard } from "./PlayerIdleCard";
@@ -80,13 +81,21 @@ export const PlayerPhone = ({ seat, contestantLeg }: PlayerPhoneProps): JSX.Elem
       ? null
       : resolvePhoneTurn(roomState, seatedPlayer.id, previousContestantRef.current);
   const contestantHostView = useContestantHostView(contestantLeg, phoneTurn?.role === "play");
+  const crewTurn = roomState?.crewTurn ?? null;
+  // The game this phone has a part in, when the turn is played on phones: a relay's leg, or a
+  // crew game's pad.
+  const phoneGame =
+    phoneTurn === null
+      ? null
+      : roomState?.contestantTurn?.deviceMode === MINIGAME_DEVICE_MODES.PHONES
+        ? roomState.contestantTurn.minigame
+        : isCrewPhoneTurn(crewTurn)
+          ? crewTurn.minigame
+          : null;
   // Warms the game's renderer chunk from the team's briefing on, on the team's phones only, and
-  // only when the turn is played on phones: the leg that lands on this phone draws at once.
-  useMinigameRendererBundle(
-    phoneTurn !== null && roomState?.contestantTurn?.deviceMode === MINIGAME_DEVICE_MODES.PHONES
-      ? roomState.contestantTurn.minigame
-      : null
-  );
+  // only when the turn is played on phones: the leg — or the pad — that lands on this phone draws
+  // at once.
+  const { rendererBundle } = useMinigameRendererBundle(phoneGame);
   const nameOf = (playerId: string | null): string | null =>
     players.find((player) => player.id === playerId)?.name ?? null;
 
@@ -115,6 +124,23 @@ export const PlayerPhone = ({ seat, contestantLeg }: PlayerPhoneProps): JSX.Elem
     );
   }
 
+  // A crew game in play: this phone is its player's gamepad, the whole screen, and the game is on
+  // the TV.
+  const crewPad = phoneTurn?.role === "pad" && seatedPlayer !== undefined ? (crewTurn?.pads[seatedPlayer.id] ?? null) : null;
+
+  if (crewPad !== null && crewTurn !== null && seatedPlayer !== undefined) {
+    return (
+      <CrewPadScreen
+        PadSurface={rendererBundle?.PadSurface ?? null}
+        minigameType={crewTurn.minigame}
+        playerId={seatedPlayer.id}
+        pad={crewPad}
+        status={crewTurn.status}
+        onDispatchAction={(actionType, actionPayload) => contestantLeg?.dispatchTo(crewTurn.minigame, actionType, actionPayload)}
+      />
+    );
+  }
+
   const renderBody = (): JSX.Element => {
     if (seatState.status === "locked") {
       return <ScanTheTvCard />;
@@ -135,7 +161,7 @@ export const PlayerPhone = ({ seat, contestantLeg }: PlayerPhoneProps): JSX.Elem
       );
     }
 
-    if (seatedPlayer !== undefined && phoneTurn !== null && phoneTurn.role !== "play") {
+    if (seatedPlayer !== undefined && phoneTurn !== null && phoneTurn.role !== "play" && phoneTurn.role !== "pad") {
       return (
         <ContestantTurnCard
           turn={phoneTurn}

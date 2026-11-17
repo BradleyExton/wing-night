@@ -27,7 +27,7 @@ export const MinigameIntroStage = (): JSX.Element => {
   const handlers = useHostHandlers();
   const activeTeam = roomState?.teams.find((team) => team.id === roomState.activeRoundTeamId) ?? null;
   const handset = resolveBriefingHandset(
-    roomState?.contestantTurn ?? null,
+    roomState?.contestantTurn ?? roomState?.crewTurn ?? null,
     activeTeam?.playerIds ?? [],
     roomState?.claimedPlayerIds ?? []
   );

@@ -4,7 +4,11 @@ Status: **Shipped** — `packages/minigames/brawl/`
 
 Last updated: 2026-10-02 (depth pass, tier 3: the handoff pick — buy a fourth heart with banked worth, or keep the three — §0.11; tiers 1 and 2 landed the same day)
 
-Next: the depth pass is built. What it added, and why, is argued from primary sources in
+Next (2026-11-16): the relay is to be replaced by the whole team playing at once from their phones,
+on a street with depth — drafted in [brawl-crew-spec.md](brawl-crew-spec.md), not built. This file
+stays the record of the code until that lands.
+
+Before that: the depth pass is built. What it added, and why, is argued from primary sources in
 [docs/research/brawl-depth-and-strategy.md](../research/brawl-depth-and-strategy.md) (its
 "Recommended package" was the plan; `BACKLOG.md` carries the tiers). Tiers 1, 2 and 3 (features
 1–5 and 7–10) are built and described below as built; phone-held spectator reinforcements stay an

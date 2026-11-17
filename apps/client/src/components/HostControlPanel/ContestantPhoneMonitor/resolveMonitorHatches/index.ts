@@ -45,16 +45,6 @@ export const resolveMonitorHatches = (view: MinigameDisplayView | null): Monitor
         },
         reset
       ];
-    case "BRAWL":
-      return [
-        {
-          actionType: "skipBlock",
-          label: hatchLabels.skipBlock,
-          isEnabled: view.phase === "ready" || view.phase === "running",
-          isLegScoped: true
-        },
-        reset
-      ];
     case "JOUST":
       return [
         { actionType: "nextShot", label: hatchLabels.nextShot, isEnabled: view.phase === "resolved", isLegScoped: false },

@@ -1,5 +1,6 @@
 import type {
   MinigameContestant,
+  MinigameCrew,
   MinigameDeadlineAction,
   MinigameRuntimeActionEnvelope,
   SerializableValue
@@ -308,6 +309,20 @@ export const supportsContestantTurns = (minigameId: MinigameType): boolean => {
   return runtimePlugin.selectContestant !== undefined && runtimePlugin.contestantActionTypes !== undefined;
 };
 
+// The crew hook (`MinigameRuntimePlugin.selectCrew`): a game the whole team plays at once from
+// its phones. Its inputs are the same `contestantActionTypes` list the relays use.
+export const supportsCrewTurns = (minigameId: MinigameType): boolean => {
+  const runtimePlugin = resolveMinigameRuntimePlugin(minigameId);
+
+  return runtimePlugin.selectCrew !== undefined && runtimePlugin.contestantActionTypes !== undefined;
+};
+
+// Whether a phone has any part in this game, relay or crew: the games a round's device mode means
+// something for.
+export const supportsPhoneTurns = (minigameId: MinigameType): boolean => {
+  return supportsContestantTurns(minigameId) || supportsCrewTurns(minigameId);
+};
+
 export const isContestantMinigameAction = (minigameId: MinigameType, actionType: string): boolean => {
   return (findMinigameRuntimePlugin(minigameId)?.contestantActionTypes ?? []).includes(actionType);
 };
@@ -346,6 +361,12 @@ export const selectActiveMinigameContestant = (
   rules: SerializableValue | null
 ): { minigameId: MinigameType; result: MinigameContestant } | null => {
   return selectFromActiveRuntime(rules, (plugin, input) => plugin.selectContestant?.(input) ?? null);
+};
+
+export const selectActiveMinigameCrew = (
+  rules: SerializableValue | null
+): { minigameId: MinigameType; result: MinigameCrew } | null => {
+  return selectFromActiveRuntime(rules, (plugin, input) => plugin.selectCrew?.(input) ?? null);
 };
 
 export const selectActiveMinigameDeadline = (

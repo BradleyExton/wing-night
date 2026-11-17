@@ -102,3 +102,19 @@ test("does stop listening when disposed", () => {
   controller.dispose();
   assert.equal(hasHandler(SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW), false);
 });
+
+test("does send a crew pad's action for a game the phone holds no view of", () => {
+  const { socket, sent } = createFakeSocket();
+  const controller = createContestantLegController(socket);
+
+  // No view ever arrives for a crew game: the room names the game, and the server decides
+  // whether this face is on its crew.
+  controller.dispatchTo("BRAWL", "walk", { dir: 3 });
+
+  assert.deepEqual(sent, [
+    [
+      CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION,
+      { minigameId: "BRAWL", minigameApiVersion: MINIGAME_API_VERSION, actionType: "walk", actionPayload: { dir: 3 } }
+    ]
+  ]);
+});

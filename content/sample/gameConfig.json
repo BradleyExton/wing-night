@@ -80,8 +80,7 @@
     },
     "brawl": {
       "blocksPerTurn": 3,
-      "courseSeed": 20261001,
-      "heartPrice": 3
+      "courseSeed": 20261001
     },
     "mount": {
       "climbSeconds": 30,

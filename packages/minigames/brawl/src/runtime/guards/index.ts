@@ -1,79 +1,39 @@
 import {
-  isCastPlayerFigure,
   isFiniteNumber,
   isNonNegativeInteger,
   isNumberRecord,
   isPositiveInteger,
   isRecord,
   type BrawlBestTurn,
-  type BrawlBlockResult,
-  type BrawlBlockStatus,
-  type BrawlInput,
-  type BrawlMinigameBlock,
-  type BrawlOutcome,
-  type BrawlPlayerFigure
+  type BrawlCrewWalk
 } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import type { BrawlRoundMemory, BrawlRuntimeBlock, BrawlRuntimeState } from "../types/index.js";
-
-const BLOCK_STATUSES: readonly BrawlBlockStatus[] = ["ready", "running", "done"];
-const OUTCOMES: readonly BrawlOutcome[] = ["cleared", "ko", "timeout"];
-const WALK_DIRS: readonly number[] = [-1, 0, 1];
+import type { BrawlRoundMemory, BrawlRuntimeState } from "../types/index.js";
 
 const isInteger = (value: unknown): value is number => {
   return typeof value === "number" && Number.isInteger(value);
 };
 
-const isBlockStatus = (value: unknown): value is BrawlBlockStatus => {
-  return BLOCK_STATUSES.some((status) => status === value);
-};
-
-const isWalkDir = (value: unknown): value is -1 | 0 | 1 => {
-  return WALK_DIRS.some((dir) => dir === value);
-};
-
-const isResultOrNull = (value: unknown): value is BrawlBlockResult | null => {
-  if (value === null) {
-    return true;
-  }
-
-  return (
-    isRecord(value) &&
-    OUTCOMES.some((outcome) => outcome === value.outcome) &&
-    isNonNegativeInteger(value.endTick) &&
-    isNonNegativeInteger(value.goons) &&
-    isNonNegativeInteger(value.hearts)
-  );
-};
-
-const isFigureOrNull = (value: unknown): value is BrawlPlayerFigure | null => {
-  if (value === null) {
-    return true;
-  }
-
-  return isCastPlayerFigure(value);
-};
-
-const isInput = (value: unknown): value is BrawlInput => {
-  if (!isRecord(value) || !isNonNegativeInteger(value.tick)) {
+/**
+ * Whether a value is this game's own runtime state. Asked on every action, and a block's frame is
+ * a few kilobytes that only this reducer ever writes, so the check is of the state's own fields
+ * and goes no deeper: it is there to refuse another game's state, not to audit ours.
+ */
+export const isBrawlRuntimeState = (value: SerializableValue): value is BrawlRuntimeState => {
+  if (!isRecord(value)) {
     return false;
   }
 
-  return value.kind === "peck" || (value.kind === "walk" && isWalkDir(value.dir));
-};
-
-const isBlock = (value: unknown): value is BrawlRuntimeBlock => {
   return (
-    isRecord(value) &&
+    (value.activeTurnTeamId === null || typeof value.activeTurnTeamId === "string") &&
+    Array.isArray(value.roster) &&
+    Array.isArray(value.blocks) &&
+    isPositiveInteger(value.blocksPerTurn) &&
+    isInteger(value.courseSeed) &&
     isNonNegativeInteger(value.blockIndex) &&
-    isFigureOrNull(value.player) &&
-    isBlockStatus(value.status) &&
-    Array.isArray(value.inputs) &&
-    value.inputs.every(isInput) &&
-    typeof value.skipped === "boolean" &&
-    isResultOrNull(value.result) &&
-    typeof value.heartBought === "boolean"
+    isFiniteNumber(value.turnStartPoints) &&
+    isNumberRecord(value.pendingPointsByTeamId)
   );
 };
 
@@ -86,95 +46,21 @@ const isBestTurnOrNull = (value: unknown): value is BrawlBestTurn | null => {
     isRecord(value) &&
     (value.teamId === null || typeof value.teamId === "string") &&
     (value.teamName === null || typeof value.teamName === "string") &&
-    isNonNegativeInteger(value.goons)
+    isNonNegativeInteger(value.banked) &&
+    isPositiveInteger(value.total)
   );
 };
 
-/**
- * What the previous turn handed on, if it was ours. Anything else — another game's memory, a
- * shape from before this field existed — is no memory at all, and the round starts with nothing
- * to beat.
- */
-export const isBrawlRoundMemory = (
-  value: SerializableValue | null | undefined
-): value is BrawlRoundMemory => {
+export const isBrawlRoundMemory = (value: unknown): value is BrawlRoundMemory => {
   return isRecord(value) && isBestTurnOrNull(value.bestTurn);
 };
 
-export const isBrawlRuntimeState = (value: SerializableValue): value is BrawlRuntimeState => {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  const state = value as Partial<BrawlRuntimeState>;
-
-  return (
-    (state.activeTurnTeamId === null || typeof state.activeTurnTeamId === "string") &&
-    (state.activeTurnTeamName === null || typeof state.activeTurnTeamName === "string") &&
-    isNonNegativeInteger(state.blocksPerTurn) &&
-    isInteger(state.courseSeed) &&
-    isPositiveInteger(state.heartPrice) &&
-    isNonNegativeInteger(state.blockIndex) &&
-    Array.isArray(state.blocks) &&
-    state.blocks.every(isBlock) &&
-    isFiniteNumber(state.turnStartPoints) &&
-    isNumberRecord(state.pendingPointsByTeamId) &&
-    isBestTurnOrNull(state.bestTurn)
-  );
+/** A stick: standing, or one of eight directions. A pad sends where it is, never a tick. */
+export const isBrawlWalkPayload = (value: SerializableValue): value is { dir: BrawlCrewWalk } => {
+  return isRecord(value) && isInteger(value.dir) && value.dir >= 0 && value.dir <= 8;
 };
 
-export type BrawlWalkPayload = {
-  tick: number;
-  dir: -1 | 0 | 1;
-};
-
-export type BrawlPeckPayload = {
-  tick: number;
-};
-
-export const isBrawlWalkPayload = (
-  actionPayload: SerializableValue
-): actionPayload is BrawlWalkPayload => {
-  return (
-    isRecord(actionPayload) &&
-    isNonNegativeInteger(actionPayload.tick) &&
-    isWalkDir(actionPayload.dir)
-  );
-};
-
-export const isBrawlPeckPayload = (
-  actionPayload: SerializableValue
-): actionPayload is BrawlPeckPayload => {
-  return isRecord(actionPayload) && isNonNegativeInteger(actionPayload.tick);
-};
-
-/** `buyHeart` carries nothing: the block in hand is the one bought for. */
-export const isBrawlBuyHeartPayload = (actionPayload: SerializableValue): boolean => {
-  return isRecord(actionPayload);
-};
-
-/**
- * The handoff pick (docs/minigames/brawl-spec.md §0.3): whether the teammate on the line may buy
- * a fourth heart now. Only on a block after the first — the first block has nothing banked to
- * spend — only while it is `ready` (the first thumb on the street closes the offer), only once,
- * and only when the team's banked worth covers the price, so the bank can never go below nought.
- * The reducer refuses `buyHeart` on the same test the tablet draws the cards on.
- */
-export const canBuyBrawlHeart = ({
-  block,
-  banked,
-  heartPrice
-}: {
-  block: Pick<BrawlMinigameBlock, "blockIndex" | "status" | "heartBought"> | null;
-  banked: number;
-  heartPrice: number;
-}): boolean => {
-  return (
-    block !== null &&
-    block.status === "ready" &&
-    block.blockIndex >= 1 &&
-    !block.heartBought &&
-    heartPrice > 0 &&
-    banked >= heartPrice
-  );
+/** The right thumb: down or up. */
+export const isBrawlPeckPayload = (value: SerializableValue): value is { held: boolean } => {
+  return isRecord(value) && typeof value.held === "boolean";
 };

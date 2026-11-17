@@ -8,7 +8,7 @@ import { contestantTurnCardCopy } from "./copy";
 import * as styles from "./styles";
 
 type ContestantTurnCardProps = {
-  turn: Exclude<PhoneTurn, { role: "play" }>;
+  turn: Exclude<PhoneTurn, { role: "play" | "pad" }>;
   player: Player;
   teamTheme: TeamTheme | null;
   // Whoever holds the leg in hand right now, by name, for "after Caitlin".

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test, { beforeEach, mock } from "node:test";
 
+import { fappyRuntimePlugin } from "@wingnight/minigames-fappy/runtime";
 import { joustDevManifest } from "@wingnight/minigames-joust/dev";
 import {
   Phase,
@@ -32,7 +33,6 @@ const T0 = 1_800_000_000_000;
 const ROUND_BY_GAME: Record<ContestantMinigameType, number> = {
   FAPPY: 1,
   SCHLONIC: 2,
-  BRAWL: 3,
   JOUST: 4
 };
 
@@ -97,6 +97,25 @@ test("does let the contestant's phone play its own leg and lands the input in th
 
   assert.equal(phoneSends("player-1", "FAPPY", "flap", { tick: 4 }), null);
   assert.deepEqual(hostViewOf("FAPPY").legs[0]?.flapTicks, [4]);
+});
+
+test("does stamp the face that sent a phone's action on its envelope, and nothing on the tablet's", () => {
+  playArcadeTurn("FAPPY");
+
+  const reduceAction = mock.method(fappyRuntimePlugin, "reduceAction");
+
+  try {
+    // The payload tries to name somebody else: the face the phone holds is the only identity.
+    phoneSends("player-1", "FAPPY", "flap", { tick: 4, actorPlayerId: "player-3" });
+    dispatchMinigameAction("FAPPY", "skipLeg", {});
+
+    const [fromPhone, fromTablet] = reduceAction.mock.calls.map((call) => call.arguments[0]?.envelope);
+
+    assert.equal(fromPhone?.actorPlayerId, "player-1");
+    assert.equal(fromTablet !== undefined && "actorPlayerId" in fromTablet, false);
+  } finally {
+    reduceAction.mock.restore();
+  }
 });
 
 test("does refuse a phone's action for another team's player and an off-turn teammate", () => {
@@ -217,7 +236,7 @@ test("does respawn a taken-back FAPPY leg as the next attempt from its checkpoin
   assert.deepEqual(retaken?.flapTicks, []);
 });
 
-test("does put a taken-back SCHLONIC run and BRAWL block back on the line", () => {
+test("does put a taken-back SCHLONIC run back on the line", () => {
   const rider = playArcadeTurn("SCHLONIC");
 
   assert.equal(phoneSends(rider, "SCHLONIC", "press", { tick: 2 }), null);
@@ -227,18 +246,6 @@ test("does put a taken-back SCHLONIC run and BRAWL block back on the line", () =
   assert.equal(hostViewOf("SCHLONIC").runs[0]?.status, "ready");
   assert.deepEqual(hostViewOf("SCHLONIC").runs[0]?.inputs, []);
   assert.equal(hostViewOf("SCHLONIC").runIndex, 0);
-
-  resetRoomState();
-  setupArcadeNight();
-
-  const brawler = playArcadeTurn("BRAWL");
-
-  assert.equal(phoneSends(brawler, "BRAWL", "walk", { tick: 1, dir: 1 }), null);
-  assert.equal(hostViewOf("BRAWL").blocks[0]?.status, "running");
-  takeBackContestantLeg();
-
-  assert.equal(hostViewOf("BRAWL").blocks[0]?.status, "ready");
-  assert.deepEqual(hostViewOf("BRAWL").blocks[0]?.inputs, []);
   assert.equal(getRoomStateSnapshot().contestantTurn?.controller, "tablet");
 });
 
@@ -294,13 +301,6 @@ const END_OF_RUN: Record<
       ["release", { tick: 6 }]
     ],
     endActionType: "endRun"
-  },
-  BRAWL: {
-    inputs: [
-      ["walk", { tick: 0, dir: 1 }],
-      ["peck", { tick: 4 }]
-    ],
-    endActionType: "endBlock"
   }
 };
 
@@ -346,7 +346,7 @@ const playRunAndUndo = (
   return { afterEnd, afterUndo: readUndo(getRoomStateSnapshot()) };
 };
 
-for (const minigame of ["FAPPY", "SCHLONIC", "BRAWL"] as const) {
+for (const minigame of ["FAPPY", "SCHLONIC"] as const) {
   test(`does undo a phone's ${END_OF_RUN[minigame].endActionType} exactly as it undoes the tablet's (${minigame})`, () => {
     // One clock for both runs, so the server's stamps match to the millisecond.
     mock.timers.enable({ apis: ["Date"], now: T0 });

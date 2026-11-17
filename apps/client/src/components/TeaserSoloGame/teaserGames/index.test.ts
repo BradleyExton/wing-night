@@ -58,15 +58,15 @@ test("counts more wings and a faster relay as the better turn", () => {
 
 test("scores a Streets of Barrie turn by the geese it put down once the last block is over, and names a clean street", () => {
   assert.equal(
-    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "running", goonsDown: 5, goonsTotal: 34 })),
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "running", banked: 5, total: 34 })),
     null
   );
   assert.deepEqual(
-    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", goonsDown: 29, goonsTotal: 34 })),
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", banked: 29, total: 34 })),
     { kicker: "Street over", headline: "29 geese down", result: 29 }
   );
   assert.equal(
-    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", goonsDown: 34, goonsTotal: 34 }))
+    streetsOfBarrieGame.resolveOutcome(asView({ minigame: "BRAWL", phase: "finished", banked: 34, total: 34 }))
       ?.kicker,
     "Street cleared"
   );

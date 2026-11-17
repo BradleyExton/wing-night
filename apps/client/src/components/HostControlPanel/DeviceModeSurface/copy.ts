@@ -1,4 +1,4 @@
-import { MINIGAME_DEVICE_MODES, type ContestantMinigameType, type MinigameDeviceMode } from "@wingnight/shared";
+import { MINIGAME_DEVICE_MODES, type MinigameDeviceMode, type MinigameType } from "@wingnight/shared";
 
 import { formatMinigameName } from "../../../copy/formatters";
 
@@ -7,7 +7,7 @@ const modeName = (deviceMode: MinigameDeviceMode): string =>
 
 export const deviceModeSurfaceCopy = {
   title: "Played on",
-  roundLabel: (round: number, minigame: ContestantMinigameType): string =>
+  roundLabel: (round: number, minigame: MinigameType): string =>
     `R${round} · ${formatMinigameName(minigame)}`,
   optionLabel: (deviceMode: MinigameDeviceMode): string =>
     deviceMode === MINIGAME_DEVICE_MODES.PHONES ? "Phones" : "Tablet",

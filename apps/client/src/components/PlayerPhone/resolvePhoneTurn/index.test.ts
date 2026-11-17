@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Phase, type ContestantTurn, type Team } from "@wingnight/shared";
+import { Phase, type ContestantTurn, type CrewTurn, type Team } from "@wingnight/shared";
 
 import { resolvePhoneTurn } from "./index";
 
@@ -25,7 +25,29 @@ const room = (overrides: Partial<ContestantTurn> = {}, phase: Phase = Phase.MINI
   teams: TEAMS,
   activeRoundTeamId: "team-1",
   activeTurnTeamId: null,
-  contestantTurn: { ...TURN, ...overrides }
+  contestantTurn: { ...TURN, ...overrides },
+  crewTurn: null
+});
+
+const CREW: CrewTurn = {
+  minigame: "BRAWL",
+  deviceMode: "phones",
+  status: "ready",
+  playerIds: ["alex", "caitlin", "dan"],
+  pads: {
+    alex: { state: "up", slot: 0, hearts: 3 },
+    caitlin: { state: "out", slot: null, hearts: 0 },
+    dan: { state: "down", slot: 1, hearts: 0 }
+  }
+};
+
+const crewRoom = (overrides: Partial<CrewTurn> = {}, phase: Phase = Phase.MINIGAME_PLAY) => ({
+  phase,
+  teams: TEAMS,
+  activeRoundTeamId: "team-1",
+  activeTurnTeamId: null,
+  contestantTurn: null,
+  crewTurn: { ...CREW, ...overrides }
 });
 
 test("does hand the game to the contestant when their phone holds the leg", () => {
@@ -92,4 +114,34 @@ test("does carry who held the leg before into the handoff when the leg reaches t
 
 test("does show nothing when the game has no phone turns", () => {
   assert.equal(resolvePhoneTurn({ ...room(), contestantTurn: null }, "alex", null), null);
+});
+
+test("does make every phone on the team a pad at once when a crew game is in play on phones", () => {
+  // Stepped out, not stepped out yet, and down: each is its own player's gamepad all the same.
+  for (const playerId of ["alex", "caitlin", "dan"]) {
+    assert.deepEqual(resolvePhoneTurn(crewRoom(), playerId, null), { role: "pad" });
+  }
+});
+
+test("does give a rival's phone nothing when the other team's crew is playing", () => {
+  assert.equal(resolvePhoneTurn(crewRoom(), "rob", null), null);
+});
+
+test("does brief the whole team for a crew game, on phones or on the tablet", () => {
+  assert.deepEqual(resolvePhoneTurn(crewRoom({ status: null, playerIds: [], pads: {} }, Phase.MINIGAME_INTRO), "caitlin", null), {
+    role: "crewBriefing",
+    deviceMode: "phones"
+  });
+  assert.deepEqual(
+    resolvePhoneTurn(crewRoom({ deviceMode: "tablet", status: null, playerIds: [], pads: {} }, Phase.MINIGAME_INTRO), "caitlin", null),
+    { role: "crewBriefing", deviceMode: "tablet" }
+  );
+});
+
+test("does point a crew phone at the TV when the turn is on the tablet or the fight is over", () => {
+  const watch = { role: "watch", contestantPlayerId: null };
+
+  assert.deepEqual(resolvePhoneTurn(crewRoom({ deviceMode: "tablet", playerIds: [], pads: {} }), "alex", null), watch);
+  assert.deepEqual(resolvePhoneTurn(crewRoom({ status: null, playerIds: [], pads: {} }), "alex", null), watch);
+  assert.deepEqual(resolvePhoneTurn(crewRoom({}, Phase.TURN_RESULTS), "alex", null), watch);
 });

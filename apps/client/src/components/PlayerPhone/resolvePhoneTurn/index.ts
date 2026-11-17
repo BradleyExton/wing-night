@@ -1,6 +1,8 @@
 import {
   CONTESTANT_CONTROLLERS,
   Phase,
+  isCrewPhoneTurn,
+  type CrewTurn,
   type MinigameDeviceMode,
   type PlayerRoomStateSnapshot
 } from "@wingnight/shared";
@@ -18,16 +20,35 @@ export type PhoneTurn =
   // The team is up and this player is neither on nor next: eyes on the TV.
   | { role: "watch"; contestantPlayerId: string | null }
   // The team's briefing: what to pick up when it ends.
-  | { role: "briefing"; deviceMode: MinigameDeviceMode };
+  | { role: "briefing"; deviceMode: MinigameDeviceMode }
+  // A crew game's briefing: everybody on the team plays at once, each on their own phone.
+  | { role: "crewBriefing"; deviceMode: MinigameDeviceMode }
+  // A crew game in play on phones: this phone is this player's gamepad.
+  | { role: "pad" };
 
 type PhoneTurnRoom = Pick<
   PlayerRoomStateSnapshot,
-  "phase" | "teams" | "activeRoundTeamId" | "activeTurnTeamId" | "contestantTurn"
+  "phase" | "teams" | "activeRoundTeamId" | "activeTurnTeamId" | "contestantTurn" | "crewTurn"
 >;
 
 // The turn's team: the round cursor's, the precedence the room's music and the rail share.
 export const resolveTurnTeamId = (room: Pick<PhoneTurnRoom, "activeRoundTeamId" | "activeTurnTeamId">): string | null => {
   return room.activeRoundTeamId ?? room.activeTurnTeamId;
+};
+
+// A crew game: at the briefing every phone on the team is told what to pick up; in play on
+// phones each of them is its player's pad for as long as the game lists her; otherwise — a turn
+// on the tablet, the beat after the turn — the phone points at the TV.
+const resolveCrewPhoneTurn = (phase: Phase, turn: CrewTurn, playerId: string): PhoneTurn => {
+  if (phase === Phase.MINIGAME_INTRO) {
+    return { role: "crewBriefing", deviceMode: turn.deviceMode };
+  }
+
+  if (phase === Phase.MINIGAME_PLAY && isCrewPhoneTurn(turn) && turn.pads[playerId] !== undefined) {
+    return { role: "pad" };
+  }
+
+  return { role: "watch", contestantPlayerId: null };
 };
 
 export const resolvePhoneTurn = (
@@ -39,7 +60,15 @@ export const resolvePhoneTurn = (
   const turn = room.contestantTurn;
   const team = room.teams.find((candidate) => candidate.playerIds.includes(playerId)) ?? null;
 
-  if (turn === null || team === null || team.id !== resolveTurnTeamId(room)) {
+  if (team === null || team.id !== resolveTurnTeamId(room)) {
+    return null;
+  }
+
+  if (room.crewTurn !== null) {
+    return resolveCrewPhoneTurn(room.phase, room.crewTurn, playerId);
+  }
+
+  if (turn === null) {
     return null;
   }
 

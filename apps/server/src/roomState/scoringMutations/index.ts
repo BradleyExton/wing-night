@@ -236,7 +236,10 @@ export const applyMinigameAction = (
   minigameId: MinigameType,
   actionType: string,
   actionPayload: SerializableValue,
-  receivedAtMs: number
+  receivedAtMs: number,
+  // The player whose phone sent it (`MinigameRuntimeActionEnvelope.actorPlayerId`); null for the
+  // tablet and for the server's own clock.
+  actorPlayerId: string | null = null
 ): { didRuntimeMutate: boolean; didProjectionChange: boolean } => {
   const unchanged = { didRuntimeMutate: false, didProjectionChange: false };
 
@@ -257,7 +260,9 @@ export const applyMinigameAction = (
   try {
     didRuntimeMutate = dispatchActiveMinigameRuntimeAction(
       roomState,
-      { actionType, actionPayload, receivedAtMs },
+      actorPlayerId === null
+        ? { actionType, actionPayload, receivedAtMs }
+        : { actionType, actionPayload, receivedAtMs, actorPlayerId },
       minigameContext.minigamePointsMax,
       minigameContext.minigameRules
     );

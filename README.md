@@ -144,8 +144,11 @@ TV. The QR codes carry whatever port the page was opened on.
 
 The client finds the server on port **3000** at whatever hostname the page
 was opened from, so nothing is baked into the build. To move the server, set
-`PORT` for it and `VITE_SOCKET_SERVER_URL` in the environment of the
-`pnpm start` that builds the client.
+`PORT` for it and, for the client, either `VITE_SOCKET_SERVER_PORT` (the same
+port, still at whatever hostname the page was opened from — what a second
+stack on the party Wi-Fi wants, because phones and the laptop each reach the
+server at their own address) or `VITE_SOCKET_SERVER_URL` (one fixed address
+for every device).
 
 `pnpm dev` is for building the thing; `pnpm start` is for running the party.
 

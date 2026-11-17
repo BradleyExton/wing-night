@@ -3,7 +3,8 @@ import {
   MINIGAME_DEVICE_MODES,
   PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   Phase,
-  isContestantMinigameType,
+  isCrewMinigameType,
+  isPhoneMinigameType,
   resolveRoundDeviceMode,
   type MinigameDeviceMode,
   type MinigameType,
@@ -17,9 +18,10 @@ import {
   isContestantMinigameAction,
   resolveContestantRetakeActionType,
   selectActiveMinigameDeadline,
-  supportsContestantTurns
+  supportsPhoneTurns
 } from "../../minigames/runtime/index.js";
 import { holdContestantLegOnTablet } from "../contestantTurnState/index.js";
+import { resolveCrewActionRefusal } from "../crewTurnState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
 import { applyMinigameAction } from "../scoringMutations/index.js";
 import { isMinigamePlayState, resolveMinigameContext, resolveMinigameRules } from "../selectors/index.js";
@@ -36,8 +38,8 @@ export const setRoundDeviceMode = defineRoomMutation({
       !Number.isInteger(round) ||
       round < 1 ||
       minigame === null ||
-      !isContestantMinigameType(minigame) ||
-      !supportsContestantTurns(minigame)
+      !isPhoneMinigameType(minigame) ||
+      !supportsPhoneTurns(minigame)
     ) {
       return false;
     }
@@ -99,6 +101,7 @@ export const takeBackContestantLeg = defineRoomMutation({
 // a PLAYER socket has to pass beyond holding a face (the socket layer checked that): the game in
 // play, a turn locked to phones, an input the game lets a phone send, this player's own leg, and
 // the phone — not the tablet — holding it. `controller` already folds in claimed and awake.
+// A crew game asks less (`resolveCrewActionRefusal`): there is no leg, only the team.
 export const resolveContestantActionRefusal = (
   roomState: RoomState,
   playerId: string,
@@ -107,6 +110,15 @@ export const resolveContestantActionRefusal = (
 ): PlayerMinigameActionRefusalReason | null => {
   if (!isMinigamePlayState(roomState, minigameId)) {
     return PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.WRONG_PHASE;
+  }
+
+  if (isCrewMinigameType(minigameId)) {
+    return resolveCrewActionRefusal(
+      roomState.crewTurn,
+      minigameId,
+      playerId,
+      isContestantMinigameAction(minigameId, actionType)
+    );
   }
 
   const turn = roomState.contestantTurn;
@@ -142,7 +154,8 @@ export const readContestantActionRefusal = (
 
 // A contestant's phone playing its own leg (`player:minigameAction`). The refusal is asked again
 // here, so the mutation is safe whoever calls it; past it, the action takes exactly the tablet's
-// road into the game.
+// road into the game — carrying the face that sent it, which a crew game tells its players apart
+// by and a relay never reads.
 export const dispatchContestantMinigameAction = defineRoomMutation({
   run: (
     roomState,
@@ -155,7 +168,7 @@ export const dispatchContestantMinigameAction = defineRoomMutation({
       return false;
     }
 
-    return applyMinigameAction(roomState, minigameId, actionType, actionPayload, Date.now())
+    return applyMinigameAction(roomState, minigameId, actionType, actionPayload, Date.now(), playerId)
       .didProjectionChange;
   }
 });

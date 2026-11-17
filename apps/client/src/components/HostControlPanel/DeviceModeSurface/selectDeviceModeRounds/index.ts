@@ -1,15 +1,15 @@
 import {
   Phase,
-  isContestantMinigameType,
+  isPhoneMinigameType,
   resolveRoundDeviceMode,
-  type ContestantMinigameType,
+  type MinigameType,
   type MinigameDeviceMode,
   type RoomState
 } from "@wingnight/shared";
 
 export type DeviceModeRound = {
   round: number;
-  minigame: ContestantMinigameType;
+  minigame: MinigameType;
   deviceMode: MinigameDeviceMode;
 };
 
@@ -46,7 +46,7 @@ export const selectDeviceModeRounds = (room: DeviceModeRoom | null): DeviceModeR
       (isInTurn && config.round === room.currentRound) ||
       (isBetweenRounds && config.round > room.currentRound);
 
-    if (!isOffered || !isContestantMinigameType(config.minigame)) {
+    if (!isOffered || !isPhoneMinigameType(config.minigame)) {
       return [];
     }
 
