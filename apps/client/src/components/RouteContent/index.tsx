@@ -63,6 +63,10 @@ const ContraptionUiLab = lazy(() =>
   import("../ContraptionUiLab").then((module) => ({ default: module.ContraptionUiLab }))
 );
 
+const BrawlBackRoomLab = lazy(() =>
+  import("../BrawlBackRoomLab").then((module) => ({ default: module.BrawlBackRoomLab }))
+);
+
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
 // (BACKLOG.md § Minigames).
 const ANAMORPH_LAB_NAME = "anamorph";
@@ -72,6 +76,10 @@ const CONTRAPTION_LAB_NAME = "contraption";
 
 // Throwaway — deleted along with the prototype when CONTRAPTION ships.
 const CONTRAPTION_UI_LAB_NAME = "contraption-ui";
+
+// Throwaway — deleted when Brad has played the Streets of Barrie finale idea
+// (docs/minigames/ideas/brawl-back-room-finale.md §7).
+const BRAWL_BACK_ROOM_LAB_NAME = "brawl-back-room";
 
 type RouteContentProps = {
   route: ClientRoute;
@@ -146,6 +154,10 @@ const resolveRouteElement = ({
 
   if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
     return <ContraptionUiLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === BRAWL_BACK_ROOM_LAB_NAME) {
+    return <BrawlBackRoomLab />;
   }
 
 

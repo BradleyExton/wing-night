@@ -6,8 +6,8 @@ confidence: sketch
 
 An expansion of a shipped game, not a new one: the first concrete candidate for
 [brawl-crew-spec.md](../brawl-crew-spec.md) §4.6 ("what expand it a lot adds"). Investigated
-2026-11-17. Nothing is built and nothing should be until the throwaway prototype of §7 has been
-played. Decisions are marked the way the crew spec marks them: **(Brad)** is a call he made on
+2026-11-17. Nothing of the game is built and nothing should be until the throwaway prototype of §7
+(`/dev/lab/brawl-back-room`, built the same day) has been played. Decisions are marked the way the crew spec marks them: **(Brad)** is a call he made on
 2026-11-17, on a question card; everything else is mine and is his to overrule. A sketch of the
 building as a block is at `apps/client/public/mockups/brawl-back-room/index.html`.
 
@@ -101,8 +101,8 @@ minute and a quarter and four and a half, plus two holds.
 
 - **The finale is built on block 2's own skeleton**: three waves and an exit run, four windows of
   192. The beach's 33 s of perfect play is the floor; the lift, the carry (slower than a walk) and
-  the tug of war go on top. My guess is 45 to 50 s for bots, which puts a real crew close to or
-  past 90. So **the finale's clock is its own number, and I would start it at 120 s** (§4). Worst
+  the tug of war go on top. The prototype's scripted crews take 42 to 45 s (§7), which puts a real
+  crew somewhere near 90. So **the finale's clock is its own number, and I would start it at 120 s** (§4). Worst
   case that is half a minute more per team than today. A fourth block would have been up to a
   minute and a half more, which is why I would not have recommended it.
 - **The boss goose becomes the bouncer.** Same goon, same rules, same `4 + 2 × (n − 1)` hp, a
@@ -297,13 +297,38 @@ What the pick sets:
 ## 7) What it costs, and what to try first
 
 **First, a throwaway prototype Brad plays** (the house way; the crew game itself began as one).
-`/dev/lab/brawl-back-room`: block 2 of the real crew sim with the sleeper bolted on in a wrapper
-round `stepBrawlCrew`, outside `packages/shared`, in flat rectangles. One hen on the keyboard or a
-phone, the rest of the crew on the brawler bots that already exist. Toggles: carry or herd; the
-drag-back on or off; the clock at 90 or 120; charges on or off. It answers the three things no
-document can: is carrying a job or a chore, does the drag-back read from the couch, and how long
-real people take. About a day. It should not be played before the core game has been on real
-phones once (step 9), because the finale stands on things nobody has felt (below).
+**Built 2026-11-17, unplayed by a person: `/dev/lab/brawl-back-room`**
+(`apps/client/src/components/BrawlBackRoomLab`). It is block 2 of the real crew sim with the
+sleeper bolted on in a wrapper round `stepBrawlCrew` (`backRoom/`), outside `packages/shared`, in
+flat shapes on a canvas. One or two people on the keyboard (W A S D and Space; arrows and Enter),
+or one on a touch screen with the real pad's stick laid over the street; the rest of the crew are
+the brawler bots that already exist. Toggles: carry or herd; the drag-back on or off; the clock at
+90 or 120; a bill a song on or off; crew of one to five.
+
+It answers the three things no document can: is carrying a job or a chore, does the drag-back
+read from the couch, and how long real people take. What it measured on the way, with a scripted
+hen doing the carrying (fight like a brawler, put him down to do it, otherwise fetch him and walk
+him out) and bots for the rest, 30 seeds a cell on the 120 s clock: **every crew of one to five
+got him out, in a median 42 to 45 s, with all eight bills.** So the 50 s of grace is about right
+for perfect play and the 90 s clock is not obviously too short; people will say.
+
+What it fakes, so nobody mistakes it for the rules:
+
+- **The goon that is "on him" is steered by the wrapper**, not by the sim: its place is written
+  after each step and its own script is held, so it does not honk while it has him. It hurries
+  (1.8 times its walk) because at a goose's own pace it never reached him before a bot pecked it.
+  Against bots it drags him back up to about 50 units in a run, and often not at all.
+- **Bots never lift him or herd him on purpose** (a bot's stray peck does shove him in herd mode).
+- **The camera's wait is a clamp** applied after the sim's step, which also takes back a wave the
+  sim opened by getting ahead of him.
+- **In herd mode he does not bowl through geese.**
+- No sound, no real figures, no rooms beyond coloured walls. Not on real phones as pads: a phone
+  can open the page and play it alone with bots, which is enough to feel standing still on the
+  real stick's dead zone.
+
+It should not be judged before the core game has been on real phones once (step 9), because the
+finale stands on things nobody has felt (below). Delete the lab folder, its route and its dev-index
+entry once it has been played.
 
 Then, if it is fun, in this order, each step ending with the gate green:
 

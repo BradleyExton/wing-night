@@ -31,6 +31,11 @@ export const devRouteIndexCopy = {
       href: "/dev/lab/contraption-ui",
       label: "CONTRAPTION UI Direction Lab",
       detail: "Side-by-side UI direction variants for CONTRAPTION. Deleted when a direction is picked."
+    },
+    {
+      href: "/dev/lab/brawl-back-room",
+      label: "Streets of Barrie — Back Room Lab",
+      detail: "Throwaway prototype of the indoor finale idea: carry a sleeper out the back while his wallet runs down. Deleted once it has been played."
     }
   ] as const
 } as const;
