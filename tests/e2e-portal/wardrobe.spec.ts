@@ -12,7 +12,8 @@ import { readSeededLinks, resolveScreenshotPath } from "./portalStack.ts";
 // nothing from portal.spec.ts but the seeded guests: the cap and the picks switch never apply to
 // him. Then the same pages on a 390px phone for every genre the stack seeds (metal, disco,
 // country and pop, one body each): nothing wider than the screen, no control under a thumb, the
-// tabs sticking, every tile's crop leaving the head out, and a Move played on the stage.
+// stage pinned while the rail scrolls, every tile's crop leaving the head out, and a Move played
+// on the stage.
 test.describe.configure({ mode: "serial" });
 
 const signIn = async (page: Page, linkPath: string): Promise<void> => {
@@ -82,9 +83,13 @@ const readWornItems = async (page: Page): Promise<string[]> => {
     .evaluateAll((elements) => [...new Set(elements.map((element) => element.getAttribute("data-outfit-item") ?? ""))].sort());
 };
 
-const openTab = (page: Page, slot: string) => page.locator(`[data-testid="wardrobe-tab"][data-slot="${slot}"]`).click();
+// The rail is one page, a section a slot: its tiles (None among them) and the worn item's swatches.
+const slotOf = (page: Page, slot: string) => page.locator(`[data-testid="wardrobe-slot"][data-slot="${slot}"]`);
 
 const tile = (page: Page, item: string) => page.locator(`[data-testid="wardrobe-tile"][data-item="${item}"]`);
+
+const swatch = (page: Page, slot: string, style: string) =>
+  slotOf(page, slot).locator(`[data-testid="wardrobe-style"][data-style="${style}"]`);
 
 test("a guest dresses their bird, keeps an outfit per genre across a team switch, and strips it bare for the pull", async ({
   page,
@@ -121,12 +126,10 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
   await expectSaved(page);
   expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "leather-sleeve-a"]);
 
-  await openTab(page, "prop");
   await expect(tile(page, "flying-v-b")).toHaveAttribute("aria-pressed", "true");
-  await page.locator('[data-testid="wardrobe-style"][data-style="gold"]').click();
+  await swatch(page, "prop", "gold").click();
   await expectSaved(page);
   await expect(page.locator('[data-testid="wardrobe-look"][data-look="thrash"]')).toHaveAttribute("aria-pressed", "false");
-  await openTab(page, "tail");
   await tile(page, "lava-tips-b").click();
   await expect(status(page)).toHaveText("Lava tips.");
   await expectSaved(page);
@@ -135,8 +138,7 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
   // A reload reads it back from the Worker, gold Flying V and all.
   await page.reload();
   expect(await readWornItems(page)).toEqual(["battle-vest-a", "combat-boots-a", "flying-v-b", "lava-tips-b", "leather-sleeve-a"]);
-  await openTab(page, "prop");
-  await expect(page.locator('[data-testid="wardrobe-style"][data-style="gold"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(swatch(page, "prop", "gold")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("wardrobe-team").scrollIntoViewIfNeeded();
   await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, "wardrobe-metal-rail-390x844.png") });
 
@@ -146,7 +148,6 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
   await expect(page.getByText(discoTeam, { exact: true })).toBeVisible();
   expect(await readWornItems(page)).toEqual([]);
   await expect(status(page)).toHaveText("Bare. The silhouette's doing all the work.");
-  await openTab(page, "tail");
   await tile(page, "tinsel-a").click();
   await expectSaved(page);
   expect(await readWornItems(page)).toEqual(["tinsel-a"]);
@@ -164,14 +165,13 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
 
   // Stripping the bird bare: None on every filled slot.
   for (const slot of ["top", "sleeve", "tail", "boots", "prop"]) {
-    await openTab(page, slot);
-    await tile(page, "none").click();
+    await slotOf(page, slot).locator('[data-item="none"]').click();
   }
 
   await expectSaved(page);
   await page.reload();
   expect(await readWornItems(page)).toEqual([]);
-  await expect(page.locator('[data-testid="wardrobe-tab"][data-filled="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="wardrobe-slot"][data-filled="true"]')).toHaveCount(0);
 
   // What the pull reads: every genre Rob dressed, the stripped one as {} — and that undresses the
   // bird Brad had dressed by hand in the pack, genre by genre: the pop look Rob never touched stays.
@@ -215,7 +215,7 @@ test("a guest dresses their bird, keeps an outfit per genre across a team switch
 
 // What a 390px phone must never show: a page wider than the screen, a control a thumb can't hit
 // (under 44px a side), or one hanging off either edge. Read off the page as laid out; a control in
-// a row that scrolls sideways on purpose (the Looks) is judged by its row, not its own place.
+// a row that scrolls sideways on purpose is judged by its row, not its own place.
 type PhoneFault = { what: string; fault: string };
 
 const readPhoneFaults = (page: Page): Promise<PhoneFault[]> =>
@@ -229,7 +229,7 @@ const readPhoneFaults = (page: Page): Promise<PhoneFault[]> =>
       faults.push({ what: "page", fault: `scrolls sideways: ${document.documentElement.scrollWidth} > ${width}` });
     }
 
-    for (const element of document.querySelectorAll("main a, main button, main [role=tab]")) {
+    for (const element of document.querySelectorAll("main a, main button")) {
       const box = element.getBoundingClientRect();
 
       if (box.width === 0 && box.height === 0) {
@@ -279,7 +279,7 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
   page,
   browser
 }, testInfo) => {
-  // Four genres, every tab of each and a save per tap: a long walk, not a slow one.
+  // Four genres, every slot of each and a save per tap: a long walk, not a slow one.
   test.setTimeout(180_000);
   const links = readSeededLinks();
   const brad = await browser.newContext({ ...testInfo.project.use, viewport: { width: 390, height: 844 } });
@@ -311,7 +311,7 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
     genres.push(genre);
 
     // The photo head (the one portal.spec.ts painted, when it ran first) rises past the bird's box
-    // on the right: it stays clear of the TV-size pill.
+    // on the right: it stays clear of the TV-size pill, which sits under the stage.
     const headUnderPill = await page.evaluate(() => {
       const head = document.querySelector('[data-testid="wardrobe-bird"] [data-character-head] image')?.getBoundingClientRect();
       const pill = document.querySelector('[data-testid="wardrobe-tv-size"]')?.getBoundingClientRect();
@@ -334,59 +334,48 @@ test("every genre's /me card and wardrobe fit a 390px phone: rail, tiles, swatch
     expect.soft(await readPhoneFaults(page), `/me/wardrobe on ${teamName}`).toEqual([]);
     await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, `wardrobe-${genre}-390x844.png`), fullPage: true });
 
-    // Every tab: its tiles are the bird cropped to the slot on this body, the head left out of every
-    // crop and kept whole on the Stage and the Move; and an item with styles shows its swatches.
-    const longestSlot = { slot: "", tiles: 0 };
-
-    for (const tab of await page.getByTestId("wardrobe-tab").all()) {
-      const slot = (await tab.getAttribute("data-slot")) ?? "";
-      await tab.click();
-      await expect(tab).toHaveAttribute("aria-selected", "true");
-      const tiles = page.locator('[data-testid="wardrobe-tile"]:not([data-item="none"])');
-      const tileCount = await tiles.count();
-      expect(tileCount, `${genre} ${slot} has tiles`).toBeGreaterThan(0);
-
-      if (tileCount > longestSlot.tiles) {
-        Object.assign(longestSlot, { slot, tiles: tileCount });
-      }
+    // Every slot, all on the one page: its tiles are the bird cropped to the slot on this body, the
+    // head left out of every crop and kept whole on the Stage and the Move; and an item with styles
+    // shows its swatches beside the slot's name.
+    for (const section of await page.getByTestId("wardrobe-slot").all()) {
+      const slot = (await section.getAttribute("data-slot")) ?? "";
+      const tiles = section.locator('[data-testid="wardrobe-tile"]:not([data-item="none"])');
+      expect(await tiles.count(), `${genre} ${slot} has tiles`).toBeGreaterThan(0);
 
       const heads = tiles.locator("[data-character-head]");
       const shownHeads = await heads.evaluateAll((elements) => elements.filter((element) => element.getBoundingClientRect().width > 0).length);
       expect(shownHeads, `${genre} ${slot} tiles showing a head`).toBe(slot === "stage" || slot === "move" ? await heads.count() : 0);
 
-      const styled = page.locator('[data-testid="wardrobe-tile"][data-styles="many"]').first();
+      const styled = section.locator('[data-testid="wardrobe-tile"][data-styles="many"]').first();
 
       if ((await styled.count()) > 0) {
         await styled.click();
         await expectSaved(page);
-        await expect(page.getByTestId("wardrobe-style").first()).toBeVisible();
+        await expect(section.getByTestId("wardrobe-style").first()).toBeVisible();
       }
 
-      expect.soft(await readPhoneFaults(page), `${genre} ${slot} tab`).toEqual([]);
+      expect.soft(await readPhoneFaults(page), `${genre} ${slot} slot`).toEqual([]);
 
       if (slot === "prop" || slot === "tail") {
-        await page.getByTestId("wardrobe-grid").scrollIntoViewIfNeeded();
+        await section.scrollIntoViewIfNeeded();
         await page.screenshot({ path: resolveScreenshotPath(testInfo.outputDir, `wardrobe-${genre}-${slot}-390x844.png`) });
       }
     }
 
-    // The tabs stick to the top of the screen while the grid scrolls under them: on the longest
-    // grid, scrolled until the rail's head is off the screen, the tabs are not. A rail too short
-    // to scroll that far never needs them to, and since the catalogue went to one tile per idea
-    // (at most seven tiles a tab) none is that long at 844px, so no genre is required to stick.
-    await page.locator(`[data-testid="wardrobe-tab"][data-slot="${longestSlot.slot}"]`).click();
+    // The stage is pinned: with the page scrolled to the foot of the rail, the rail's head long
+    // gone off the top, the bird is still on the screen, at the top of it.
+    await page.getByTestId("wardrobe-slot").last().scrollIntoViewIfNeeded();
     await page.evaluate(() => {
       const rail = document.querySelector('[data-testid="wardrobe-rail"]');
-      window.scrollTo(0, window.scrollY + (rail?.getBoundingClientRect().top ?? 0) + 60);
+      window.scrollTo(0, window.scrollY + (rail?.getBoundingClientRect().bottom ?? 0) - window.innerHeight);
     });
-
-    if (((await page.getByTestId("wardrobe-rail").boundingBox())?.y ?? 0) < 0) {
-      expect(Math.round((await page.getByRole("tablist").boundingBox())?.y ?? -1), `${genre} tabs stick`).toBe(0);
-    }
+    expect((await page.getByTestId("wardrobe-rail").boundingBox())?.y ?? 0, `${genre} rail scrolled off the top`).toBeLessThan(0);
+    const pinned = await stage.boundingBox();
+    expect(pinned?.y ?? -1, `${genre} stage stays on the screen`).toBeGreaterThanOrEqual(0);
+    expect(pinned?.y ?? 999, `${genre} stage stays at the top`).toBeLessThan(60);
 
     // A Move tapped on the stage plays, on the page's beat, and the bird goes back to its idle.
-    await page.locator('[data-testid="wardrobe-tab"][data-slot="move"]').click();
-    const firstMove = page.locator('[data-testid="wardrobe-tile"]:not([data-item="none"])').first();
+    const firstMove = slotOf(page, "move").locator('[data-testid="wardrobe-tile"]:not([data-item="none"])').first();
     const moveId = (await firstMove.getAttribute("data-item")) ?? "";
     await firstMove.click();
     await expectSaved(page);

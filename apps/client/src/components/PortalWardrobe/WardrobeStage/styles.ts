@@ -1,24 +1,30 @@
-// The stage: about 40% of a phone's height, the hearth's heat pooled under the bird like the
-// studio's (PortalHeadBird), the pill in its corner. At TV size it goes dark, as the room is.
-const stageBase = "relative flex h-[min(20rem,40svh)] items-end justify-center overflow-hidden rounded-xl pb-3";
+// The stage with its foot: the status line and the TV-size pill on one row under it.
+export const root = "flex flex-col gap-2";
 
-export const stage = `${stageBase} bg-[radial-gradient(ellipse_at_50%_100%,theme(colors.primary/22%)_0%,transparent_70%)]`;
+// The stage: about a quarter of a phone's height, short enough to stay pinned over the Looks
+// and the rail, the hearth's heat pooled under the bird like the studio's (PortalHeadBird). At
+// TV size it goes dark, as the room is, and grows to hold the 130px bird and its head.
+const stageBase = "relative flex items-end justify-center overflow-hidden rounded-xl pb-3";
 
-export const stageTv = `${stageBase} bg-bg`;
+export const stage = `${stageBase} h-[min(13rem,28svh)] bg-[radial-gradient(ellipse_at_50%_100%,theme(colors.primary/22%)_0%,transparent_70%)]`;
+
+export const stageTv = `${stageBase} h-[min(20rem,40svh)] bg-bg`;
 
 export const birdButton =
   "flex h-full w-full cursor-pointer items-end justify-center border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow aria-disabled:cursor-default";
 
-// The bird's box is its 72-unit body; a photo head rises 12 units past the top of it, over the
-// right half, where the TV-size pill sits. Sized so that head clears the pill's 52px band, with
-// room for its idle bob, on a phone tall or short: (stage − foot padding − 60px) × 72 ÷ 84 is
-// about 25svh at both ends of the stage's clamp, and 13rem where the stage stops growing.
-export const bird = "block h-[min(13rem,25svh)]";
+// The bird's box is its 72-unit body; a photo head rises 12 units past the top of it. Sized so
+// that head clears the top of the stage with room for its idle bob, on a phone tall or short:
+// (stage − foot padding − 16px) × 72 ÷ 84 is about 20svh while the stage is 28svh, and 9.5rem
+// where the stage stops growing.
+export const bird = "block h-[min(9.5rem,20svh)]";
 
 export const hint = "pointer-events-none absolute left-3 top-3 text-[0.72rem] text-mutedWarmDim";
 
+export const foot = "flex items-center gap-3";
+
 const pillBase =
-  "absolute right-2 top-2 inline-flex min-h-[44px] items-center rounded-full px-3.5 text-[0.64rem] font-bold uppercase tracking-[0.18em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
+  "inline-flex min-h-[44px] flex-none items-center rounded-full px-3.5 text-[0.64rem] font-bold uppercase tracking-[0.18em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
 
 export const tvPill = `${pillBase} border border-text/15 bg-bg/60 text-text`;
 

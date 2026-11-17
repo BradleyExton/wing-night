@@ -1,24 +1,19 @@
-// The rail: tabs that stick, a three-across grid of square tiles, the worn one ringed in
-// `primary`, and the style swatches under it (mockups/cast/wardrobe-picker.html).
-export const rail = "flex flex-col gap-3";
+// The rail: the kit, then the showpieces, each group under its one line; in a group a slot is
+// its name over a three-across grid of square tiles, the worn one ringed in `primary`, and the
+// worn item's style swatches beside the name (the tiles are mockups/cast/wardrobe-picker.html's;
+// the page departs from its tabs).
+export const rail = "flex flex-col gap-5";
 
-// The tabs stick to the top of the screen, over the page's own `bg`, so the grid scrolls under them.
-// Seven across a 390px phone is 45px a tab only with the gaps and the inset this tight: at the
-// card's own 16px and a 4px gap they come out at 43, under a thumb.
-export const tabs =
-  "sticky top-0 z-10 -mx-4 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-0.5 bg-bg/95 px-3 py-2 [box-shadow:0_8px_16px_-12px_theme(colors.shade)]";
+export const group = "flex flex-col gap-3";
 
-const tabBase =
-  "relative inline-flex min-h-[44px] min-w-0 items-center justify-center rounded-lg border px-0.5 text-[0.6rem] font-extrabold uppercase tracking-[0.06em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";
+export const groupNote = "m-0 text-[0.75rem] leading-snug text-mutedWarmDim";
 
-export const tab = `${tabBase} border-ember/25 bg-surface/50 text-mutedWarm`;
+export const slot = "flex flex-col gap-1";
 
-export const tabOn = `${tabBase} border-primary bg-primary/15 text-text`;
+// As tall as a swatch whether or not the item on has any, so choosing one never moves the grid.
+export const slotHead = "flex min-h-[44px] items-center justify-between gap-3";
 
-export const tabDot =
-  "absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-primary [box-shadow:0_0_6px_theme(colors.primary/70%)]";
-
-export const tabNote = "-mt-1 m-0 text-[0.75rem] leading-snug text-mutedWarmDim";
+export const slotName = "m-0 text-[0.68rem] font-extrabold uppercase tracking-[0.3em] text-mutedWarm";
 
 export const grid = "grid grid-cols-3 gap-2";
 
@@ -37,9 +32,7 @@ export const moveName =
 export const shared =
   "pointer-events-none absolute bottom-1 left-1.5 text-[0.5rem] font-bold uppercase tracking-[0.14em] text-mutedWarmDim";
 
-export const styleRow = "flex items-center gap-3";
-
-export const stylesLabel = "text-[0.68rem] font-extrabold uppercase tracking-[0.3em] text-mutedWarm";
+export const styleRow = "flex items-center gap-2";
 
 const swatchBase =
   "h-11 w-11 flex-none cursor-pointer rounded-full border-2 border-text/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-glow";

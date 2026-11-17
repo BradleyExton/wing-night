@@ -43,10 +43,11 @@ type WardrobeRailProps = {
   beatRootRef: RefObject<HTMLElement | null>;
 };
 
-// The rail (research §2.5): a tab per slot the genre has (country has no Boots), a dot on each
-// filled one, sticking to the top of the screen while the grid scrolls; then the grid, three
-// across, None first, each tile your own bird wearing the item, cropped to where it sits; then,
-// when the item on has more than one, its styles.
+// The rail, for a guest who wants to mix their own: every slot the genre has (country has no
+// Boots) on one page, each under its name, the kit first and the showpieces after, each group
+// under the line that says where it is worn. With one tile per idea a slot is a row or two, so
+// the page scrolls where it used to tab, and the bird stays in view above it (the page pins the
+// stage).
 export const WardrobeRail = ({
   genre,
   theme,
@@ -57,19 +58,19 @@ export const WardrobeRail = ({
   beatRootRef
 }: WardrobeRailProps): JSX.Element => {
   const slots = resolveOutfitSlots(genre);
-  const [tab, setTab] = useState<OutfitSlot>("top");
   const [moveLoop, setMoveLoop] = useState(0);
-  const rail = resolveOutfitRail(genre, tab);
-  const worn = outfit[tab];
-  const wornItem = worn === undefined ? undefined : findOutfitItem(worn.item);
+  const groups = [
+    { id: "kit", note: wardrobeRailCopy.kitNote, slots: slots.filter((slot) => !isOutfitCropOnShow(slot)) },
+    { id: "showpieces", note: wardrobeRailCopy.showpieceNote, slots: slots.filter(isOutfitCropOnShow) }
+  ];
 
-  // The first beat after the tab opens restarts the tiles onto the bar, then every
+  // The first beat after the rail opens restarts the Move tiles onto the bar, then every
   // MOVE_LOOP_BEATS after it. Under reduced motion the clock never beats and the tiles stand
   // still, which is what the cast's motion-safe Moves would show anyway.
   useEffect(() => {
     const root = beatRootRef.current;
 
-    if (tab !== "move" || root === null) {
+    if (root === null) {
       return undefined;
     }
 
@@ -82,43 +83,93 @@ export const WardrobeRail = ({
         setMoveLoop((count) => count + 1);
       }
     });
-  }, [tab, beatRootRef]);
+  }, [beatRootRef]);
 
   return (
     <div className={styles.rail} data-testid="wardrobe-rail" data-genre={genre}>
-      <div className={styles.tabs} role="tablist" aria-label={wardrobeRailCopy.tabsLabel}>
-        {slots.map((slot) => (
-          <button
-            key={slot}
-            type="button"
-            role="tab"
-            id={`wardrobe-tab-${slot}`}
-            aria-selected={slot === tab}
-            aria-controls="wardrobe-grid"
-            className={slot === tab ? styles.tabOn : styles.tab}
-            onClick={(): void => setTab(slot)}
-            data-testid="wardrobe-tab"
-            data-slot={slot}
-            data-filled={outfit[slot] !== undefined}
+      {groups.map(
+        (group) =>
+          group.slots.length > 0 && (
+            <div key={group.id} className={styles.group}>
+              <p className={styles.groupNote}>{group.note}</p>
+              {group.slots.map((slot) => (
+                <WardrobeSlot
+                  key={slot}
+                  genre={genre}
+                  slot={slot}
+                  theme={theme}
+                  outfit={outfit}
+                  dressBird={dressBird}
+                  onDress={onDress}
+                  onRestyle={onRestyle}
+                  moveLoop={moveLoop}
+                />
+              ))}
+            </div>
+          )
+      )}
+    </div>
+  );
+};
+
+type WardrobeSlotProps = Omit<WardrobeRailProps, "beatRootRef"> & {
+  slot: OutfitSlot;
+  // Counts the Move tiles' loops: a new count starts every Move tile again.
+  moveLoop: number;
+};
+
+// One slot (research §2.5): its name, and beside it the styles of the item on when that item has
+// more than one; then the grid, three across, None first, each tile your own bird wearing the
+// item, cropped to where it sits.
+const WardrobeSlot = ({ genre, slot, theme, outfit, dressBird, onDress, onRestyle, moveLoop }: WardrobeSlotProps): JSX.Element => {
+  const rail = resolveOutfitRail(genre, slot);
+  const worn = outfit[slot];
+  const wornItem = worn === undefined ? undefined : findOutfitItem(worn.item);
+  const headingId = `wardrobe-slot-${slot}`;
+
+  return (
+    <section
+      className={styles.slot}
+      aria-labelledby={headingId}
+      data-testid="wardrobe-slot"
+      data-slot={slot}
+      data-filled={worn !== undefined}
+    >
+      <div className={styles.slotHead}>
+        <h3 id={headingId} className={styles.slotName}>
+          {OUTFIT_SLOT_NAMES[slot]}
+        </h3>
+        {worn !== undefined && wornItem !== undefined && wornItem.styles.length > 1 && (
+          <div
+            className={`${styles.styleRow} ${theme.colorVariant.characterFillClassName}`}
+            role="group"
+            aria-label={wardrobeRailCopy.stylesLabel(OUTFIT_SLOT_NAMES[slot])}
           >
-            {OUTFIT_SLOT_NAMES[slot]}
-            {outfit[slot] !== undefined && <span className={styles.tabDot} aria-label={wardrobeRailCopy.filled} />}
-          </button>
-        ))}
+            {wornItem.styles.map((style) => {
+              const isOn = (worn.style ?? wornItem.styles[0]) === style;
+
+              return (
+                <button
+                  key={style}
+                  type="button"
+                  className={`${isOn ? styles.swatchOn : styles.swatch} ${SWATCH_CLASS_BY_STYLE[style]}`}
+                  aria-pressed={isOn}
+                  aria-label={OUTFIT_STYLE_NAMES[style]}
+                  onClick={(): void => onRestyle(slot, style)}
+                  data-testid="wardrobe-style"
+                  data-style={style}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
-      <p className={styles.tabNote}>{isOutfitCropOnShow(tab) ? wardrobeRailCopy.showpieceNote : wardrobeRailCopy.kitNote}</p>
-      <div
-        className={styles.grid}
-        id="wardrobe-grid"
-        role="tabpanel"
-        aria-labelledby={`wardrobe-tab-${tab}`}
-        data-testid="wardrobe-grid"
-      >
+      <div className={styles.grid} role="group" aria-labelledby={headingId} data-testid="wardrobe-grid">
         <button
           type="button"
           className={worn === undefined ? styles.tileOn : styles.tile}
           aria-pressed={worn === undefined}
-          onClick={(): void => onDress(tab, null)}
+          onClick={(): void => onDress(slot, null)}
           data-testid="wardrobe-tile"
           data-item="none"
         >
@@ -126,7 +177,7 @@ export const WardrobeRail = ({
         </button>
         {rail.map((item) => {
           const isOn = worn?.item === item.id;
-          const trial = dressOutfitSlot(outfit, tab, item.id);
+          const trial = dressOutfitSlot(outfit, slot, item.id);
 
           return (
             <button
@@ -135,47 +186,26 @@ export const WardrobeRail = ({
               className={isOn ? styles.tileOn : styles.tile}
               aria-pressed={isOn}
               aria-label={item.name}
-              onClick={(): void => onDress(tab, item)}
+              onClick={(): void => onDress(slot, item)}
               data-testid="wardrobe-tile"
               data-item={item.id}
               data-styles={item.styles.length > 1 ? "many" : "one"}
             >
               <OutfitCrop
-                key={tab === "move" ? moveLoop : undefined}
+                key={slot === "move" ? moveLoop : undefined}
                 appearance={dressBird(trial)}
                 theme={theme}
-                viewBox={resolveOutfitSlotCrop(theme.silhouette, tab)}
-                showpieces={isOutfitCropOnShow(tab)}
-                whole={isOutfitCropWhole(tab)}
-                move={tab === "move" ? (item.id as CharacterMove) : undefined}
+                viewBox={resolveOutfitSlotCrop(theme.silhouette, slot)}
+                showpieces={isOutfitCropOnShow(slot)}
+                whole={isOutfitCropWhole(slot)}
+                move={slot === "move" ? (item.id as CharacterMove) : undefined}
               />
-              {tab === "move" && <span className={styles.moveName}>{item.name}</span>}
-              {item.genre === "shared" && tab !== "move" && <span className={styles.shared}>{wardrobeRailCopy.shared}</span>}
+              {slot === "move" && <span className={styles.moveName}>{item.name}</span>}
+              {item.genre === "shared" && slot !== "move" && <span className={styles.shared}>{wardrobeRailCopy.shared}</span>}
             </button>
           );
         })}
       </div>
-      {worn !== undefined && wornItem !== undefined && wornItem.styles.length > 1 && (
-        <div className={`${styles.styleRow} ${theme.colorVariant.characterFillClassName}`} role="group" aria-label={wardrobeRailCopy.stylesLabel}>
-          <span className={styles.stylesLabel}>{wardrobeRailCopy.style}</span>
-          {wornItem.styles.map((style) => {
-            const isOn = (worn.style ?? wornItem.styles[0]) === style;
-
-            return (
-              <button
-                key={style}
-                type="button"
-                className={`${isOn ? styles.swatchOn : styles.swatch} ${SWATCH_CLASS_BY_STYLE[style]}`}
-                aria-pressed={isOn}
-                aria-label={OUTFIT_STYLE_NAMES[style]}
-                onClick={(): void => onRestyle(tab, style)}
-                data-testid="wardrobe-style"
-                data-style={style}
-              />
-            );
-          })}
-        </div>
-      )}
-    </div>
+    </section>
   );
 };

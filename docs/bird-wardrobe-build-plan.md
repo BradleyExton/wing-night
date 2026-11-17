@@ -252,6 +252,26 @@ satin-sleeve b, feather-boa b, roller-skates a, mirror-ball-egg c, lit-floor a, 
 Shared wing-night-bib b, team-sash a, golden-egg b, drumstick b, egg-nest a. The 12 ideas that
 only ever had one drawing are untouched.
 
+## One page, opening on Looks (2026-11-16)
+
+After the variant collapse a team's rail is about 23 tiles, short enough to drop the seven slot
+tabs. `/me/wardrobe` is now one scrolling page:
+
+1. **The stage, pinned.** The bird sticks to the top of the screen (on a screen at least 520px
+   tall), so a tap anywhere on the page shows on it. It is shorter than it was (28svh, down from
+   40svh) to leave the page room. The status line sits under it, held to two lines, with the
+   TV-size pill beside it instead of over the bird.
+2. **Looks.** Two across, each the guest's own bird wearing the whole Look, with its name under
+   it. The dice takes the cell an odd number of Looks leaves, or a bar under an even number.
+3. **Mix your own.** Every slot under its own heading, kit first and showpieces after, each group
+   under its one line about where it is worn. The grid is still three across with None first. The
+   worn item's style swatches sit beside the slot's name.
+4. **Your team**, unchanged.
+
+Nothing about the data or the saves changed. This departs from `mockups/cast/wardrobe-picker.html`
+(a Looks row and slot tabs), which was not redrawn. Screenshots are in
+`docs/screenshots/wardrobe/one-page/`.
+
 ## Rules every agent brief carries
 
 - **Process hygiene.** Stop only processes you started, by the PID you captured. Never `pkill`,

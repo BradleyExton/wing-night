@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Character, type CharacterAppearance, type CharacterMove } from "@wingnight/cast";
 import type { TeamTheme } from "@wingnight/shared";
 
@@ -24,13 +24,16 @@ type WardrobeStageProps = {
   label: string;
   // The page's beat (`beatCue`): a tapped Move starts on the next one, on the parade's bar.
   beatRootRef: RefObject<HTMLElement | null>;
+  // The page's status line, which sits under the stage beside the TV-size pill.
+  children: ReactNode;
 };
 
-// The top of the wardrobe (research §2.5): your bird large, on its Stage, in its team's colour,
-// idling. Tap it to play its Move. The TV-size pill swaps it for the bird at the sizes the room
-// will see it — 130px in the parade, blurred as from the couch, and 76px in a game, kit only —
-// which is honest, and steers a guest off an item too quiet to read.
-export const WardrobeStage = ({ appearance, theme, move, label, beatRootRef }: WardrobeStageProps): JSX.Element => {
+// The top of the wardrobe (research §2.5): your bird on its Stage, in its team's colour,
+// idling, kept in view while the page scrolls under it (the page pins it). Tap it to play its
+// Move. The TV-size pill, under the stage beside the status line, swaps it for the bird at the
+// sizes the room will see it — 130px in the parade, blurred as from the couch, and 76px in a
+// game, kit only — which is honest, and steers a guest off an item too quiet to read.
+export const WardrobeStage = ({ appearance, theme, move, label, beatRootRef, children }: WardrobeStageProps): JSX.Element => {
   const [isTvSize, setIsTvSize] = useState(false);
   const [play, setPlay] = useState({ count: 0, isPlaying: false });
   const timerRef = useRef<number | null>(null);
@@ -88,53 +91,58 @@ export const WardrobeStage = ({ appearance, theme, move, label, beatRootRef }: W
   };
 
   return (
-    <div className={isTvSize ? styles.stageTv : styles.stage} data-testid="wardrobe-stage" data-team-color={theme.colorToken}>
-      {isTvSize ? (
-        <div className={styles.tvRow} role="img" aria-label={wardrobeStageCopy.tvLabel(label)}>
-          <figure className={styles.tvFigure}>
-            <span className={styles.tvBird130}>
-              <Character {...birdProps} pose="idle" showpieces />
+    <div className={styles.root}>
+      <div className={isTvSize ? styles.stageTv : styles.stage} data-testid="wardrobe-stage" data-team-color={theme.colorToken}>
+        {isTvSize ? (
+          <div className={styles.tvRow} role="img" aria-label={wardrobeStageCopy.tvLabel(label)}>
+            <figure className={styles.tvFigure}>
+              <span className={styles.tvBird130}>
+                <Character {...birdProps} pose="idle" showpieces />
+              </span>
+              <figcaption className={styles.tvCaption}>{wardrobeStageCopy.parade}</figcaption>
+            </figure>
+            <figure className={styles.tvFigure}>
+              <span className={styles.tvBird76}>
+                <Character {...birdProps} pose="still" />
+              </span>
+              <figcaption className={styles.tvCaption}>{wardrobeStageCopy.game}</figcaption>
+            </figure>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={styles.birdButton}
+            onClick={playMove}
+            aria-label={move === undefined ? label : wardrobeStageCopy.playLabel(label)}
+            aria-disabled={move === undefined}
+            data-testid="wardrobe-bird"
+            data-playing-move={play.isPlaying ? move : undefined}
+          >
+            <span className={styles.bird}>
+              <Character
+                key={play.count}
+                {...birdProps}
+                pose="idle"
+                showpieces
+                move={play.isPlaying ? move : undefined}
+              />
             </span>
-            <figcaption className={styles.tvCaption}>{wardrobeStageCopy.parade}</figcaption>
-          </figure>
-          <figure className={styles.tvFigure}>
-            <span className={styles.tvBird76}>
-              <Character {...birdProps} pose="still" />
-            </span>
-            <figcaption className={styles.tvCaption}>{wardrobeStageCopy.game}</figcaption>
-          </figure>
-        </div>
-      ) : (
+          </button>
+        )}
+        {!isTvSize && move !== undefined && <span className={styles.hint}>{wardrobeStageCopy.hint}</span>}
+      </div>
+      <div className={styles.foot}>
+        {children}
         <button
           type="button"
-          className={styles.birdButton}
-          onClick={playMove}
-          aria-label={move === undefined ? label : wardrobeStageCopy.playLabel(label)}
-          aria-disabled={move === undefined}
-          data-testid="wardrobe-bird"
-          data-playing-move={play.isPlaying ? move : undefined}
+          className={isTvSize ? styles.tvPillOn : styles.tvPill}
+          aria-pressed={isTvSize}
+          onClick={(): void => setIsTvSize((current) => !current)}
+          data-testid="wardrobe-tv-size"
         >
-          <span className={styles.bird}>
-            <Character
-              key={play.count}
-              {...birdProps}
-              pose="idle"
-              showpieces
-              move={play.isPlaying ? move : undefined}
-            />
-          </span>
+          {wardrobeStageCopy.tvSize}
         </button>
-      )}
-      {!isTvSize && move !== undefined && <span className={styles.hint}>{wardrobeStageCopy.hint}</span>}
-      <button
-        type="button"
-        className={isTvSize ? styles.tvPillOn : styles.tvPill}
-        aria-pressed={isTvSize}
-        onClick={(): void => setIsTvSize((current) => !current)}
-        data-testid="wardrobe-tv-size"
-      >
-        {wardrobeStageCopy.tvSize}
-      </button>
+      </div>
     </div>
   );
 };

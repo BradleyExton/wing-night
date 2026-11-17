@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolvePlayerAppearance, type CharacterAppearance, type CharacterMove } from "@wingnight/cast";
-import type { GenreKey, Outfit, OutfitItem, OutfitSlot, OutfitStyle, TeamTheme } from "@wingnight/shared";
+import type { GenreKey, Outfit, OutfitItem, OutfitLook, OutfitSlot, OutfitStyle, TeamTheme } from "@wingnight/shared";
 import {
   PORTAL_API_ROUTES,
   resolveThemeTeam,
@@ -17,6 +17,7 @@ import * as shellStyles from "../PortalShell/styles";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
 import { OUTFIT_SLOT_NAMES, portalWardrobeCopy } from "./copy";
 import { useOutfitSave } from "./useOutfitSave";
+import { WardrobeLooks } from "./WardrobeLooks";
 import { WardrobeRail } from "./WardrobeRail";
 import { WardrobeStage } from "./WardrobeStage";
 import { WardrobeTeam } from "./WardrobeTeam";
@@ -25,7 +26,6 @@ import {
   dressOutfitSlot,
   resolveDressMeOutfit,
   resolveGenreOutfit,
-  resolveOutfitLooks,
   resolveOutfitSummary,
   resolveWornLookId,
   resolveWornLookOutfit,
@@ -124,8 +124,9 @@ type WardrobeEditorProps = {
   update: (next: (me: PortalMe) => PortalMe) => void;
 };
 
-// The wardrobe itself, for one genre: keyed on it, so a genre never inherits another's taps. It
-// keeps the page's one beat, flipping `data-beat` on its root as the TV does on its own: the team
+// The wardrobe itself, for one genre: keyed on it, so a genre never inherits another's taps. One
+// scrolling page: the bird, pinned; the Looks, which are all most guests need; the rail, slot by
+// slot, for one who wants to mix their own; the team. It keeps the page's one beat, flipping `data-beat` on its root as the TV does on its own: the team
 // at the foot dances to it, a Move tapped on the stage starts on it, and the Move tiles loop on it.
 const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps): JSX.Element => {
   const beatRootRef = useRef<HTMLDivElement | null>(null);
@@ -136,7 +137,6 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
   // What the last tap did, said once ("Flying V."); cleared, the line says what the bird has on.
   const [said, setSaid] = useState<string | null>(null);
   const headSrc = me.avatar.headHash === null ? null : `${PORTAL_API_ROUTES.myAvatar}?v=${me.avatar.headHash}`;
-  const looks = resolveOutfitLooks(genre);
   const wornLookId = resolveWornLookId(genre, outfit);
   const summary = resolveOutfitSummary(outfit);
 
@@ -164,6 +164,14 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
     dress(restyleOutfitSlot(outfit, slot, style), null);
   };
 
+  const handleLook = (look: OutfitLook): void => {
+    dress(resolveWornLookOutfit(genre, look), portalWardrobeCopy.look(look.name));
+  };
+
+  const handleDressMe = (): void => {
+    dress(resolveDressMeOutfit(genre, Math.random), null);
+  };
+
   const statusText =
     save.status.kind === "failed"
       ? (portalWardrobeCopy.failures[save.status.error] ?? portalWardrobeCopy.failed)
@@ -171,48 +179,43 @@ const WardrobeEditor = ({ me, team, theme, genre, update }: WardrobeEditorProps)
 
   return (
     <div className={styles.cards} ref={beatRootRef}>
-      <section className={shellStyles.card} aria-label={portalWardrobeCopy.title}>
-        <WardrobeStage
-          appearance={dressBird(outfit)}
-          theme={theme}
-          move={outfit.move?.item as CharacterMove | undefined}
-          label={summary}
-          beatRootRef={beatRootRef}
-        />
-        <p
-          className={`${save.status.kind === "failed" ? shellStyles.statusError : shellStyles.voice} ${styles.statusLine}`}
-          role="status"
-          data-testid="wardrobe-status"
-          data-save-state={save.status.kind}
-        >
-          {statusText}
-        </p>
-        <div className={styles.looks} data-scrolls="x">
-          <button
-            type="button"
-            className={styles.dressMe}
-            aria-label={portalWardrobeCopy.dressMeLabel}
-            onClick={(): void => dress(resolveDressMeOutfit(genre, Math.random), null)}
-            data-testid="wardrobe-dress-me"
+      <div className={styles.stageDock}>
+        <section className={shellStyles.card} aria-label={portalWardrobeCopy.title}>
+          <WardrobeStage
+            appearance={dressBird(outfit)}
+            theme={theme}
+            move={outfit.move?.item as CharacterMove | undefined}
+            label={summary}
+            beatRootRef={beatRootRef}
           >
-            {portalWardrobeCopy.dressMe}
-          </button>
-          {looks.map((look) => (
-            <button
-              key={look.id}
-              type="button"
-              className={look.id === wornLookId ? styles.lookOn : styles.look}
-              aria-pressed={look.id === wornLookId}
-              onClick={(): void => dress(resolveWornLookOutfit(genre, look), portalWardrobeCopy.look(look.name))}
-              data-testid="wardrobe-look"
-              data-look={look.id}
+            <p
+              className={`${save.status.kind === "failed" ? shellStyles.statusError : shellStyles.voice} ${styles.statusLine}`}
+              role="status"
+              data-testid="wardrobe-status"
+              data-save-state={save.status.kind}
             >
-              {look.name}
-            </button>
-          ))}
-        </div>
+              {statusText}
+            </p>
+          </WardrobeStage>
+        </section>
+      </div>
+      <section className={shellStyles.card} aria-labelledby="wardrobe-looks-title">
+        <h2 id="wardrobe-looks-title" className={shellStyles.eyebrow}>
+          {portalWardrobeCopy.looksTitle}
+        </h2>
+        <WardrobeLooks
+          genre={genre}
+          theme={theme}
+          wornLookId={wornLookId}
+          dressBird={dressBird}
+          onLook={handleLook}
+          onDressMe={handleDressMe}
+        />
       </section>
-      <section className={styles.railCard} aria-label={portalWardrobeCopy.railLabel}>
+      <section className={shellStyles.card} aria-labelledby="wardrobe-rail-title">
+        <h2 id="wardrobe-rail-title" className={shellStyles.eyebrow}>
+          {portalWardrobeCopy.railTitle}
+        </h2>
         <WardrobeRail
           genre={genre}
           theme={theme}
