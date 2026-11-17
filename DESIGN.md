@@ -1384,8 +1384,8 @@ are still told apart from the sofa by the hour:
     so the bird on the balcony still wins the eye. Lettering only appears on
     a façade at least 30 units wide, and only on the wall under the plank,
     never where a bird stands.
-    The sample lanes stand three or four such towers a lane, 23.7 to 37.4
-    units wide and no two lanes to the same plan, stepping up away from the
+    The sample lanes stand three such towers a lane, 23.7 to 37.4 units
+    wide and no two lanes to the same plan, stepping up away from the
     slingshot, with a short group of players on the
     sand between each tower's own legs (in a landmark's doorway, where there
     is a façade), and one piece of beach or street furniture in front of the

@@ -4,17 +4,15 @@
       "id": "arena-centennial-beach",
       "name": "Centennial Beach",
       "perches": [
-        { "x": 54, "y": 52, "width": 23.7, "kind": "lifeguard-tower" },
-        { "x": 56.15, "y": 78, "width": 19.4 },
-        { "x": 78.5, "y": 48, "width": 28.4, "kind": "lifeguard-tower" },
-        { "x": 83, "y": 78, "width": 19.4 },
-        { "x": 132.2, "y": 34, "width": 23.7, "kind": "lifeguard-tower" },
-        { "x": 109.85, "y": 78, "width": 19.4 },
-        { "x": 107.7, "y": 38, "width": 23.7, "kind": "lifeguard-tower" },
-        { "x": 134.35, "y": 78, "width": 19.4 }
+        { "x": 84.1, "y": 46, "width": 37.4, "kind": "lifeguard-tower" },
+        { "x": 123.2, "y": 36, "width": 32.6, "kind": "lifeguard-tower" },
+        { "x": 54, "y": 50, "width": 28.4, "kind": "lifeguard-tower" },
+        { "x": 88.6, "y": 78, "width": 28.4 },
+        { "x": 125.3, "y": 78, "width": 28.4 },
+        { "x": 58.5, "y": 78, "width": 19.4 }
       ],
       "obstacles": [
-        { "x": 45, "y": 68, "width": 7, "height": 10, "kind": "umbrella" },
+        { "x": 45, "y": 62, "width": 7, "height": 16, "kind": "umbrella" },
         { "x": 156, "y": 50, "width": 2, "height": 28, "kind": "mast" }
       ]
     },

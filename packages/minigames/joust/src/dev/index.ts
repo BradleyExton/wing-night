@@ -3,7 +3,7 @@ import type { SerializableValue } from "@wingnight/minigames-core";
 
 // A hand-copy of content/sample/minigames/joust.json, shelf for shelf, so sandbox play matches a
 // real night: team-alpha shoots down the first lane, team-beta the second, and so on down the
-// four. Every lane is three or four small towers stepping up away from the slingshot, each with a
+// four. Every lane is three small towers stepping up away from the slingshot, each with a
 // sand group stood between its own legs, on four different plans (docs/minigames/joust-spec.md §5).
 //
 // It is copied rather than imported because this module is bundled for the browser and the sample
@@ -19,17 +19,15 @@ const DEV_CONTENT: SerializableValue = {
       id: "arena-centennial-beach",
       name: "Centennial Beach",
       perches: [
-        { x: 54, y: 52, width: 23.7, kind: "lifeguard-tower" },
-        { x: 56.15, y: 78, width: 19.4 },
-        { x: 78.5, y: 48, width: 28.4, kind: "lifeguard-tower" },
-        { x: 83, y: 78, width: 19.4 },
-        { x: 132.2, y: 34, width: 23.7, kind: "lifeguard-tower" },
-        { x: 109.85, y: 78, width: 19.4 },
-        { x: 107.7, y: 38, width: 23.7, kind: "lifeguard-tower" },
-        { x: 134.35, y: 78, width: 19.4 }
+        { x: 84.1, y: 46, width: 37.4, kind: "lifeguard-tower" },
+        { x: 123.2, y: 36, width: 32.6, kind: "lifeguard-tower" },
+        { x: 54, y: 50, width: 28.4, kind: "lifeguard-tower" },
+        { x: 88.6, y: 78, width: 28.4 },
+        { x: 125.3, y: 78, width: 28.4 },
+        { x: 58.5, y: 78, width: 19.4 }
       ],
       obstacles: [
-        { x: 45, y: 68, width: 7, height: 10, kind: "umbrella" },
+        { x: 45, y: 62, width: 7, height: 16, kind: "umbrella" },
         { x: 156, y: 50, width: 2, height: 28, kind: "mast" }
       ]
     },
