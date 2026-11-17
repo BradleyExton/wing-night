@@ -34,6 +34,7 @@ import { createTrailingCoalescer } from "../utils/trailingCoalescer/index.js";
 import { registerPlayerHandlers, resolvePlayerRoom } from "./registerPlayerHandlers/index.js";
 import { resolveContestantHostViewDelivery } from "./contestantHostView/index.js";
 import { registerRoomStateHandlers } from "./registerRoomStateHandlers/index.js";
+import { attachProtoRunGunPadRelay } from "./protoRunGunPad/index.js";
 import { createSeatGuard, type SeatedSocketData } from "./seatGuard/index.js";
 
 const ROOM_BY_CLIENT_ROLE = {
@@ -119,6 +120,10 @@ export const attachSocketServer = (
       threshold: 1024
     }
   });
+
+  // PROTOTYPE — throwaway (`./protoRunGunPad`): the run-and-gun jump lab's relay, on a namespace
+  // of its own that the seat guard below never sees.
+  attachProtoRunGunPadRelay(socketServer as unknown as Server);
 
   // Every seat is decided here, before a connection exists: HOST is the
   // laptop itself or the host control token, PLAYER is the current join token,

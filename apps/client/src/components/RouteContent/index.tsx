@@ -63,6 +63,19 @@ const ContraptionUiLab = lazy(() =>
   import("../ContraptionUiLab").then((module) => ({ default: module.ContraptionUiLab }))
 );
 
+const RunGunPadLab = lazy(() =>
+  import("../RunGunLab/Pad").then((module) => ({ default: module.RunGunPadLab }))
+);
+
+const RunGunYardLab = lazy(() =>
+  import("../RunGunLab/Yard").then((module) => ({ default: module.RunGunYardLab }))
+);
+
+// Throwaway — the run-and-gun jump lab (docs/minigames/ideas/base-borden.md): a phone pad and the
+// yard it drives on the TV. Deleted when the game is specced or dropped.
+const RUNGUN_PAD_LAB_NAME = "rungun-pad";
+const RUNGUN_YARD_LAB_NAME = "rungun-yard";
+
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
 // (BACKLOG.md § Minigames).
 const ANAMORPH_LAB_NAME = "anamorph";
@@ -146,6 +159,14 @@ const resolveRouteElement = ({
 
   if (route === "DEV_LAB" && devLabName === CONTRAPTION_UI_LAB_NAME) {
     return <ContraptionUiLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === RUNGUN_PAD_LAB_NAME) {
+    return <RunGunPadLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === RUNGUN_YARD_LAB_NAME) {
+    return <RunGunYardLab />;
   }
 
 

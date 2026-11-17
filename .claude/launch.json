@@ -126,6 +126,33 @@
       ],
       "port": 5677,
       "url": "http://127.0.0.1:5677"
+    },
+    {
+      "name": "wing-night-lab-server",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PORT=3300", "fnm", "exec", "--using=25", "pnpm", "--filter", "@wingnight/server", "dev"],
+      "port": 3300
+    },
+    {
+      "name": "wing-night-lab-client",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_SOCKET_SERVER_PORT=3300",
+        "fnm",
+        "exec",
+        "--using=25",
+        "pnpm",
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "--host",
+        "--port",
+        "5473",
+        "--strictPort"
+      ],
+      "port": 5473,
+      "url": "http://localhost:5473"
     }
   ]
 }

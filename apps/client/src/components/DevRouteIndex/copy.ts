@@ -31,6 +31,17 @@ export const devRouteIndexCopy = {
       href: "/dev/lab/contraption-ui",
       label: "CONTRAPTION UI Direction Lab",
       detail: "Side-by-side UI direction variants for CONTRAPTION. Deleted when a direction is picked."
+    },
+    {
+      href: "/dev/lab/rungun-yard",
+      label: "Base Borden jump lab — the yard (TV)",
+      detail:
+        "Throwaway controls prototype: turrets to jump and duck, driven by phone pads. Open this on the laptop, scan its code with a phone."
+    },
+    {
+      href: "/dev/lab/rungun-pad",
+      label: "Base Borden jump lab — the pad (phone)",
+      detail: "Throwaway controls prototype: the crew pad's stick on the left, JUMP on the right. Opens on a phone."
     }
   ] as const
 } as const;
