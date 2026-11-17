@@ -55,13 +55,6 @@ export {
 export { startQuickPlay } from "./quickPlayMutations/index.js";
 
 export {
-  placeSpectatorBet,
-  readOwnSpectatorBet,
-  readSpectatorBetRefusal,
-  releaseSpectatorBet
-} from "./spectatorBetMutations/index.js";
-
-export {
   dispatchContestantMinigameAction,
   dispatchServerMinigameAction,
   readContestantActionRefusal,
@@ -69,16 +62,6 @@ export {
   setRoundDeviceMode,
   takeBackContestantLeg
 } from "./contestantMutations/index.js";
-
-export {
-  dispatchPlayerAnswerAction,
-  isAnswerHolder,
-  isPlayerAnswerAction,
-  readAnsweringPlayerIds,
-  readMinigamePlayerView,
-  readPlayerAnswerRefusal,
-  releasePlayerAnswer
-} from "./phoneAnswerMutations/index.js";
 
 export { getRoomPhase, getRoomPlayers } from "./stateStore/index.js";
 

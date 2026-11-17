@@ -25,9 +25,7 @@ const triviaHostViewFixture: MinigameHostView = {
     id: "prompt-1",
     question: "Which scale measures pepper heat?",
     answer: "Scoville"
-  },
-  phoneAnswers: null,
-  reveal: null
+  }
 };
 
 test("renders trivia controls from minigame host view during MINIGAME_PLAY", () => {
@@ -106,8 +104,7 @@ test("renders GEO guessing surface for configured geo minigame", () => {
           answerLat: 48.85837,
           answerLng: 2.294481
         },
-        lastResult: null,
-        phoneAnswers: null
+        lastResult: null
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}
@@ -154,10 +151,8 @@ test("renders GEO result card after a submitted guess", () => {
           guessLat: 48.8,
           guessLng: 2.35,
           distanceKm: 7.7,
-          pointsAwarded: 2,
-          pins: []
-        },
-        phoneAnswers: null
+          pointsAwarded: 2
+        }
       }}
       activeTeamName="Team Alpha"
       teamNameByTeamId={teamNameByTeamId}

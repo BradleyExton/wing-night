@@ -3,9 +3,7 @@ import type { TeamTheme } from "@wingnight/shared";
 
 import { TeamAmbient } from "../../../TeamAmbient";
 import { TeamWordmark } from "../../../TeamWordmark";
-import type { SpectatorBetSettlementView } from "../resolveSpectatorBetView";
 import type { TurnTile } from "../resolveStageViewModel";
-import { SpectatorBetSettlement } from "../SpectatorBetSettlement";
 import { turnResultsStageCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -14,8 +12,6 @@ type TurnResultsStageBodyProps = {
   justFinishedTeamTheme: TeamTheme | null;
   turnTiles: TurnTile[];
   nextTeamName: string | null;
-  // The watchers' bet on this turn, settled, or null when nobody bet.
-  betSettlement?: SpectatorBetSettlementView | null;
 };
 
 const resolveDotClassName = (status: TurnTile["status"]): string => {
@@ -32,8 +28,7 @@ export const TurnResultsStageBody = ({
   justFinishedTeamName,
   justFinishedTeamTheme,
   turnTiles,
-  nextTeamName,
-  betSettlement = null
+  nextTeamName
 }: TurnResultsStageBodyProps): JSX.Element => {
   const resolvedTeamName =
     justFinishedTeamName ?? turnResultsStageCopy.fallbackTeamName;
@@ -76,12 +71,6 @@ export const TurnResultsStageBody = ({
             />
           ))}
         </span>
-      )}
-      {betSettlement !== null && (
-        <SpectatorBetSettlement
-          settlement={betSettlement}
-          beatClassName={`${styles.beatBase} ${styles.beatDelay4}`}
-        />
       )}
       <p className={`${styles.beatBase} ${styles.beatDelay4} ${styles.next}`}>
         <span className={styles.nextArrow}>

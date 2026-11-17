@@ -45,8 +45,6 @@ const renderPendingRoute = (pathname: string): string => {
       displayReports={null}
       playerSeat={null}
       contestantLeg={null}
-      betSlip={null}
-      answerCard={null}
     />
   );
 };

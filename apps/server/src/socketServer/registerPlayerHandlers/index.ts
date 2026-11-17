@@ -4,16 +4,13 @@ import {
   PLAYER_CLAIM_REFUSAL_REASONS,
   PLAYER_MINIGAME_ACTION_REFUSAL_REASONS,
   SERVER_TO_CLIENT_EVENTS,
-  SPECTATOR_BET_REFUSAL_REASONS,
   type Player,
   type PlayerClaimGonePayload,
   type PlayerClaimResult,
   type PlayerHandshake,
   type PlayerMinigameActionPayload,
   type PlayerMinigameActionResult,
-  type PlayerPlaceBetResult,
-  type PlayerReleaseResult,
-  type SpectatorBetPick
+  type PlayerReleaseResult
 } from "@wingnight/shared";
 
 import { logError } from "../../logger/index.js";
@@ -22,7 +19,6 @@ import { createTokenBucket, type TokenBucket } from "../../utils/tokenBucket/ind
 import {
   isPlayerClaimPayload,
   isPlayerMinigameActionPayload,
-  isPlayerPlaceBetPayload,
   isPlayerReleasePayload
 } from "../registerRoomStateHandlers/payloadGuards/index.js";
 
@@ -34,8 +30,7 @@ export const resolvePlayerRoom = (playerId: string): string => `player:${playerI
 export type PlayerEventName =
   | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_CLAIM
   | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_RELEASE
-  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION
-  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET;
+  | typeof CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION;
 
 type PlayerSocket = {
   id: string;
@@ -69,14 +64,6 @@ export type PlayerSeatContext = {
     playerId: string,
     action: PlayerMinigameActionPayload
   ) => PlayerMinigameActionResult;
-  // A watcher's side bet: refused with a reason, or written to the turn's bets and broadcast.
-  placeBet: (playerId: string, pick: SpectatorBetPick) => PlayerPlaceBetResult;
-  // Hands the player their own pick on the turn in hand, through their own room. A no-op with no
-  // bets up.
-  emitOwnSpectatorBet: (playerId: string) => void;
-  // Hands a playing-team phone its own answer card (or a null, with nothing to answer), through
-  // its own room. Omitted by a harness that has no game in play.
-  emitOwnPlayerView?: (playerId: string) => void;
   // Copies the store's claimed/connected ids into the room and broadcasts
   // (coalesced by the caller, so a burst of claims is one snapshot).
   syncClaimFlags: () => void;
@@ -88,8 +75,6 @@ export type PlayerSeatContext = {
   // bucket it had rather than getting a fresh burst on every new socket. Omitted, each socket
   // gets its own (a harness with one socket per test).
   minigameActionBuckets?: Map<string, TokenBucket>;
-  // The room's bet buckets, one per face, for the same reason. Omitted, each socket gets its own.
-  betBuckets?: Map<string, TokenBucket>;
   // The rate limiter's clock; injected so a test can walk it.
   now?: () => number;
 };
@@ -204,33 +189,6 @@ const registerGuardedPlayerHandlers = (
   const minigameActionBuckets = context.minigameActionBuckets ?? new Map<string, TokenBucket>();
   // A socket that holds no face still pays for what it sends, on a bucket of its own.
   const unseatedActionBucket = createMinigameActionBucket();
-  // Bets are sized like claims — a tap and a change of mind, not a stream — on buckets of their
-  // own so a guest flipping OVER and UNDER never costs them a claim. One per face, kept by the
-  // room, so a phone that reconnects keeps spending the bucket it had.
-  const createBetBucket = (): TokenBucket =>
-    createTokenBucket({
-      capacity: PLAYER_ACTION_BURST,
-      refillPerSecond: PLAYER_ACTIONS_PER_SECOND,
-      now: context.now ?? Date.now
-    });
-  const betBuckets = context.betBuckets ?? new Map<string, TokenBucket>();
-  const unseatedBetBucket = createBetBucket();
-
-  const takeBetToken = (playerId: string | null): boolean => {
-    if (playerId === null) {
-      return unseatedBetBucket.take();
-    }
-
-    let bucket = betBuckets.get(playerId);
-
-    if (bucket === undefined) {
-      bucket = createBetBucket();
-      betBuckets.set(playerId, bucket);
-    }
-
-    return bucket.take();
-  };
-
   const takeMinigameActionToken = (playerId: string | null): boolean => {
     if (playerId === null) {
       return unseatedActionBucket.take();
@@ -251,10 +209,6 @@ const registerGuardedPlayerHandlers = (
     context.emitPlayerSelf(playerId);
     // A phone that took its seat mid-leg — a reload, a wake — gets the leg straight back.
     context.emitContestantHostView(playerId);
-    // And a watcher who bet before the reload sees the button they pressed.
-    context.emitOwnSpectatorBet(playerId);
-    // And a phone on the playing team sees the question in hand, and its own answer to it.
-    context.emitOwnPlayerView?.(playerId);
   };
 
   if (handshake.claimSecret !== null) {
@@ -346,11 +300,10 @@ const registerGuardedPlayerHandlers = (
     }
   );
 
-  // A contestant playing their own leg, or a playing-team phone answering the question in hand.
-  // The face this socket holds is the only identity that counts — the payload names no player —
-  // and the room decides whether that face may send this action now. Nothing here can advance a
-  // phase or move a turn: the actions a game lets a phone send are its inputs, the end of its own
-  // run and an answer (AGENTS.md §3.4, §3.5).
+  // A contestant playing their own leg. The face this socket holds is the only identity that
+  // counts — the payload names no player — and the room decides whether that face may send this
+  // action now. Nothing here can advance a phase or move a turn: the actions a game lets a phone
+  // send are its inputs and the end of its own run (AGENTS.md §3.5).
   onGuarded(
     CLIENT_TO_SERVER_EVENTS.PLAYER_MINIGAME_ACTION,
     { ok: false, reason: PLAYER_MINIGAME_ACTION_REFUSAL_REASONS.SERVER_ERROR },
@@ -385,48 +338,13 @@ const registerGuardedPlayerHandlers = (
     }
   );
 
-  // A watcher's OVER or UNDER on the turn in hand. Like the contestant's input, the face this
-  // socket holds is the only identity that counts; the room decides whether the window is open and
-  // whether that face is on the team about to play. It reaches the turn's bets and nothing else.
-  onGuarded(
-    CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET,
-    { ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.SERVER_ERROR },
-    (payload, ack) => {
-      if (!isAck<PlayerPlaceBetResult>(ack)) {
-        return;
-      }
-
-      const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
-
-      if (!takeBetToken(playerId)) {
-        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.RATE_LIMITED });
-        return;
-      }
-
-      if (!isPlayerPlaceBetPayload(payload)) {
-        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.MALFORMED });
-        return;
-      }
-
-      if (playerId === null) {
-        ack({ ok: false, reason: SPECTATOR_BET_REFUSAL_REASONS.NOT_SEATED });
-        return;
-      }
-
-      ack(context.placeBet(playerId, payload.pick));
-    }
-  );
-
-  // The phone asking for the room again (a reconnect, a tab brought back) asks for its leg too,
-  // and for the bet it placed.
+  // The phone asking for the room again (a reconnect, a tab brought back) asks for its leg too.
   socket.on(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, () => {
     runGuarded(CLIENT_TO_SERVER_EVENTS.REQUEST_STATE, () => {
       const playerId = claimStore.resolvePlayerIdBySocket(socket.id);
 
       if (playerId !== null) {
         context.emitContestantHostView(playerId);
-        context.emitOwnSpectatorBet(playerId);
-        context.emitOwnPlayerView?.(playerId);
       }
     });
   });

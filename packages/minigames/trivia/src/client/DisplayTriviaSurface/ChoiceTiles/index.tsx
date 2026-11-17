@@ -5,7 +5,7 @@ type ChoiceTilesProps = {
   choices: readonly string[];
 };
 
-// A multiple-choice question's choices on the TV while the team's phones are choosing.
+// A multiple-choice question's choices on the TV, for the team to pick one aloud.
 export const ChoiceTiles = ({ choices }: ChoiceTilesProps): JSX.Element => {
   return (
     <ol className={styles.root} data-trivia-choices={choices.length}>

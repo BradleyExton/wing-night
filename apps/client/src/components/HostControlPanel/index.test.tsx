@@ -173,9 +173,7 @@ test("renders trivia controls during TRIVIA MINIGAME_PLAY", () => {
           id: "prompt-1",
           question: "Which scale measures pepper heat?",
           answer: "Scoville"
-        },
-        phoneAnswers: null,
-        reveal: null
+        }
       }
     })
   });
@@ -204,9 +202,7 @@ test("replaces trivia attempt controls with the turn-complete panel when the que
           id: "prompt-1",
           question: "Which scale measures pepper heat?",
           answer: "Scoville"
-        },
-        phoneAnswers: null,
-        reveal: null
+        }
       }
     }),
     handlers: { onDispatchMinigameAction: (): void => {} }

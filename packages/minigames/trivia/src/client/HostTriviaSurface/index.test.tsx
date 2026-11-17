@@ -24,8 +24,6 @@ const hostView = (
     question: "What country is credited with hot sauce?",
     answer: "Mexico"
   },
-  phoneAnswers: null,
-  reveal: null,
   ...overrides
 });
 
@@ -151,47 +149,14 @@ const choicePrompt = {
   choices: ["India", "Mexico", "Thailand"]
 };
 
-test("does offer the lock with the phones' count and keep the spoken verdicts when the team's phones are choosing", () => {
-  const html = renderSurface(
-    hostView({
-      currentPrompt: choicePrompt,
-      phoneAnswers: { answeredCount: 1, seatedCount: 2 }
-    })
-  );
+test("does show the choice key under the answer and keep the spoken verdicts when a question has choices", () => {
+  const html = renderSurface(hostView({ currentPrompt: choicePrompt }));
 
-  assert.match(html, /Lock answers · 1 of 2 in/);
-  assert.match(html, /data-trivia-host-tally="1\/2"/);
-  assert.match(html, />Correct</);
-  assert.match(html, />Incorrect</);
-  // The host's key: every choice, the answer ticked.
+  // The host's key: every choice, lettered as on the TV, the answer ticked.
   assert.match(html, /data-trivia-host-choices/);
   assert.match(html, /Thailand/);
-});
-
-test("does keep today's verdicts alone when nobody on the team has a phone", () => {
-  const html = renderSurface(hostView({ currentPrompt: choicePrompt, phoneAnswers: null }));
-
-  assert.doesNotMatch(html, /Lock answers/);
+  assert.match(html, /✓/);
   assert.match(html, />Correct</);
-});
-
-test("does offer the next question and the spread's counts when the question is locked", () => {
-  const html = renderSurface(
-    hostView({
-      currentPrompt: choicePrompt,
-      reveal: {
-        promptId: "spice-origin",
-        choices: choicePrompt.choices,
-        choiceCounts: [0, 2, 0],
-        correctIndex: 1,
-        correctCount: 2,
-        answeredCount: 2,
-        seatedCount: 2,
-        pointsAwarded: 1
-      }
-    })
-  );
-
-  assert.match(html, /Next question/);
-  assert.doesNotMatch(html, />Correct</);
+  assert.match(html, />Incorrect</);
+  assert.doesNotMatch(html, /Lock answers|Next question/);
 });

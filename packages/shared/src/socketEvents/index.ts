@@ -17,9 +17,7 @@ import type {
   PlayerClaimResult,
   PlayerReleaseResult
 } from "../playerJoin/index.js";
-import type { PlayerMinigamePlayerViewPayload } from "../phoneAnswers/index.js";
 import type { QuickPlayStartRequest } from "../quickPlay/index.js";
-import type { PlayerPlaceBetResult, SpectatorBetPick } from "../spectatorBets/index.js";
 
 export { MINIGAME_API_VERSION } from "../content/gameConfig/index.js";
 export type { MinigameApiVersion } from "../content/gameConfig/index.js";
@@ -121,22 +119,6 @@ export type PlayerMinigameActionAck = (result: PlayerMinigameActionResult) => vo
 // Never in the shared player snapshot.
 export type PlayerMinigameHostViewPayload = Record<"minigameHostView", ContestantMinigameHostView>;
 
-// A watcher's side bet on the turn in hand (`SpectatorBets`): OVER or UNDER the line, from a
-// phone whose face is not on the team about to play, while the window is open. A pick can be
-// changed until it closes. Authorized by the face the socket holds; answers on an ack.
-export type PlayerPlaceBetPayload = Record<"pick", SpectatorBetPick>;
-export type PlayerPlaceBetAck = (result: PlayerPlaceBetResult) => void;
-
-// Server → one playing-team phone's `player:<id>` room only: its own answer card for the question
-// in hand (`MinigamePlayerView`). Re-sent whenever it changes, when the phone takes its seat and on
-// `client:requestState`; null when the card goes away. Never in any shared snapshot.
-export type { PlayerMinigamePlayerViewPayload };
-
-// Server → one bettor's `player:<id>` room only: their own pick for the turn named, sent when it
-// is placed and again when the phone takes its seat. No snapshot carries a pick before the turn
-// settles, so this is the one way a phone remembers which button it pressed.
-export type PlayerSpectatorBetPayload = Record<"turnKey", string> & Record<"pick", SpectatorBetPick | null>;
-
 // Server → one phone, over its `player:<id>` room: who this phone is. Later
 // milestones grow this per-player channel (a contestant's turn, a ballot);
 // anything only one player may see goes here, never in the shared snapshot.
@@ -189,8 +171,7 @@ export const CLIENT_TO_SERVER_EVENTS = {
   TAKE_BACK_CONTESTANT_LEG: "minigame:takeBack",
   PLAYER_CLAIM: "player:claim",
   PLAYER_RELEASE: "player:release",
-  PLAYER_MINIGAME_ACTION: "player:minigameAction",
-  PLAYER_PLACE_BET: "player:placeBet"
+  PLAYER_MINIGAME_ACTION: "player:minigameAction"
 } as const;
 
 export const SERVER_TO_CLIENT_EVENTS = {
@@ -201,8 +182,6 @@ export const SERVER_TO_CLIENT_EVENTS = {
   PLAYER_SELF: "player:self",
   PLAYER_CLAIM_GONE: "player:claimGone",
   PLAYER_MINIGAME_HOST_VIEW: "player:minigameHostView",
-  PLAYER_MINIGAME_PLAYER_VIEW: "player:minigamePlayerView",
-  PLAYER_SPECTATOR_BET: "player:spectatorBet",
   PLAYER_JOIN_TOKEN: "display:playerJoinToken"
 } as const;
 
@@ -292,10 +271,6 @@ export type ClientToServerEvents = {
     payload: PlayerMinigameActionPayload,
     ack?: PlayerMinigameActionAck
   ) => void;
-  [CLIENT_TO_SERVER_EVENTS.PLAYER_PLACE_BET]: (
-    payload: PlayerPlaceBetPayload,
-    ack: PlayerPlaceBetAck
-  ) => void;
 };
 
 export type ServerToClientEvents = {
@@ -313,12 +288,6 @@ export type ServerToClientEvents = {
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_HOST_VIEW]: (
     payload: PlayerMinigameHostViewPayload
-  ) => void;
-  [SERVER_TO_CLIENT_EVENTS.PLAYER_MINIGAME_PLAYER_VIEW]: (
-    payload: PlayerMinigamePlayerViewPayload
-  ) => void;
-  [SERVER_TO_CLIENT_EVENTS.PLAYER_SPECTATOR_BET]: (
-    payload: PlayerSpectatorBetPayload
   ) => void;
   [SERVER_TO_CLIENT_EVENTS.PLAYER_JOIN_TOKEN]: (
     payload: PlayerJoinTokenPayload

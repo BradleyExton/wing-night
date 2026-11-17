@@ -79,9 +79,9 @@ const seatPhone = async (browser: Browser, joinUrl: string, playerId: string): P
 const contestantGame = (page: Page, legIndex: number) =>
   page.locator(`[data-contestant-game][data-contestant-leg='${legIndex}']`);
 
-// Quick Play one arcade game, with the first team's turn played out on the tablet: a turn locks
-// its device mode when its briefing opens, so the host sets phones during the first briefing and
-// it lands on the second team's.
+// Quick Play one arcade game, with the first team's turn played out on the tablet. A relay round
+// plays on the phones by default, but no phone holds a face yet, so every leg of the first turn
+// falls to the tablet; the phones seated after it play the second team's.
 const startQuickPlayWithPhonesFromTeamTwo = async (
   hostPage: Page,
   gameName: string,
@@ -98,9 +98,6 @@ const startQuickPlayWithPhonesFromTeamTwo = async (
 
   await hostPage.getByRole("button", { name: "Start Quick Play" }).click();
   await expect(hostPage.getByRole("button", { name: "Start Mini-Game" })).toBeVisible({ timeout: 15_000 });
-
-  await hostPage.getByRole("button", { name: "Round 1 on phones" }).click();
-  await expect(hostPage.getByText("This team's turn: on the tablet. Phones from the next team.")).toBeVisible();
 
   // The first team plays on the tablet: the hatches clear it.
   await hostPage.getByRole("button", { name: "Start Mini-Game" }).click();

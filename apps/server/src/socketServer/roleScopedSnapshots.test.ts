@@ -36,9 +36,7 @@ const createRoomStateFixture = (): RoomState => {
       attemptsRemaining: 1,
       promptCursor: 0,
       pendingPointsByTeamId: {},
-      currentPrompt: null,
-      phoneAnswers: null,
-      reveal: null
+      currentPrompt: null
     },
     minigameDisplayView: {
       minigame: "TRIVIA",
@@ -46,9 +44,7 @@ const createRoomStateFixture = (): RoomState => {
       promptCursor: 0,
       attemptsRemaining: 1,
       pendingPointsByTeamId: {},
-      currentPrompt: null,
-      phoneAnswers: null,
-      reveal: null
+      currentPrompt: null
     },
     timer: null,
     gameStartCountdownEndsAt: null,
@@ -64,9 +60,7 @@ const createRoomStateFixture = (): RoomState => {
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null,
-    spectatorBets: null,
-    betTallyByPlayerId: {}
+    contestantTurn: null
   };
 };
 

@@ -20,16 +20,16 @@ const room = (phase: Phase, currentRound: number, roundDeviceModes: RoomState["r
 });
 
 test("does offer every arcade round of the night when the night has not started", () => {
-  assert.deepEqual(selectDeviceModeRounds(room(Phase.SETUP, 0, { 3: "phones" })), [
-    { round: 1, minigame: "SCHLONIC", deviceMode: "tablet" },
-    { round: 3, minigame: "FAPPY", deviceMode: "phones" }
+  assert.deepEqual(selectDeviceModeRounds(room(Phase.SETUP, 0, { 3: "tablet" })), [
+    { round: 1, minigame: "SCHLONIC", deviceMode: "phones" },
+    { round: 3, minigame: "FAPPY", deviceMode: "tablet" }
   ]);
   assert.equal(selectDeviceModeRounds(room(Phase.INTRO, 0)).length, 2);
 });
 
 test("does offer only the round in hand when a turn is under way", () => {
   assert.deepEqual(selectDeviceModeRounds(room(Phase.MINIGAME_INTRO, 3)), [
-    { round: 3, minigame: "FAPPY", deviceMode: "tablet" }
+    { round: 3, minigame: "FAPPY", deviceMode: "phones" }
   ]);
   assert.deepEqual(selectDeviceModeRounds(room(Phase.EATING, 2)), []);
 });

@@ -250,6 +250,7 @@ test("does move the host view to the next teammate's phone when the leg hands of
 });
 
 test("does hand no phone a host view, and take no phone input, in a turn locked to the tablet", async () => {
+  setRoundDeviceMode(1, "tablet");
   advanceUntil(Phase.MINIGAME_PLAY, 1);
 
   await withSocketServer(async (url) => {

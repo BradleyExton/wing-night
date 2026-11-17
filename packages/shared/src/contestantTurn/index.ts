@@ -1,8 +1,9 @@
 import type { MinigameType } from "../content/gameConfig/index.js";
 
-// Where an arcade relay's legs are played: on the host tablet, passed from hand to hand as it
-// always has been, or on each contestant's own phone. A per-round setting the host makes; a
-// round that never set one plays on the tablet.
+// Where an arcade relay's legs are played: on each contestant's own phone, or on the host
+// tablet, passed from hand to hand. A per-round setting the host makes; a round that never set
+// one plays on the phones. A leg whose contestant has no phone holding their face still falls
+// to the tablet, so a team with no phones plays exactly as a tablet round would.
 export const MINIGAME_DEVICE_MODES = {
   TABLET: "tablet",
   PHONES: "phones"
@@ -10,14 +11,14 @@ export const MINIGAME_DEVICE_MODES = {
 
 export type MinigameDeviceMode = (typeof MINIGAME_DEVICE_MODES)[keyof typeof MINIGAME_DEVICE_MODES];
 
-export const DEFAULT_MINIGAME_DEVICE_MODE: MinigameDeviceMode = MINIGAME_DEVICE_MODES.TABLET;
+export const DEFAULT_MINIGAME_DEVICE_MODE: MinigameDeviceMode = MINIGAME_DEVICE_MODES.PHONES;
 
 export const isMinigameDeviceMode = (value: unknown): value is MinigameDeviceMode => {
   return value === MINIGAME_DEVICE_MODES.TABLET || value === MINIGAME_DEVICE_MODES.PHONES;
 };
 
 // The host's per-round choice, keyed by round number (1-based, like `currentRound`). A round
-// with no entry plays on the tablet.
+// with no entry plays on the phones.
 export type RoundDeviceModes = Record<number, MinigameDeviceMode>;
 
 export const resolveRoundDeviceMode = (
@@ -99,11 +100,6 @@ export const PLAYER_MINIGAME_ACTION_REFUSAL_REASONS = {
   NOT_CONTESTANT: "not_contestant",
   // The contestant's own leg, but the tablet holds it (taken back, or begun on the tablet).
   TABLET_HOLDS_LEG: "tablet_holds_leg",
-  // An answer (a game's player action type) from a face that is not on the team whose turn it is.
-  NOT_ON_TURN: "not_on_turn",
-  // An answer the game did not take: the question is locked, the answer is not one it offers, or it
-  // is the answer already in. Nothing changed.
-  NOT_ACCEPTED: "not_accepted",
   // The server hit a fault handling this message and refused it rather than go down with it.
   SERVER_ERROR: "server_error"
 } as const;

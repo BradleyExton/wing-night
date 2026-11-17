@@ -19,9 +19,7 @@ import { saveHostSecret } from "./utils/hostSecretStorage";
 import { createDisplayReportHandlers } from "./utils/displayReports";
 import { createHostRequestHandlers } from "./utils/hostRequests";
 import { createContestantLegController } from "./utils/contestantLeg";
-import { createPhoneAnswerCardController } from "./utils/phoneAnswerCard";
 import { createPlayerSeatController } from "./utils/playerSeat";
-import { createSpectatorBetSlipController } from "./utils/spectatorBetSlip";
 import {
   resolveClientRoute,
   resolveDevLabName,
@@ -94,34 +92,6 @@ export const App = (): JSX.Element => {
       contestantLeg?.dispose();
     };
   }, [contestantLeg]);
-
-  const betSlip = useMemo(() => {
-    if (route !== "PLAY" || roomSocket === null) {
-      return null;
-    }
-
-    return createSpectatorBetSlipController(roomSocket);
-  }, [roomSocket, route]);
-
-  useEffect(() => {
-    return (): void => {
-      betSlip?.dispose();
-    };
-  }, [betSlip]);
-
-  const answerCard = useMemo(() => {
-    if (route !== "PLAY" || roomSocket === null) {
-      return null;
-    }
-
-    return createPhoneAnswerCardController(roomSocket);
-  }, [roomSocket, route]);
-
-  useEffect(() => {
-    return (): void => {
-      answerCard?.dispose();
-    };
-  }, [answerCard]);
 
   // The TV's player QR: only the laptop's display is ever handed the token.
   useEffect(() => {
@@ -205,8 +175,6 @@ export const App = (): JSX.Element => {
               displayReports={displayReports}
               playerSeat={playerSeat}
               contestantLeg={contestantLeg}
-              betSlip={betSlip}
-              answerCard={answerCard}
             />
           </AppErrorBoundary>
         </PlayerJoinTokenProvider>

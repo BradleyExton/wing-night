@@ -1,6 +1,6 @@
-// The open question's choices on the TV (mockups/phone-answers, frame 6): a row of lettered glass
-// tiles under the question, the letters the phones carry. None is marked: which is right waits
-// for the host's lock.
+// The open question's choices on the TV: a row of lettered glass
+// tiles under the question, so the team can answer by letter. None is marked: which is right is
+// the host's call on the tablet.
 export const root = "grid w-full max-w-[min(92vw,110rem)] grid-cols-2 gap-[clamp(0.6rem,1.2vw,1.2rem)] xl:grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]";
 
 export const tile =

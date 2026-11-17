@@ -1117,21 +1117,6 @@ body {
   color: theme(colors.muted);
 }
 
-/* The reveal names every pin on the chart (GeoPinMarkers): Leaflet's tooltip is a white speech
-   bubble by default, which on the dark chart reads as a sticker. It wears the show's glass. */
-.geo-pin-label.leaflet-tooltip {
-  border: 1px solid theme(colors.text / 15%);
-  border-radius: 0.4rem;
-  background: theme(colors.bg / 88%);
-  color: theme(colors.text);
-  font-weight: 800;
-  font-size: clamp(0.7rem, 0.9vw, 1.05rem);
-  box-shadow: none;
-}
-.geo-pin-label.leaflet-tooltip-top::before {
-  border-top-color: theme(colors.bg / 88%);
-}
-
 /* The in-progress pin breathes so the room can pick it out of a whole world
    while the table is still arguing. Fill only — a transform would move an SVG
    path out of the pane's coordinate space rather than scale it in place.

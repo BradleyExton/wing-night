@@ -4,10 +4,8 @@ import type { MinigameType } from "@wingnight/shared";
 import type { createRoomSocket } from "../../socket/createRoomSocket";
 import type { ContestantLegController } from "../../utils/contestantLeg";
 import type { DisplayReportHandlers } from "../../utils/displayReports";
-import type { PhoneAnswerCardController } from "../../utils/phoneAnswerCard";
 import type { PlayerSeatController } from "../../utils/playerSeat";
 import type { ClientRoute } from "../../utils/resolveClientRoute";
-import type { SpectatorBetSlipController } from "../../utils/spectatorBetSlip";
 import * as styles from "./styles";
 
 // Every route's content is loaded on demand, without exception — that single
@@ -83,8 +81,6 @@ type RouteContentProps = {
   displayReports: DisplayReportHandlers | null;
   playerSeat: PlayerSeatController | null;
   contestantLeg: ContestantLegController | null;
-  betSlip: SpectatorBetSlipController | null;
-  answerCard: PhoneAnswerCardController | null;
 };
 
 const resolveRouteElement = ({
@@ -94,9 +90,7 @@ const resolveRouteElement = ({
   roomSocket,
   displayReports,
   playerSeat,
-  contestantLeg,
-  betSlip,
-  answerCard
+  contestantLeg
 }: RouteContentProps): JSX.Element => {
   if (route === "HOST") {
     return <HostControlPanel />;
@@ -123,12 +117,10 @@ const resolveRouteElement = ({
 
   // A guest's phone. Its seat (which face is this phone's) is its own, held
   // beside room state rather than in it, so it rides in as a prop — and so
-  // does its leg of an arcade relay, whose host view only this phone is sent,
-  // its own side bet, whose pick only this phone is told, and its own answer
-  // card while its team plays a game the phones answer.
+  // does its leg of an arcade relay, whose host view only this phone is sent.
   if (route === "PLAY") {
     return (
-      <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} betSlip={betSlip} answerCard={answerCard} />
+      <PlayerPhone seat={playerSeat} contestantLeg={contestantLeg} />
     );
   }
 

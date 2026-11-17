@@ -215,17 +215,14 @@ export type {
   EmojiCharadesSubjectOutcome,
   EmojiCharadesSubjectReveal,
   EmojiCharadesSubState,
-  GeoMinigameDisplayPin,
   GeoMinigameDisplayPrompt,
   GeoMinigameDisplayResult,
   GeoMinigameDisplayView,
   GeoMinigameHostPrompt,
   GeoMinigameHostView,
   GeoMinigameSubState,
-  GeoPinResult,
   GeoPromptResult,
   HostRoomStateSnapshot,
-  TriviaChoiceReveal,
   PlayerRoomStateSnapshot,
   JoustMinigameArena,
   JoustMinigameDisplayView,
@@ -451,13 +448,6 @@ export type {
   RecreateContentFile,
   RecreatePrompt
 } from "./content/recreate/index.js";
-export type {
-  GeoMinigamePlayerView,
-  MinigamePlayerView,
-  PhoneAnswerStatus,
-  PhoneAnswerTally,
-  TriviaMinigamePlayerView
-} from "./phoneAnswers/index.js";
 export {
   TRIVIA_MAX_CHOICES,
   TRIVIA_MIN_CHOICES,
@@ -526,27 +516,6 @@ export type {
   RoundDeviceModes
 } from "./contestantTurn/index.js";
 export {
-  SPECTATOR_BET_PICKS,
-  SPECTATOR_BET_REFUSAL_REASONS,
-  SPECTATOR_BET_STATUSES,
-  isSpectatorBetPick,
-  projectSpectatorBets,
-  resolveBestBettorPlayerIds,
-  resolveSpectatorBetLine,
-  resolveSpectatorBetOutcome,
-  resolveSpectatorBetWinnerIds
-} from "./spectatorBets/index.js";
-export type {
-  PlayerPlaceBetResult,
-  SpectatorBetOutcome,
-  SpectatorBetPick,
-  SpectatorBetRecord,
-  SpectatorBetRefusalReason,
-  SpectatorBets,
-  SpectatorBetStatus,
-  SpectatorBetTally
-} from "./spectatorBets/index.js";
-export {
   CLIENT_TO_SERVER_EVENTS,
   MINIGAME_API_VERSION,
   SERVER_TO_CLIENT_EVENTS,
@@ -574,10 +543,6 @@ export type {
   PlayerMinigameActionAck,
   PlayerMinigameActionPayload,
   PlayerMinigameHostViewPayload,
-  PlayerMinigamePlayerViewPayload,
-  PlayerPlaceBetAck,
-  PlayerPlaceBetPayload,
-  PlayerSpectatorBetPayload,
   PlayerReleaseAck,
   PlayerReleasePayload,
   PlayerSelfPayload,

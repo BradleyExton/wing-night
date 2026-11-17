@@ -39,9 +39,7 @@ If it is not defined in this document, it is not MVP scope.
 - All devices run on the same local Wi-Fi network (LAN-first)
 - Server holds authoritative state (in-memory only)
 - Host-driven phase progression (never auto-advance)
-- Turn-based mini-games only: ONE team per turn. Only the input may go parallel — during that
-  team's turn each of its players can answer on their own phone at the same time (a GEO pin, a
-  TRIVIA choice); the host still locks and reveals ("Answers on the phones" below)
+- Turn-based mini-games only: ONE team per turn
 - Escape hatches always available (skip, redo, manual scoring)
 
 Player phones:
@@ -63,13 +61,14 @@ Player phones:
   it. Reset Game frees every face and rotates the code, so every phone scans the TV again.
 - Claims and releases are rate-limited per phone, and the TV hears claim changes at most ten
   times a second.
-- A phone never advances a phase or moves a turn. Beyond the face it holds it changes three
-  things: a contestant's own arcade leg (AGENTS.md §3.5); on the playing team, its own answer to
-  the question in hand ("Answers on the phones" below — the host's lock scores it, never the
-  phone); and, off the playing team, a side bet that never touches a score ("Spectator bets"
-  below). Only the contestant's phone ever shows a game surface. A playing-team phone in a GEO
-  or TRIVIA turn shows an answer card — its own chart to pin, or the question's choices — never
-  the game surface itself; every other phone is a ballot, a bet or blank.
+- Phones are for the arcade relays only (FAPPY, SCHLONIC, BRAWL, JOUST): each contestant plays
+  their own leg on their own phone (AGENTS.md §3.5). A relay round plays on the phones unless
+  the host flips it to the tablet on the deck, and a leg whose contestant has no phone holding
+  their face falls to the tablet, so a team with no phones plays as it always did. Every other
+  game — GEO, TRIVIA, DRAWING and the rest — is played on the tablet alone.
+- A phone never advances a phase or moves a turn, and beyond the face it holds it changes one
+  thing: a contestant's own arcade leg. Only the contestant's phone ever shows a game surface;
+  every other phone shows a card (you're next, watch the TV, grab the tablet) or its idle bird.
 
 Host seat:
 - The host seat is locked. A socket asking for HOST gets it only from the laptop itself (a
@@ -492,80 +491,10 @@ and the screen picker); the TV stays on `/display` and follows as it always does
 
 ---
 
-### Answers on the phones (GEO, TRIVIA)
+### Phone hardening
 
-ONE team per turn, as ever. Only the input goes parallel: during that team's turn, each of its
-players whose phone holds a face answers the question in hand on that phone, at the same time,
-and the host still locks and reveals on the tablet. A night without phones plays exactly as
-before — the tablet's own path is untouched.
-
-- **Who answers**: the playing team's seated phones (claimed faces), and nobody else. A phone on
-  another team, a socket with no face, any phase but `MINIGAME_PLAY` and any game but the one in
-  play are refused. Answers are rate-limited like a contestant's input.
-- **GEO**: every seated phone drops its own pin on its own chart (the GEO chart at phone scale;
-  with no route to the map tiles it still takes the tap on its dark ground and graticule, and
-  says so). The tablet's pin still counts as one more pin. The host's "Lock it in" locks the
-  photo — it can lock on phone pins alone — and the team scores its BEST pin: the most points,
-  then the shorter distance, then the tablet's pin before the phones' in roster order. After the
-  lock a phone's pin is refused. The TV plots every pin at the reveal, each named, the best one
-  starred.
-- **TRIVIA**: a question with choices is answered on the phones (ONE choice on screen, a tap
-  each, changeable until the lock). The host's "Lock answers" scores it:
-  `points = round(1 × correct / seated)` — one question's worth (the point a CORRECT banks),
-  scaled by the share of the team's phones that chose the answer, rounded half up. `seated` is
-  the team's claimed phones that are awake at the lock, plus any asleep one that chose before it
-  slept: an awake phone that never answered counts against the share, a sleeping one that never
-  answered does not. **With one point a question this is a majority vote**: half the counted
-  phones right bank the point, fewer bank nothing — there is no partial credit. Partial credit
-  needs a per-question value above one (BACKLOG.md); that is Brad's call after a table test.
-  "Lock answers" waits for at least one phone's answer (like GEO's lock, which waits for a pin).
-  The turn's cap still clips the total. CORRECT / INCORRECT stay on every question as the spoken
-  verdict and the escape hatch — a question without choices, a team with no phones, nobody's
-  phone answering, or a host who would rather judge it aloud. "Next question" moves on from a
-  reveal.
-  The TV shows the spread (a bar per choice, the answer marked ✓ "The answer") and the result.
-- **Secret until the lock**: before the host locks a question the TV and the room hear only how
-  many are in ("2 of 3 in"), the tablet the same count (never who or what — it is in the team's
-  hands), and each phone only its own answer, over its own room. The spread, every pin and every name are
-  the reveal. An answer belongs to the guest who gave it: a face let go while the question is
-  open loses its answer, and the next guest to sit in it never sees one.
-- **Undo**: an answer is play, not a ruling — it never becomes the host's undo point. The host's
-  lock is, and undoing it reopens the question with every answer still in — except those of
-  guests who have let their faces go since, which leave with them.
 - **A phone cannot take the party down**: every phone message is shape-checked (an unknown game
   is malformed), and a fault handling one is logged and refused, never thrown.
-
-### Spectator bets (side game)
-
-The watchers' job. Before each team's turn, every guest whose phone holds a face and who is NOT
-on the team about to play calls OVER or UNDER on that turn's score. It is a side game: a bet
-never touches `totalScore`, the pending round points or any team's standing.
-
-- **The line** is one visible rule for every game: `floor(max / 2) + 0.5`, where `max` is the
-  turn's minigame points cap (`defaultMax`, or `finalRoundMax` on the last round) — 7.5 on a cap
-  of 15, 10.5 on 20. A whole-number score can never land on a .5 line, so every turn settles and
-  somebody called it. A turn with no cap (or a cap of 0) has no bets.
-- **The window** opens when the turn's briefing does (`MINIGAME_INTRO`) and closes when play
-  starts (`MINIGAME_PLAY`), so a night's window is the briefing and the wings and a Quick Play
-  window the briefing alone. One pick per player, changeable until it closes; the playing team
-  cannot bet. No host action is needed.
-- **Settlement** is on the turn's results: the turn's points are what the team adds to its
-  pending minigame points during the turn (not the round's pending total). An undo on the
-  results re-settles it. Leaving the results freezes it: each bettor's record (won / played)
-  takes it once. A skipped turn's bets are void and count for nobody; a push (only reachable by
-  a fractional score) is no bet. Reset Game clears every bet and every record.
-- **Nobody herds**: until the turn settles no screen shows a pick — the TV and the phones see
-  how many have bet, the host also sees who, and each phone is told its own pick alone. A pick
-  belongs to the guest who placed it, not the face: a face let go or freed while the window is
-  open loses its pick, and whoever sits in it next is never told one. Once settled, the picks
-  are the show.
-- **Screens**: the phone shows the line and two buttons (then "bet locked — watch the TV", then
-  whether it called it); the TV shows the line and the count on the briefing and the wings,
-  nothing about bets during play, the settlement (line, score, side, who called it) on the
-  turn's results, and the best bettor in one line on the final results; the tablet shows a
-  compact count while the window is open.
-- **Best bettor**: the most bets won; level on wins, the fewer bets played; still level, the
-  title is shared. Nobody who won nothing is named. No team bonus.
 
 ---
 
@@ -618,8 +547,6 @@ Testing Expectations:
 ### Mini-Game Points
 - Defined in config
 - No negative scoring
-- A phone's answer never scores by itself: the host's lock turns the answers in into points
-  ("Answers on the phones")
 - Each round's mini-game is capped: the round's own `minigameMax` when the pack sets one,
   otherwise `minigameScoring.defaultMax` (`finalRoundMax` for the last round). The TV's team
   briefing names the cap ("up to N pts"), so a pack that ramps the stakes round by round does
@@ -652,14 +579,13 @@ Testing Expectations:
 - Snapshot rehydrate behavior:
   - Clients request latest state with `client:requestState` on connect.
   - `server:stateSnapshot` emits a role-scoped envelope (`toRoleScopedSnapshotEnvelope`): the
-    full `RoomState` to the host (bet picks aside until they settle), a display-safe one to the
+    full `RoomState` to the host, a display-safe one to the
     TV, and the player allow-list to a phone (AGENTS.md §3.4).
 - Generic mini-game mutation envelope:
   - Host sends `minigame:action` payloads with `hostSecret`, `minigameId`, `minigameApiVersion`, `actionType`, and `actionPayload`.
   - Server validates host authorization, active mini-game match, and contract compatibility before dispatch.
   - A phone sends `player:minigameAction`: the same envelope without the secret, authorized by the
-    face its socket holds (a contestant's own arcade leg, or a playing-team answer — AGENTS.md
-    §3.4–3.5).
+    face its socket holds (a contestant's own arcade leg — AGENTS.md §3.5).
 - In-memory state only
 - LAN-first operation (no internet required on the night; the guest portal is pre-party only)
 

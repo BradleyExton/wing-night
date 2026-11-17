@@ -1,5 +1,5 @@
 import type { MinigameHostRendererProps } from "@wingnight/minigames-core";
-import type { TriviaChoiceReveal, TriviaPrompt } from "@wingnight/shared";
+import type { TriviaPrompt } from "@wingnight/shared";
 import { TakeoverStage, useVerdictDispatch } from "@wingnight/surface";
 
 import { ChoiceKey } from "./ChoiceKey/index.js";
@@ -8,11 +8,7 @@ import * as styles from "./styles.js";
 
 // The same card on both beats, at two heights: the takeover's body slot has a
 // definite height to fill, the intro deck's panel has not.
-const renderPromptCard = (
-  prompt: TriviaPrompt,
-  className: string,
-  reveal: TriviaChoiceReveal | null
-): JSX.Element => (
+const renderPromptCard = (prompt: TriviaPrompt, className: string): JSX.Element => (
   <div className={className}>
     <div className={styles.promptSection}>
       <p className={styles.promptLabel}>{hostTriviaSurfaceCopy.questionLabel}</p>
@@ -22,11 +18,7 @@ const renderPromptCard = (
       <p className={styles.answerLabel}>{hostTriviaSurfaceCopy.answerLabel}</p>
       <p className={styles.answerValue}>{prompt.answer}</p>
       {prompt.choices !== undefined && (
-        <ChoiceKey
-          choices={prompt.choices}
-          answer={prompt.answer}
-          choiceCounts={reveal?.promptId === prompt.id ? reveal.choiceCounts : null}
-        />
+        <ChoiceKey choices={prompt.choices} answer={prompt.answer} />
       )}
     </div>
   </div>
@@ -43,9 +35,9 @@ const renderPromptCard = (
 // resolved once by the shell — which is why this file no longer carries the
 // `resolveActiveTeamName` helper that all nine host surfaces had copied.
 //
-// A question with choices, on a team with phones, is answered on those phones at once: the host
-// locks it (and the spread goes up on the TV), then moves to the next question. CORRECT and
-// INCORRECT stay on every question as the spoken verdict and the escape hatch.
+// Every question is judged here, aloud: the team answers, the host presses CORRECT or INCORRECT.
+// A question with choices shows them on the TV for the team to pick from, and here as a key with
+// the answer ticked.
 export const HostTriviaSurface = ({
   phase,
   minigameHostView,
@@ -60,8 +52,6 @@ export const HostTriviaSurface = ({
   const currentPrompt = triviaHostView?.currentPrompt ?? null;
   const attemptsRemaining = triviaHostView?.attemptsRemaining ?? 0;
   const attemptsExhausted = attemptsRemaining <= 0;
-  const reveal = triviaHostView?.reveal ?? null;
-  const phoneAnswers = triviaHostView?.phoneAnswers ?? null;
 
   // The intro phase already has the turn's first question, so the host gets a
   // look at it before play starts; only the TV is held back to "Get ready".
@@ -74,7 +64,7 @@ export const HostTriviaSurface = ({
         <p className={styles.introDescription}>
           {hostTriviaSurfaceCopy.introDescription}
         </p>
-        {currentPrompt !== null && renderPromptCard(currentPrompt, styles.promptCard, null)}
+        {currentPrompt !== null && renderPromptCard(currentPrompt, styles.promptCard)}
       </div>
     );
   }
@@ -84,38 +74,6 @@ export const HostTriviaSurface = ({
   // Once the turn is spent the count is the turn-complete panel's job to say,
   // and "0 questions left" beside it just says it twice.
   const shouldRenderQuestionsLeft = currentPrompt !== null && !attemptsExhausted;
-
-  const verdictButtons = (
-    <>
-      {/* Positive verdict first (§4, owner decision P7). */}
-      <button
-        className={styles.correctButton}
-        type="button"
-        disabled={disableAttemptButtons}
-        onClick={(): void => {
-          dispatchVerdict("recordAttempt", { isCorrect: true });
-        }}
-      >
-        <span className={styles.verdictIcon} aria-hidden="true">
-          {hostTriviaSurfaceCopy.correctIconGlyph}
-        </span>
-        {hostTriviaSurfaceCopy.correctButtonLabel}
-      </button>
-      <button
-        className={styles.incorrectButton}
-        type="button"
-        disabled={disableAttemptButtons}
-        onClick={(): void => {
-          dispatchVerdict("recordAttempt", { isCorrect: false });
-        }}
-      >
-        <span className={styles.verdictIcon} aria-hidden="true">
-          {hostTriviaSurfaceCopy.incorrectIconGlyph}
-        </span>
-        {hostTriviaSurfaceCopy.incorrectButtonLabel}
-      </button>
-    </>
-  );
 
   const renderActions = (): JSX.Element => {
     if (attemptsExhausted) {
@@ -127,44 +85,37 @@ export const HostTriviaSurface = ({
       );
     }
 
-    // The locked question's spread is on the TV; the host moves the room on when it has landed.
-    if (reveal !== null) {
-      return (
+    return (
+      <div className={styles.actions}>
+        {/* Positive verdict first (§4, owner decision P7). */}
         <button
-          className={styles.nextButton}
+          className={styles.correctButton}
           type="button"
-          disabled={!canDispatchAction || isVerdictSettling}
+          disabled={disableAttemptButtons}
           onClick={(): void => {
-            dispatchVerdict("nextQuestion", {});
+            dispatchVerdict("recordAttempt", { isCorrect: true });
           }}
         >
-          {hostTriviaSurfaceCopy.nextQuestionLabel}
+          <span className={styles.verdictIcon} aria-hidden="true">
+            {hostTriviaSurfaceCopy.correctIconGlyph}
+          </span>
+          {hostTriviaSurfaceCopy.correctButtonLabel}
         </button>
-      );
-    }
-
-    // The phones are answering: lock them in, or judge it aloud after all.
-    if (phoneAnswers !== null) {
-      return (
-        <div className={styles.actionsWithLock} data-trivia-host-tally={`${phoneAnswers.answeredCount}/${phoneAnswers.seatedCount}`}>
-          <button
-            className={styles.lockButton}
-            type="button"
-            // Like GEO's lock: nothing to lock until a phone has chosen. CORRECT and INCORRECT
-            // beside it stay live for a question nobody's phone answers.
-            disabled={disableAttemptButtons || phoneAnswers.answeredCount === 0}
-            onClick={(): void => {
-              dispatchVerdict("lockChoices", {});
-            }}
-          >
-            {hostTriviaSurfaceCopy.lockLabel(phoneAnswers.answeredCount, phoneAnswers.seatedCount)}
-          </button>
-          {verdictButtons}
-        </div>
-      );
-    }
-
-    return <div className={styles.actions}>{verdictButtons}</div>;
+        <button
+          className={styles.incorrectButton}
+          type="button"
+          disabled={disableAttemptButtons}
+          onClick={(): void => {
+            dispatchVerdict("recordAttempt", { isCorrect: false });
+          }}
+        >
+          <span className={styles.verdictIcon} aria-hidden="true">
+            {hostTriviaSurfaceCopy.incorrectIconGlyph}
+          </span>
+          {hostTriviaSurfaceCopy.incorrectButtonLabel}
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -185,7 +136,7 @@ export const HostTriviaSurface = ({
       {currentPrompt === null ? (
         <p className={styles.statusNote}>{hostTriviaSurfaceCopy.waitingPromptLabel}</p>
       ) : (
-        renderPromptCard(currentPrompt, `${styles.promptCard} ${styles.promptCardFill}`, reveal)
+        renderPromptCard(currentPrompt, `${styles.promptCard} ${styles.promptCardFill}`)
       )}
     </TakeoverStage>
   );

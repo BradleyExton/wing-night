@@ -47,18 +47,12 @@ const Marquee = ({
 
 const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode => {
   const distance = displayGeoSurfaceCopy.distanceValue(result.distanceKm);
-  // With more than one pin in, the plaque says whose pin the team scored.
-  const bestPin = result.pins.length > 1 ? result.pins.find((pin) => pin.isBest) : undefined;
 
   return (
     <>
       <ResultPlaque
         tone={result.pointsAwarded > 0 ? "hit" : "miss"}
-        kicker={
-          bestPin === undefined
-            ? displayGeoSurfaceCopy.distanceLabel
-            : displayGeoSurfaceCopy.bestPinLabel(bestPin.name)
-        }
+        kicker={displayGeoSurfaceCopy.distanceLabel}
         title={displayGeoSurfaceCopy.distanceTitle(distance.value, distance.unit)}
         points={displayGeoSurfaceCopy.pointsValue(result.pointsAwarded)}
         pointsCaption={displayGeoSurfaceCopy.pointsLabel}
@@ -66,7 +60,7 @@ const GeoResultReadout = ({ result }: { result: GeoDisplayResult }): ReactNode =
       <div className={styles.legendRow}>
         <span className={styles.legendEntry}>
           <span className={styles.legendGuessDot} aria-hidden="true" />
-          {result.pins.length > 1 ? displayGeoSurfaceCopy.teamPinsLabel : displayGeoSurfaceCopy.guessPinLabel}
+          {displayGeoSurfaceCopy.guessPinLabel}
         </span>
         <span className={styles.legendEntry}>
           <span className={styles.legendAnswerDot} aria-hidden="true" />
@@ -160,7 +154,6 @@ export const DisplayGeoSurface = ({
               <GeoTheatreMap
                 guess={guess}
                 answer={answer}
-                pins={result?.pins}
                 offlineNote={displayGeoSurfaceCopy.offlineNote}
               />
             </Suspense>
@@ -196,22 +189,9 @@ export const DisplayGeoSurface = ({
         <div className={styles.readout}>
           {result === null
             ? activeTeamName !== null && (
-                <span
-                  className={styles.status}
-                  data-geo-phone-tally={
-                    geoDisplayView.phoneAnswers === null
-                      ? undefined
-                      : `${geoDisplayView.phoneAnswers.answeredCount}/${geoDisplayView.phoneAnswers.seatedCount}`
-                  }
-                >
+                <span className={styles.status}>
                   <span className={styles.statusDot} aria-hidden="true" />
-                  {geoDisplayView.phoneAnswers === null
-                    ? displayGeoSurfaceCopy.plottingStatus(activeTeamName)
-                    : displayGeoSurfaceCopy.phonePinsStatus(
-                        activeTeamName,
-                        geoDisplayView.phoneAnswers.answeredCount,
-                        geoDisplayView.phoneAnswers.seatedCount
-                      )}
+                  {displayGeoSurfaceCopy.plottingStatus(activeTeamName)}
                 </span>
               )
             : <GeoResultReadout result={result} />}

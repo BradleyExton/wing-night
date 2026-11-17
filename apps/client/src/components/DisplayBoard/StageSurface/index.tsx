@@ -70,7 +70,6 @@ const EatingBody = (props: StageBodyProps): JSX.Element => {
       activeTeamName={stageViewModel.activeTeamName}
       activeTeamTheme={stageViewModel.activeTeamTheme}
       liveEatingRemainingSeconds={liveEatingRemainingSeconds}
-      betReadout={stageViewModel.spectatorBetView.readout}
       totalEatingSeconds={
         stageViewModel.eatingTimerSnapshot !== null
           ? Math.round(stageViewModel.eatingTimerSnapshot.durationMs / 1000)
@@ -91,7 +90,6 @@ const MinigameIntroBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       activeTeamPlayers={stageViewModel.activeTeamPlayers}
       minigameType={stageViewModel.minigameType}
       minigamePointsMax={stageViewModel.minigamePointsMax}
-      betReadout={stageViewModel.spectatorBetView.readout}
       handset={
         stageViewModel.contestantTurn === null
           ? null
@@ -133,7 +131,6 @@ const TurnResultsBody = ({ stageViewModel }: StageBodyProps): JSX.Element => {
       justFinishedTeamTheme={stageViewModel.activeTeamTheme}
       turnTiles={stageViewModel.turnTiles}
       nextTeamName={stageViewModel.nextTurnTeamName}
-      betSettlement={stageViewModel.spectatorBetView.settlement}
     />
   );
 };
@@ -155,7 +152,6 @@ const FinalResultsBody = ({ stageViewModel, leadingTeams }: StageBodyProps): JSX
     <FinalResultsStageBody
       winnerTeamNames={leadingTeams.map((team) => team.name)}
       winnerScore={leadingTeams[0]?.totalScore ?? null}
-      bestBettor={stageViewModel.spectatorBetView.bestBettor}
       winnerTheme={
         winner === null ? null : (stageViewModel.teamThemeByTeamId.get(winner.id) ?? null)
       }

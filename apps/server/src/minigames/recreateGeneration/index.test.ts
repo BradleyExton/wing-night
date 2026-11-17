@@ -177,9 +177,7 @@ test("does nothing outside RECREATE play with a generating attempt", () => {
       attemptsRemaining: 1,
       promptCursor: 0,
       pendingPointsByTeamId: {},
-      currentPrompt: null,
-      phoneAnswers: null,
-      reveal: null
+      currentPrompt: null
     })
   );
 

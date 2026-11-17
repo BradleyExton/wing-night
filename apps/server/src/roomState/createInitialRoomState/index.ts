@@ -41,8 +41,6 @@ export const createInitialRoomState = (): RoomState => {
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null,
-    spectatorBets: null,
-    betTallyByPlayerId: {}
+    contestantTurn: null
   };
 };

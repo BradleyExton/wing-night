@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import test, { before } from "node:test";
-import type { MinigamePlayerView, RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
+import type { RoleScopedStateSnapshotEnvelope } from "@wingnight/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { RoomStateProvider } from "../../context/RoomStateContext";
 import type { ContestantLegController } from "../../utils/contestantLeg";
-import type { PhoneAnswerCardController } from "../../utils/phoneAnswerCard";
 import type { PlayerSeatController, PlayerSeatState } from "../../utils/playerSeat";
 import { PlayerPhone } from "./index";
 import { warmMinigameRenderers } from "../../testSupport/warmMinigameRenderers";
@@ -30,8 +29,7 @@ const ENVELOPE: RoleScopedStateSnapshotEnvelope = {
     activeRoundTeamId: null,
     activeTurnTeamId: null,
     claimedPlayerIds: ["player-1"],
-    contestantTurn: null,
-    spectatorBets: null
+    contestantTurn: null
   }
 } as RoleScopedStateSnapshotEnvelope;
 
@@ -148,64 +146,8 @@ test("does tell the next teammate they are next and never draw the game on their
   assert.doesNotMatch(html, /data-contestant-game/);
 });
 
-// Spice Girls (Rob) are briefed; Brad sits on Molten Metal and watches with his phone.
-const BETS_OPEN_ENVELOPE = {
-  clientRole: "PLAYER",
-  roomState: {
-    ...ENVELOPE.roomState,
-    phase: "MINIGAME_INTRO",
-    teams: [
-      { id: "team-1", name: "Spice Girls", playerIds: ["player-2"], totalScore: 0 },
-      { id: "team-2", name: "Molten Metal", playerIds: ["player-1"], totalScore: 0 }
-    ],
-    activeRoundTeamId: "team-1",
-    claimedPlayerIds: ["player-1", "player-2"],
-    spectatorBets: {
-      turnKey: "1:0",
-      teamId: "team-1",
-      line: 7.5,
-      baselinePoints: 0,
-      status: "open",
-      betsByPlayerId: {},
-      bettorPlayerIds: [],
-      betCount: 0,
-      turnPoints: null,
-      outcome: null
-    }
-  }
-} as RoleScopedStateSnapshotEnvelope;
-
-test("does give a watcher off the playing team the bet card when the window is open", () => {
-  const html = render(seatIn({ status: "seated", playerId: "player-1", confirmed: true }), BETS_OPEN_ENVELOPE);
-
-  assert.match(html, /data-spectator-bet="open"/);
-  assert.match(html, /Side bet · Spice Girls/);
-  assert.doesNotMatch(html, /data-player-idle/);
-});
-
-test("does keep the playing team's phone off the bet card when its team is up", () => {
-  const html = render(seatIn({ status: "seated", playerId: "player-2", confirmed: true }), BETS_OPEN_ENVELOPE);
-
-  assert.doesNotMatch(html, /data-spectator-bet/);
-  assert.match(html, /data-player-idle="player-2"/);
-});
-
-test("does keep an arcade team's phones on their own turn cards when the other teams are betting", () => {
-  const envelope = {
-    clientRole: "PLAYER",
-    roomState: {
-      ...PHONES_TURN_ENVELOPE.roomState,
-      spectatorBets: { ...BETS_OPEN_ENVELOPE.roomState.spectatorBets, status: "closed" }
-    }
-  } as RoleScopedStateSnapshotEnvelope;
-  const html = render(seatIn({ status: "seated", playerId: "player-1", confirmed: true }), envelope, holdingNoView);
-
-  assert.match(html, /data-contestant-phone="next"/);
-  assert.doesNotMatch(html, /data-spectator-bet/);
-});
-
-// Spice Girls' TRIVIA turn: Rob and Brad both on the team, Brad's phone holding a choice card.
-const ANSWERS_TURN_ENVELOPE = {
+// Spice Girls' TRIVIA turn: Rob and Brad both on the team, both phones seated.
+const TRIVIA_TURN_ENVELOPE = {
   clientRole: "PLAYER",
   roomState: {
     ...ENVELOPE.roomState,
@@ -217,49 +159,8 @@ const ANSWERS_TURN_ENVELOPE = {
   }
 } as RoleScopedStateSnapshotEnvelope;
 
-const answerCardHolding = (view: MinigamePlayerView | null): PhoneAnswerCardController => ({
-  getView: () => view,
-  subscribe: () => () => undefined,
-  answer: () => undefined,
-  dispose: () => undefined
-});
+test("does keep the idle card when its team plays a game the tablet answers", () => {
+  const html = render(seatIn({ status: "seated", playerId: "player-1", confirmed: true }), TRIVIA_TURN_ENVELOPE);
 
-const TRIVIA_CARD: MinigamePlayerView = {
-  minigame: "TRIVIA",
-  promptId: "mc-1",
-  question: "Which pepper is hottest?",
-  choices: ["Jalapeño", "Carolina Reaper"],
-  status: "open",
-  choiceIndex: null,
-  isCorrect: null
-};
-
-test("does show the phone's own answer card when its team's turn is being played", () => {
-  const html = renderToStaticMarkup(
-    <RoomStateProvider value={ANSWERS_TURN_ENVELOPE}>
-      <PlayerPhone
-        seat={seatIn({ status: "seated", playerId: "player-1", confirmed: true })}
-        contestantLeg={null}
-        answerCard={answerCardHolding(TRIVIA_CARD)}
-      />
-    </RoomStateProvider>
-  );
-
-  assert.match(html, /data-phone-answer-card="TRIVIA"/);
-  assert.match(html, /Carolina Reaper/);
-});
-
-test("does keep the idle card when the phone has no answer card", () => {
-  const html = renderToStaticMarkup(
-    <RoomStateProvider value={ANSWERS_TURN_ENVELOPE}>
-      <PlayerPhone
-        seat={seatIn({ status: "seated", playerId: "player-1", confirmed: true })}
-        contestantLeg={null}
-        answerCard={answerCardHolding(null)}
-      />
-    </RoomStateProvider>
-  );
-
-  assert.doesNotMatch(html, /data-phone-answer-card/);
   assert.match(html, /data-player-idle="player-1"/);
 });

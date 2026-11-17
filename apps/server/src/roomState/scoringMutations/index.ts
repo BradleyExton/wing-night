@@ -24,7 +24,6 @@ import {
   resolveContestantLegForAction
 } from "../contestantTurnState/index.js";
 import { defineRoomMutation } from "../defineRoomMutation/index.js";
-import { releaseDepartedAnswers } from "../phoneAnswerMutations/index.js";
 import {
   arePointsByTeamIdEqual,
   captureScoringMutationUndoState,
@@ -333,9 +332,6 @@ export const redoLastScoringMutation = defineRoomMutation({
 
     restoreScoringMutationUndoState(roomState, scoringMutationUndoSnapshot);
     clearScoringMutationUndoState(roomState);
-    // A reopened question gets back every answer that was in — minus those whose phones have let
-    // their faces go since, which leave with their holders.
-    releaseDepartedAnswers(roomState);
 
     return true;
   }

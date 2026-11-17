@@ -1,8 +1,7 @@
 import { takeoverLabel } from "@wingnight/surface";
 
 // The choices under the host's answer: the key, with the right one ticked. The host knows the
-// answer already, so this is no disclosure; it is the same row the TV and the phones read, with
-// the spread's counts beside each once the question is locked.
+// answer already, so this is no disclosure; it is the same lettered row the TV shows the room.
 export const root = "mt-4 flex flex-col gap-2";
 
 export const label = takeoverLabel;
@@ -21,5 +20,3 @@ export const letter = "flex h-7 w-7 flex-none items-center justify-center rounde
 export const text = "min-w-0 flex-1 truncate";
 
 export const mark = "flex-none text-success";
-
-export const count = "flex-none font-score text-lg font-extrabold tabular-nums text-text";

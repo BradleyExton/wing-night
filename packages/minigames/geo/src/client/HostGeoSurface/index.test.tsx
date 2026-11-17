@@ -30,7 +30,6 @@ const hostView = (
     answerLng: 2.294481
   },
   lastResult: null,
-  phoneAnswers: null,
   ...overrides
 });
 
@@ -112,8 +111,7 @@ test("does hand the dock gutter to the layout rather than typing its own", () =>
         guessLat: 40,
         guessLng: -74,
         distanceKm: 5837,
-        pointsAwarded: 3,
-        pins: []
+        pointsAwarded: 3
       }
     })
   );
@@ -178,19 +176,14 @@ test("does keep the takeover when there is no photo to guess at", () => {
   assert.doesNotMatch(html, /Lock it in/);
 });
 
-test("does enable the lock when only a phone has pinned and say how many phones are in", () => {
-  const html = renderSurface(
-    hostView({ phoneAnswers: { answeredCount: 1, seatedCount: 3 } })
-  );
+test("does enable the lock when the tablet has a pin down", () => {
+  const html = renderSurface(hostView({ currentGuess: { lat: 48.8, lng: 2.3 } }));
 
-  assert.match(html, /1 of 3 phones pinned/);
   assert.doesNotMatch(html, /<button[^>]*disabled=""[^>]*>Lock it in/);
 });
 
-test("does keep the lock shut when no pin is in anywhere", () => {
-  const html = renderSurface(
-    hostView({ phoneAnswers: { answeredCount: 0, seatedCount: 2 } })
-  );
+test("does keep the lock shut when the tablet has no pin down", () => {
+  const html = renderSurface(hostView());
 
   assert.match(html, /<button[^>]*disabled=""[^>]*>Lock it in/);
 });

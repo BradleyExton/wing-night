@@ -15,8 +15,6 @@ import type {
 } from "../joust/types.js";
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import { isContestantPhoneLeg, type ContestantTurn, type RoundDeviceModes } from "../contestantTurn/index.js";
-import type { PhoneAnswerTally } from "../phoneAnswers/index.js";
-import { projectSpectatorBets, type SpectatorBets, type SpectatorBetTally } from "../spectatorBets/index.js";
 import type { BrawlInput, BrawlOutcome } from "../brawl/types.js";
 import type {
   MountClimbRules,
@@ -65,55 +63,21 @@ type MinigameDisplayViewBase = MinigameViewMetadata & {
   pendingPointsByTeamId: Record<string, number>;
 };
 
-// A multiple-choice question the host has locked: how the playing team's phones split across the
-// choices, which one was right and what it scored (`TRIVIA_POINTS_PER_QUESTION` x the share of the
-// team's seated phones that chose it, rounded). Public once it exists — it is the reveal — so the
-// TV draws the spread from it. The counts are the seated phones' only; never who chose what.
-export type TriviaChoiceReveal = {
-  promptId: string;
-  choices: string[];
-  choiceCounts: number[];
-  correctIndex: number;
-  correctCount: number;
-  answeredCount: number;
-  seatedCount: number;
-  pointsAwarded: number;
-};
-
 export type TriviaMinigameHostView = MinigameHostViewBase & {
   minigame: "TRIVIA";
   attemptsRemaining: number;
   promptCursor: number;
   currentPrompt: TriviaPrompt | null;
-  // How many of the playing team's phones have chosen, on a question with choices, before it is
-  // locked. Never who or what: the tablet is in the team's hands.
-  phoneAnswers: PhoneAnswerTally | null;
-  reveal: TriviaChoiceReveal | null;
 };
 
 export type GeoMinigameSubState = "guessing" | "submitted";
 
-// One pin measured at the lock: the tablet's (`playerId` and `name` null) or a playing-team phone's.
-// The team scores its BEST pin — the most points, the shorter distance on a tie.
-export type GeoPinResult = {
-  playerId: string | null;
-  name: string | null;
-  lat: number;
-  lng: number;
-  distanceKm: number;
-  pointsAwarded: number;
-  isBest: boolean;
-};
-
-// `guessLat`/`guessLng`/`distanceKm`/`pointsAwarded` are the best pin's; `pins` is every pin that
-// was in when the host locked the photo, the best among them.
 export type GeoPromptResult = {
   promptId: string;
   guessLat: number;
   guessLng: number;
   distanceKm: number;
   pointsAwarded: number;
-  pins: GeoPinResult[];
 };
 
 export type GeoMinigameHostPrompt = Pick<
@@ -137,13 +101,7 @@ export type GeoMinigameHostView = MinigameHostViewBase & {
   currentGuess: GeoCoordinates | null;
   currentPrompt: GeoMinigameHostPrompt | null;
   lastResult: GeoPromptResult | null;
-  // How many of the playing team's phones have a pin down, while the photo is open. Never where:
-  // the tablet is in the team's hands, and a pin on it is a pin every teammate can copy.
-  phoneAnswers: PhoneAnswerTally | null;
 };
-
-// A pin as the TV plots it at the reveal: named (null for the tablet's), never by id.
-export type GeoMinigameDisplayPin = Omit<GeoPinResult, "playerId">;
 
 export type GeoMinigameDisplayResult = {
   guessLat: number;
@@ -152,7 +110,6 @@ export type GeoMinigameDisplayResult = {
   answerLng: number;
   distanceKm: number;
   pointsAwarded: number;
-  pins: GeoMinigameDisplayPin[];
 };
 
 // `currentGuess` is the team's own in-progress pin, projected so the TV can
@@ -166,8 +123,6 @@ export type GeoMinigameDisplayView = MinigameDisplayViewBase & {
   promptsCompletedThisTurn: number;
   currentPrompt: GeoMinigameDisplayPrompt | null;
   currentGuess: GeoCoordinates | null;
-  // How many of the playing team's phones have a pin down — a count, never a coordinate or a name.
-  phoneAnswers: PhoneAnswerTally | null;
 } & (
     | { status: "guessing" }
     | { status: "submitted"; result: GeoMinigameDisplayResult }
@@ -780,12 +735,9 @@ export type TriviaMinigameDisplayView = MinigameDisplayViewBase & {
   // host-paced, so the TV has no clock to tell the room the turn is over; the
   // count reaching zero is the only signal it gets.
   attemptsRemaining: number;
-  // The choices are public — the room reads them off the TV — but which one is right is not, until
-  // the host locks the question and `reveal` arrives.
+  // The choices are public — the room reads them off the TV and answers aloud — but which one is
+  // right is not: the host judges it on the tablet.
   currentPrompt: (Pick<TriviaPrompt, "id" | "question"> & { choices: string[] | null }) | null;
-  // How many of the playing team's phones have chosen — a count, never a choice or a name.
-  phoneAnswers: PhoneAnswerTally | null;
-  reveal: TriviaChoiceReveal | null;
 };
 
 // Answer-safe: the display never receives the current prompt; prompt text
@@ -964,14 +916,6 @@ export type RoomState = {
   // The arcade turn in hand — its locked device mode, whose leg it is and which device writes
   // it — from the turn's briefing to its results. Null outside one, and for every other game.
   contestantTurn: ContestantTurn | null;
-  // The watchers' side bet on the turn in hand (`SpectatorBets`): opened by the turn's briefing,
-  // closed by its play, settled on its results, gone once the results are left. Null outside a
-  // turn and on a turn whose game has no points cap. Every role sees it through
-  // `projectSpectatorBets`: no pick reaches any screen until the turn settles.
-  spectatorBets: SpectatorBets | null;
-  // Each bettor's side record for the night. A side game's tally: it never reaches `totalScore`
-  // or any team's points. FINAL_RESULTS names the best bettor from it.
-  betTallyByPlayerId: SpectatorBetTally;
 };
 
 type DisplaySafeRoomStateKeys =
@@ -1004,9 +948,7 @@ type DisplaySafeRoomStateKeys =
   | "canAdvancePhase"
   | "claimedPlayerIds"
   | "roundDeviceModes"
-  | "contestantTurn"
-  | "spectatorBets"
-  | "betTallyByPlayerId";
+  | "contestantTurn";
 
 export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "phase",
@@ -1038,9 +980,7 @@ export const DISPLAY_SAFE_ROOM_STATE_KEYS = [
   "canAdvancePhase",
   "claimedPlayerIds",
   "roundDeviceModes",
-  "contestantTurn",
-  "spectatorBets",
-  "betTallyByPlayerId"
+  "contestantTurn"
 ] as const satisfies readonly DisplaySafeRoomStateKeys[];
 
 type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
@@ -1055,8 +995,6 @@ type DisplaySafeRoomStateKey = (typeof DISPLAY_SAFE_ROOM_STATE_KEYS)[number];
 // `contestantTurn` is the one game field here: whose leg it is and which device
 // writes it, so a phone knows to play, to get ready, or to watch the TV. It is
 // ids, a leg number and a mode — nothing a turn could cheat with.
-// `spectatorBets` is the bet card's: the line, the window and how many are in — never who, and
-// never a pick until the turn settles. A phone's own pick comes over its own room.
 // Anything only one player may see goes over that player's own channel
 // (`player:self`, and the contestant's `player:minigameHostView`), never into
 // this shared snapshot.
@@ -1071,8 +1009,7 @@ export const PLAYER_SAFE_ROOM_STATE_KEYS = [
   "activeRoundTeamId",
   "activeTurnTeamId",
   "claimedPlayerIds",
-  "contestantTurn",
-  "spectatorBets"
+  "contestantTurn"
 ] as const satisfies readonly (keyof RoomState)[];
 
 type PlayerSafeRoomStateKey = (typeof PLAYER_SAFE_ROOM_STATE_KEYS)[number];
@@ -1139,17 +1076,13 @@ export const toDisplayRoomStateSnapshot = (
     claimedPlayerIds: roomState.claimedPlayerIds,
     // The TV's briefing says "grab your phone" or "grab the tablet" from these.
     roundDeviceModes: roomState.roundDeviceModes,
-    contestantTurn: roomState.contestantTurn,
-    // The count and the line while the window is open; the picks only once the turn settles.
-    spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: false }),
-    betTallyByPlayerId: roomState.betTallyByPlayerId
+    contestantTurn: roomState.contestantTurn
   } satisfies DisplayRoomStateSnapshot;
 
   return displaySnapshot;
 };
 
-// The host sees everything but two things. A pick before its turn settles: who has bet, not
-// which way. And the display view, which is the TV's copy of the turn the tablet already holds as
+// The host sees everything but the display view, which is the TV's copy of the turn the tablet already holds as
 // `minigameHostView` — shipping both sent a DRAWING board twice in every snapshot, so the tablet
 // paid twice the bytes the TV did. The one exception is a contestant's phone leg, where the tablet
 // mirrors the TV's picture instead of running the game (ContestantPhoneMonitor). Null rather than
@@ -1157,11 +1090,7 @@ export const toDisplayRoomStateSnapshot = (
 export const toHostRoomStateSnapshot = (roomState: RoomState): HostRoomStateSnapshot => {
   return {
     ...roomState,
-    minigameDisplayView: isContestantPhoneLeg(roomState.contestantTurn) ? roomState.minigameDisplayView : null,
-    spectatorBets:
-      roomState.spectatorBets === null
-        ? null
-        : projectSpectatorBets(roomState.spectatorBets, { showBettors: true })
+    minigameDisplayView: isContestantPhoneLeg(roomState.contestantTurn) ? roomState.minigameDisplayView : null
   };
 };
 
@@ -1182,8 +1111,7 @@ export const toPlayerRoomStateSnapshot = (
     activeRoundTeamId: roomState.activeRoundTeamId,
     activeTurnTeamId: roomState.activeTurnTeamId,
     claimedPlayerIds: roomState.claimedPlayerIds,
-    contestantTurn: roomState.contestantTurn,
-    spectatorBets: projectSpectatorBets(roomState.spectatorBets, { showBettors: false })
+    contestantTurn: roomState.contestantTurn
   } satisfies PlayerRoomStateSnapshot;
 
   return playerSnapshot;

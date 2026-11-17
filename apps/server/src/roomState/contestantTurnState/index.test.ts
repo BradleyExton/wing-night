@@ -62,13 +62,16 @@ test("does keep a turn on the mode it opened with when the host changes it mid-t
   assert.equal(turn().deviceMode, "tablet");
 });
 
-test("does play a round on the tablet when the host never set it", () => {
+test("does play a round on the phones when the host never set it, and the tablet until a phone is seated", () => {
   advanceUntil(Phase.MINIGAME_PLAY, 1);
-  seatPhone("player-1");
 
-  assert.equal(turn().deviceMode, "tablet");
+  assert.equal(turn().deviceMode, "phones");
   assert.equal(turn().contestantPlayerId, "player-1");
   assert.equal(turn().controller, "tablet");
+
+  seatPhone("player-1");
+
+  assert.equal(turn().controller, "phone");
 });
 
 test("does refuse a device mode for a round whose game has no phone turns", () => {

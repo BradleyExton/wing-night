@@ -117,8 +117,6 @@ export const resolveSandboxHostRoomState = (
     claimedPlayerIds: [],
     connectedPlayerIds: [],
     roundDeviceModes: {},
-    contestantTurn: null,
-    spectatorBets: null,
-    betTallyByPlayerId: {}
+    contestantTurn: null
   };
 };

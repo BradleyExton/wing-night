@@ -10,7 +10,6 @@ import {
 } from "@wingnight/shared";
 
 import { resolveTeamTheme, resolveTeamThemeById } from "../../../../utils/resolveTeamTheme";
-import { resolveSpectatorBetView, type SpectatorBetView } from "../resolveSpectatorBetView";
 
 export type StageRenderMode =
   | "setup"
@@ -74,8 +73,6 @@ export type StageViewModel = {
   nextTurnTeamName: string | null;
   roundResultsRows: RoundResultsRow[];
   roundResultsTopTeamId: string | null;
-  // The watchers' side bets, as the TV may say them this phase (`resolveSpectatorBetView`).
-  spectatorBetView: SpectatorBetView;
   hasRoomState: boolean;
 };
 
@@ -237,7 +234,6 @@ export const resolveStageViewModel = (
     nextTurnTeamName,
     roundResultsRows,
     roundResultsTopTeamId,
-    spectatorBetView: resolveSpectatorBetView(roomState),
     hasRoomState: roomState !== null
   };
 };

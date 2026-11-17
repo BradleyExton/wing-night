@@ -398,53 +398,26 @@ minigame packages ship. Neither lab may create a package under `packages/minigam
 
 ---
 
-## Spectator bets — follow-ups
+## GEO and TRIVIA on the tablet — follow-ups
 
-Shipped: the watchers' OVER/UNDER on each turn (SPEC.md "Spectator bets", DESIGN.md §2.2F).
-Notes from the build, none of them blocking:
+Phone answers (GEO pins, TRIVIA choices from the playing team's phones) and the watchers' side bets
+were removed 2026-11-16: on the night, phones play the arcade relays and nothing else. What the
+answers work left behind that still matters on the tablet:
 
-- **Table-tune the line.** `floor(max / 2) + 0.5` is one rule for every game, but the games do not
-  score evenly (the 2026-10-03 point audit): TRIVIA rarely clears half its cap and an arcade relay
-  often does. If one side wins most nights, the fix is a per-game line in the game's definition —
-  still one visible number per turn — not a hidden modifier.
-- **A bettor's own record on the phone.** `betTallyByPlayerId` is on the TV's snapshot only. A
-  phone could be told its own record over its `player:<id>` room, the way its pick is.
-- **Sudden death.** A tie at FINAL_RESULTS is decided by sudden death trivia off the system; the
-  best bettor is named regardless. If sudden death ever becomes a turn, it gets a window like any
-  other.
-- **The briefing and the wings have no marquee**, so the readout borrows the Neon Heat Line's
-  readout type rather than sitting in its slot (DESIGN.md §2.2F). If those screens ever wear the
-  marquee, the readout moves into its `readout` slot as plain text.
-
-## Answers on the phones — follow-ups
-
-Shipped: during the playing team's turn every seated phone on it answers at once — GEO pins, TRIVIA
-choices — and the host locks and reveals (SPEC.md "Answers on the phones", DESIGN.md §2.2G).
-Notes from the build, none of them blocking:
-
-- **TRIVIA's share rule is a majority vote — Brad may want partial credit.** One question is worth
-  one point, so `round(correct / seated)` gives the point when at least half the counted phones
-  (awake, or asleep with an answer in) chose right and nothing otherwise: 2 of 3 right scores the
-  same as 3 of 3, 1 of 3 the same as 0 of 3. Partial credit needs a per-question value above one —
-  e.g. `pointsPerQuestion: 3` in the trivia rules, so 2 of 3 right banks 2 — still one visible
-  rule, not a hidden modifier, and the cap per turn would want re-checking against it.
 - **More choice questions in the night pack.** The sample pack carries choices on eight of its
-  twenty; the night pack has no `trivia.json` of its own yet.
-- **GEO has no offline basemap.** With no route to OSM the phones (and the tablet) tap a dark chart
-  with a graticule and a note; a coarse coastline layer bundled with the app would make that chart
+  twenty (the TV shows them as lettered tiles; the team calls one out); the night pack has no
+  `trivia.json` of its own yet.
+- **GEO has no offline basemap.** With no route to OSM the tablet taps a dark chart with a
+  graticule and a note; a coarse coastline layer bundled with the app would make that chart
   readable at a party with no internet. It would be the second tile source DESIGN.md §2.4 refused —
   only as an offline fallback.
-- **The tablet never sees the phones' pins before the lock**, on purpose (it is in the team's
-  hands). If the host wants to referee a pin that landed in the sea by mistake, the escape hatch is
-  undo after the reveal, not a peek.
 
 ## Online guest portal and party phones — follow-ups
 
 Shipped: the pre-party guest portal on wingnight.tv (sign-in links, avatar studio, team pick,
 `/admin`), `pnpm pack:pull` into the night pack, the locked host seat, and the party phones —
-PLAYER seats by the TV's QR, arcade legs on the contestant's phone, bets and answers (SPEC.md
-"Before the party" and "Player phones", DESIGN.md §2.2H–2.2I). Bets and answers keep their own
-lists above; nothing here repeats them.
+PLAYER seats by the TV's QR and arcade legs on the contestant's phone, on by default for every
+relay round (SPEC.md "Before the party" and "Player phones", DESIGN.md §2.2H–2.2I).
 
 - **Real-device checks.** Only Chromium has run any of it. Still to try: an iPhone's Safari
   through the avatar studio's photo path (HEIC and EXIF rotation are fixed by the browser's
@@ -471,16 +444,9 @@ lists above; nothing here repeats them.
 - **The laptop's host QR stays up all night.** It carries the host control token and the laptop
   is often in view, so anyone who can see the laptop can scan it and take the seat. A hide or
   "re-show for 30 s" control on the root page would close it.
-- **Quick Play's first team can never be on phones.** The session starts by clearing the device
-  modes and the briefing locks a turn's mode at once, so the first team is always on the tablet;
-  a mode set on the briefing lands from the second team.
-- **Bets: the line leans UNDER on even caps, and the best bettor can be shared.** On an even cap
-  `floor(max / 2) + 0.5` leaves more whole scores under the line than over (on 20: 0–10 under,
-  11–20 over). A tie on wins and plays shares the title. Both are fine for a side game; revisit
-  with "Table-tune the line" above.
-- **TRIVIA on the phones** — majority vote, partial credit and the night pack's missing
-  `trivia.json` (choices come from the sample pack's eight) are under "Answers on the phones"
-  above.
+- **Quick Play's first team plays on the phones** now that phones are the default: the session
+  clears the device modes, which reads as phones, and a team with no seated phones still falls
+  to the tablet. A host who wants the tablet for the first team flips it before Start.
 - **Wardrobe** (`docs/bird-wardrobe-build-plan.md`). Gate 1, the art pass and runs 2–5 are
   done (run 5's polish audit 2026-10-25) and deployed to wingnight.tv 2026-10-25 (Worker version
   9b2d23cd). Gate 2's feel test and open calls are done 2026-10-30 (all kept as shipped). Still
@@ -768,11 +734,9 @@ surface language that DESIGN.md should name with real tokens, or the dusk-desert
 JOUST's arena alone and the others should stop borrowing it. Until then each migration substitutes
 tokens as it goes. **Answered at T6.2**: they were copying JOUST's skin. `DESIGN.md` §2.5 now states the direction — the brown goes and the other seven marquees follow DRAWING onto house tokens. Built 2026-09-24: the brown is gone from every chrome string and lint gates the minigame trees.
 
-### TRIVIA has no verdict on the TV — half shipped
+### TRIVIA has no verdict on the TV
 Surfaced by the 2026-09-24 visual cohesion pass. Every other game shows the room a `<ResultPlaque>`
-(DESIGN.md §2.2E) when something is decided. **A multiple-choice question now has one**: the
-phones answer it and the host's lock projects the spread (`TriviaChoiceReveal`) — bars per choice,
-the answer marked, and a plaque with the points (DESIGN.md §2.12, "Answers on the phones"). A
-question judged aloud (no choices, a team with no phones, or the host's CORRECT/INCORRECT on a
-choice question) still just moves on: giving it "✓ Correct — Mexico" is the same projection change
-for `recordAttempt`'s ruling, with its own answer-safety test.
+(DESIGN.md §2.2E) when something is decided. TRIVIA does not: the host's CORRECT/INCORRECT just
+moves on (the phones' choice spread that gave multiple-choice questions a reveal was removed with
+phone answers, 2026-11-16). Giving the ruling "✓ Correct — Mexico" is a projection change for
+`recordAttempt`, with its own answer-safety test.

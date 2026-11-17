@@ -1,4 +1,3 @@
-import type { TriviaChoiceReveal } from "@wingnight/shared";
 import type {
   MinigameRuntimePlugin,
   MinigameRuntimeReductionInput,
@@ -7,36 +6,18 @@ import type {
 import { resolveSeededPromptCursor } from "@wingnight/minigames-core";
 
 import { resolveTriviaContent, triviaContentAdapter } from "./content/index.js";
-import {
-  isChooseAnswerPayload,
-  isRecordAttemptPayload,
-  isTriviaRuntimeState
-} from "./guards/index.js";
+import { isRecordAttemptPayload, isTriviaRuntimeState } from "./guards/index.js";
 import { isTriviaRules, resolveTriviaRules } from "./rules/index.js";
 import {
-  TRIVIA_CHOOSE_ANSWER_ACTION,
-  TRIVIA_LOCK_CHOICES_ACTION,
-  TRIVIA_NEXT_QUESTION_ACTION,
   TRIVIA_POINTS_PER_QUESTION,
   type TriviaMinigameState,
   type TriviaRuntimeState
 } from "./types/index.js";
 import {
-  isChoiceQuestionOpen,
-  resolveCountedChoosers,
   resolveAttemptsRemaining,
-  resolveCurrentTriviaPrompt,
   toTriviaDisplayView,
-  toTriviaHostView,
-  toTriviaPlayerView
+  toTriviaHostView
 } from "./views/index.js";
-
-export {
-  TRIVIA_CHOOSE_ANSWER_ACTION,
-  TRIVIA_LOCK_CHOICES_ACTION,
-  TRIVIA_NEXT_QUESTION_ACTION,
-  TRIVIA_POINTS_PER_QUESTION
-};
 
 const clonePendingPoints = (
   pendingPointsByTeamId: Record<string, number>
@@ -56,20 +37,10 @@ const createTriviaStateWithPendingPoints = (
   };
 };
 
-// The phones' share of the team, scaled into one question's worth (TRIVIA_POINTS_PER_QUESTION's
-// comment has the formula): half the team right, rounded up, banks the point.
-export const resolveTriviaChoicePoints = (correctCount: number, seatedCount: number): number => {
-  if (seatedCount === 0 || correctCount === 0) {
-    return 0;
-  }
-
-  return Math.round((TRIVIA_POINTS_PER_QUESTION * correctCount) / seatedCount);
-};
-
 // A question spent: one more of the turn's attempts used, and the next question in front of the
 // room unless this one ended the turn. The verdict that ends a turn leaves the question it scored
 // on screen. Advancing the cursor here would push the next question onto the TV and its answer
-// onto the host tablet while nobody can answer it — and because each team is seated its own slice
+// onto the host tablet while nobody can answer it — and because each team is seeded its own slice
 // of the bank, that next question is the next team's first one, burnt before their turn starts.
 const spendQuestion = (
   state: TriviaRuntimeState,
@@ -89,9 +60,7 @@ const spendQuestion = (
       pendingPointsByTeamId
     },
     attemptsUsedThisTurn: Math.min(state.questionsPerTurnLimit, state.attemptsUsedThisTurn + 1),
-    questionsPerTurnLimit: state.questionsPerTurnLimit,
-    choicesByPlayerId: {},
-    reveal: null
+    questionsPerTurnLimit: state.questionsPerTurnLimit
   };
 };
 
@@ -108,16 +77,14 @@ const addPoints = (
   return next;
 };
 
-// The host's spoken verdict, CORRECT or INCORRECT: today's road for every question, and the escape
-// hatch on a multiple-choice one (nobody's phone answered, or the host would rather judge it). Not
-// on a question already locked — its phones already scored it.
+// The host's spoken verdict, CORRECT or INCORRECT, on every question — with choices or without.
 const reduceRecordAttempt = (
   input: MinigameRuntimeReductionInput,
   state: TriviaRuntimeState,
   teamId: string,
   promptCount: number
 ): MinigameRuntimeReductionResult => {
-  if (!isRecordAttemptPayload(input.envelope.actionPayload) || state.reveal !== null) {
+  if (!isRecordAttemptPayload(input.envelope.actionPayload)) {
     return { state: input.state, didMutate: false };
   }
 
@@ -132,99 +99,10 @@ const reduceRecordAttempt = (
   };
 };
 
-// The host locking a multiple-choice question: the phones' choices are counted, the question is
-// scored from the share that chose right, and the spread goes up on the TV. The question stays on
-// screen under its reveal; `nextQuestion` moves on.
-const reduceLockChoices = (
-  input: MinigameRuntimeReductionInput,
-  state: TriviaRuntimeState,
-  teamId: string,
-  promptCount: number
-): MinigameRuntimeReductionResult => {
-  const prompt = resolveCurrentTriviaPrompt(state, resolveTriviaContent(input.content));
-
-  if (!isChoiceQuestionOpen(state, prompt)) {
-    return { state: input.state, didMutate: false };
-  }
-
-  // Over the phones that could answer: awake at the lock, or asleep with a choice already in.
-  const seatedPlayers = resolveCountedChoosers(state, input.answeringPlayers ?? []);
-  const correctIndex = prompt.choices.indexOf(prompt.answer);
-  const choiceCounts = prompt.choices.map(() => 0);
-  let answeredCount = 0;
-
-  for (const player of seatedPlayers) {
-    const choiceIndex = state.choicesByPlayerId[player.id];
-
-    if (choiceIndex !== undefined && choiceIndex < choiceCounts.length) {
-      choiceCounts[choiceIndex] = (choiceCounts[choiceIndex] ?? 0) + 1;
-      answeredCount += 1;
-    }
-  }
-
-  // Like GEO's lock with no pin anywhere: nothing to lock in. The host judges it aloud instead.
-  if (answeredCount === 0) {
-    return { state: input.state, didMutate: false };
-  }
-
-  const correctCount = choiceCounts[correctIndex] ?? 0;
-  const pointsAwarded = resolveTriviaChoicePoints(correctCount, seatedPlayers.length);
-  const reveal: TriviaChoiceReveal = {
-    promptId: prompt.id,
-    choices: [...prompt.choices],
-    choiceCounts,
-    correctIndex,
-    correctCount,
-    answeredCount,
-    seatedCount: seatedPlayers.length,
-    pointsAwarded
-  };
-  const spent = spendQuestion(state, promptCount, addPoints(state, teamId, pointsAwarded, input.pointsMax), false);
-
-  return {
-    state: {
-      ...spent,
-      // The question and its choices stay with their reveal until the host moves on.
-      runtimeState: { ...spent.runtimeState, activeTurnIndex: state.runtimeState.activeTurnIndex },
-      choicesByPlayerId: { ...state.choicesByPlayerId },
-      reveal
-    },
-    didMutate: true
-  };
-};
-
-// From a locked question's reveal to the next question, while the turn has one left.
-const reduceNextQuestion = (
-  input: MinigameRuntimeReductionInput,
-  state: TriviaRuntimeState,
-  promptCount: number
-): MinigameRuntimeReductionResult => {
-  if (state.reveal === null || resolveAttemptsRemaining(state) <= 0) {
-    return { state: input.state, didMutate: false };
-  }
-
-  const runtimeState = state.runtimeState;
-
-  return {
-    state: {
-      ...state,
-      runtimeState: {
-        ...runtimeState,
-        activeTurnIndex: (runtimeState.activeTurnIndex + 1) % runtimeState.turnOrderTeamIds.length,
-        promptCursor: (runtimeState.promptCursor + 1) % promptCount
-      },
-      choicesByPlayerId: {},
-      reveal: null
-    },
-    didMutate: true
-  };
-};
-
 export const triviaRuntimePlugin: MinigameRuntimePlugin = {
   id: "TRIVIA",
   content: triviaContentAdapter,
   isRules: isTriviaRules,
-  playerActionTypes: [TRIVIA_CHOOSE_ANSWER_ACTION],
   initialize: (input) => {
     const triviaRules = resolveTriviaRules(input.rules);
     const runtimeTeamIds =
@@ -244,9 +122,7 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
         pendingPointsByTeamId: clonePendingPoints(input.pendingPointsByTeamId)
       },
       attemptsUsedThisTurn: 0,
-      questionsPerTurnLimit: triviaRules.questionsPerTurn,
-      choicesByPlayerId: {},
-      reveal: null
+      questionsPerTurnLimit: triviaRules.questionsPerTurn
     };
 
     return initialState;
@@ -270,71 +146,11 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
       return unchanged;
     }
 
-    if (input.envelope.actionType === TRIVIA_NEXT_QUESTION_ACTION) {
-      return reduceNextQuestion(input, state, promptCount);
-    }
-
-    if (resolveAttemptsRemaining(state) <= 0) {
+    if (input.envelope.actionType !== "recordAttempt" || resolveAttemptsRemaining(state) <= 0) {
       return unchanged;
     }
 
-    if (input.envelope.actionType === "recordAttempt") {
-      return reduceRecordAttempt(input, state, activeTurnTeamId, promptCount);
-    }
-
-    if (input.envelope.actionType === TRIVIA_LOCK_CHOICES_ACTION) {
-      return reduceLockChoices(input, state, activeTurnTeamId, promptCount);
-    }
-
-    return unchanged;
-  },
-  // A playing-team phone's own choice on an open multiple-choice question. The server has already
-  // checked the face is seated and on the playing team; a choice can change until the host locks.
-  reducePlayerAction: (input) => {
-    const unchanged = { state: input.state, didMutate: false };
-
-    if (
-      !isTriviaRuntimeState(input.state) ||
-      input.envelope.actionType !== TRIVIA_CHOOSE_ANSWER_ACTION ||
-      !isChooseAnswerPayload(input.envelope.actionPayload) ||
-      !input.answeringPlayers.some((player) => player.id === input.playerId)
-    ) {
-      return unchanged;
-    }
-
-    const prompt = resolveCurrentTriviaPrompt(input.state, resolveTriviaContent(input.content));
-    const { choiceIndex } = input.envelope.actionPayload;
-
-    if (
-      !isChoiceQuestionOpen(input.state, prompt) ||
-      choiceIndex >= prompt.choices.length ||
-      input.state.choicesByPlayerId[input.playerId] === choiceIndex
-    ) {
-      return unchanged;
-    }
-
-    return {
-      state: {
-        ...input.state,
-        choicesByPlayerId: { ...input.state.choicesByPlayerId, [input.playerId]: choiceIndex }
-      },
-      didMutate: true
-    };
-  },
-  releasePlayerAnswer: (input) => {
-    const unchanged = { state: input.state, didMutate: false };
-
-    if (
-      !isTriviaRuntimeState(input.state) ||
-      input.state.reveal !== null ||
-      !Object.hasOwn(input.state.choicesByPlayerId, input.playerId)
-    ) {
-      return unchanged;
-    }
-
-    const { [input.playerId]: _released, ...choicesByPlayerId } = input.state.choicesByPlayerId;
-
-    return { state: { ...input.state, choicesByPlayerId }, didMutate: true };
+    return reduceRecordAttempt(input, state, activeTurnTeamId, promptCount);
   },
   syncPendingPoints: (input) => {
     if (!isTriviaRuntimeState(input.state)) {
@@ -374,7 +190,7 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     const triviaContent = resolveTriviaContent(input.content);
-    return toTriviaHostView(input.state, triviaContent, input.answeringPlayers);
+    return toTriviaHostView(input.state, triviaContent);
   },
   selectDisplayView: (input) => {
     if (!isTriviaRuntimeState(input.state)) {
@@ -382,19 +198,7 @@ export const triviaRuntimePlugin: MinigameRuntimePlugin = {
     }
 
     const triviaContent = resolveTriviaContent(input.content);
-    return toTriviaDisplayView(input.state, triviaContent, input.answeringPlayers);
-  },
-  selectPlayerView: (input) => {
-    if (!isTriviaRuntimeState(input.state)) {
-      return null;
-    }
-
-    return toTriviaPlayerView(
-      input.state,
-      resolveTriviaContent(input.content),
-      input.playerId,
-      input.showOwnAnswer
-    );
+    return toTriviaDisplayView(input.state, triviaContent);
   }
 };
 

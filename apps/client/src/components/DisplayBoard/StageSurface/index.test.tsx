@@ -141,9 +141,7 @@ test("renders trivia question without answer leakage", () => {
         id: "prompt-1",
         question: "Which scale measures pepper heat?",
         choices: null
-      },
-      phoneAnswers: null,
-      reveal: null
+      }
     }
   });
 
@@ -193,7 +191,6 @@ test("renders GEO guessing surface without leaking answer coordinates", () => {
       // The team's own pin reaches the TV while the guess is still open; the
       // answer must not.
       currentGuess: { lat: 12.5, lng: 34.5 },
-      phoneAnswers: null,
       status: "guessing"
     }
   });
@@ -226,7 +223,6 @@ test("renders GEO reveal stats after the guess is submitted", () => {
         imageSrc: "/sample-assets/geo/eiffel-tower.svg"
       },
       currentGuess: { lat: 48.8, lng: 2.35 },
-      phoneAnswers: null,
       status: "submitted",
       result: {
         guessLat: 48.8,
@@ -234,8 +230,7 @@ test("renders GEO reveal stats after the guess is submitted", () => {
         answerLat: 48.85837,
         answerLng: 2.294481,
         distanceKm: 7.7,
-        pointsAwarded: 2,
-        pins: []
+        pointsAwarded: 2
       }
     }
   });
