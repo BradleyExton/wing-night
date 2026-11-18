@@ -9,6 +9,7 @@ export const backRoomInk = {
   henDown: "#71717a",
   beak: "#fbbf24",
   sleeper: "#22d3ee",
+  staff: "#a855f7",
   gold: "#fbbf24",
   heat: "#ef4444",
   bill: "#22c55e",

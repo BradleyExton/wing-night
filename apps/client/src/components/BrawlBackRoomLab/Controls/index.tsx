@@ -68,14 +68,16 @@ export const Controls = ({ settings, onChange }: ControlsProps): JSX.Element => 
         }}
       />
       <Segmented
-        label={copy.dragLabel}
-        value={settings.isDragOn}
+        label={copy.staffLabel}
+        hint={copy.staffHint}
+        value={settings.staff}
         options={[
-          { value: true, label: copy.drag.on },
-          { value: false, label: copy.drag.off }
+          { value: "off", label: copy.staff.off },
+          { value: "few", label: copy.staff.few },
+          { value: "lots", label: copy.staff.lots }
         ]}
-        onChange={(isDragOn): void => {
-          onChange({ ...settings, isDragOn });
+        onChange={(staff): void => {
+          onChange({ ...settings, staff });
         }}
       />
       <Segmented

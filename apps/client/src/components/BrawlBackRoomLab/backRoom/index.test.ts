@@ -21,7 +21,7 @@ import {
 
 const SETTINGS: BackRoomSettings = {
   mode: "carry",
-  isDragOn: true,
+  staff: "few",
   clockSeconds: 120,
   isChargeOn: true,
   crew: 3,
@@ -44,16 +44,41 @@ const DIRS: Record<string, BrawlCrewWalk> = {
 const sign = (value: number, slack: number): number => (value > slack ? 1 : value < -slack ? -1 : 0);
 
 /**
- * A person playing it properly, for slot 0: fight like a brawler while there is a goose to fight,
- * put him down to do it, and otherwise walk to him, stand over him and carry him to the door.
+ * A person playing it, for slot 0. She fights like a brawler while there is a goose to fight, and
+ * otherwise walks to him, stands over him and carries him to the door. `isGuard` is whether she
+ * also answers the staff: puts him down when one is close, turns to it and pecks it.
  */
-const createPorter = (read: () => BackRoomRun): BrawlCrewBot => {
+const createPorter = (read: () => BackRoomRun, isGuard: boolean): BrawlCrewBot => {
   return (frame, block, slot) => {
-    const { sleeper } = read();
+    const { sleeper, staff } = read();
     const hen = frame.hens[slot];
-    const isFight = frame.goons.some((goon) => goon.state !== "ko" && goon.state !== "gone");
 
-    if (hen === undefined || isFight) {
+    if (hen === undefined) {
+      return { dir: 0, held: false };
+    }
+
+    const one = staff
+      .filter((entry) => entry.koTick === null)
+      .sort((left, right) => Math.abs(left.x - sleeper.x) - Math.abs(right.x - sleeper.x))[0];
+
+    if (isGuard && one !== undefined && Math.abs(one.x - hen.x) < 70) {
+      const dx = one.x - hen.x;
+      const facing = dx < 0 ? -1 : 1;
+
+      if (sleeper.carrier === slot) {
+        return Math.abs(dx) < 40 ? { dir: 0, held: true } : { dir: 1, held: false };
+      }
+
+      if (hen.facing !== facing) {
+        return { dir: facing === 1 ? 1 : 5, held: false };
+      }
+
+      return Math.abs(dx) <= 18 && Math.abs(one.z - hen.z) <= 6
+        ? { dir: 0, held: true }
+        : { dir: DIRS[`${sign(dx, 14)},${sign(one.z - hen.z, 4)}`] ?? 0, held: false };
+    }
+
+    if (frame.goons.some((goon) => goon.state !== "ko" && goon.state !== "gone")) {
       return brawlCrewBrawler(frame, block, slot);
     }
 
@@ -65,13 +90,27 @@ const createPorter = (read: () => BackRoomRun): BrawlCrewBot => {
   };
 };
 
-const play = (settings: BackRoomSettings): BackRoomRun => {
+const play = (settings: BackRoomSettings, isGuard: boolean): BackRoomRun => {
   let run = createBackRoomRun(settings);
-  const porter = createPorter(() => run);
+  const porter = createPorter(() => run, isGuard);
 
   while (run.outcome === null && run.frame.tick < resolveBackRoomClockTicks(settings) + 10) {
     run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
   }
+
+  return run;
+};
+
+/** Steps until he is on slot 0's back, with nobody coming for him. */
+const liftHim = (settings: BackRoomSettings): BackRoomRun => {
+  let run = createBackRoomRun({ ...settings, staff: "off" });
+  const porter = createPorter(() => run, false);
+
+  while (run.sleeper.carrier === null && run.outcome === null) {
+    run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
+  }
+
+  assert.equal(run.sleeper.carrier, 0);
 
   return run;
 };
@@ -98,40 +137,49 @@ test("does not end the block when a hen walks out without him", () => {
   assert.equal(run.sleeper.x, BACK_ROOM.sleeperX);
   assert.ok(run.frame.cameraX <= BACK_ROOM.sleeperX - BACK_ROOM.cameraLead, "the camera waited for him");
   assert.equal(run.billsLeft, 0);
+  assert.equal(run.staffSent, 0, "nobody comes for him until the crew has moved him");
 });
 
-test("does get him out when one hen carries him and puts him down to fight", () => {
-  for (const crew of [1, 3, 5]) {
-    const run = play({ ...SETTINGS, crew });
+test("does get him out when the hen carrying him also keeps the staff off him", () => {
+  for (const crew of [1, 3]) {
+    const run = play({ ...SETTINGS, crew }, true);
 
     assert.equal(run.outcome, "out", `a crew of ${crew} got him out`);
     assert.ok(run.sleeper.x >= run.block.exitX);
     assert.ok((run.tallies[0]?.lifts ?? 0) >= 1);
+    assert.ok((run.tallies[0]?.staff ?? 0) >= 1, "she had staff to see off");
     assert.ok(run.banked > 0 && run.banked <= run.total);
   }
 });
 
+test("does never get him out when nobody answers the staff", () => {
+  const run = play({ ...SETTINGS, crew: 3 }, false);
+
+  assert.equal(run.outcome, "broke");
+  assert.ok(run.draggedBack > 200, `dragged back ${run.draggedBack}`);
+  assert.ok(run.sleeper.x < run.block.exitX);
+});
+
+test("does get him out with no trouble when the staff are switched off", () => {
+  const run = play({ ...SETTINGS, crew: 3, staff: "off" }, false);
+
+  assert.equal(run.outcome, "out");
+  assert.equal(run.staffSent, 0);
+  assert.equal(run.draggedBack, 0);
+  assert.equal(run.billsLeft, 8);
+});
+
 test("does drop him when the hen carrying him pecks", () => {
-  let run = createBackRoomRun({ ...SETTINGS, crew: 1, isDragOn: false });
-  const porter = createPorter(() => run);
+  let run = liftHim({ ...SETTINGS, crew: 1 });
 
-  while (run.sleeper.carrier === null && run.outcome === null) {
-    run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
-  }
-
-  assert.equal(run.sleeper.carrier, 0);
   run = stepBackRoom(run, [{ tick: run.frame.tick, hen: 0, kind: "peck", held: true }]);
   assert.equal(run.sleeper.carrier, null);
   assert.equal(run.tallies[0]?.drops, 1);
 });
 
 test("does walk a carrier slower than a hen with nothing on her back", () => {
-  let run = createBackRoomRun({ ...SETTINGS, crew: 1, isDragOn: false });
-  const porter = createPorter(() => run);
-
-  while (run.sleeper.carrier === null && run.outcome === null) {
-    run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
-  }
+  let run = liftHim({ ...SETTINGS, crew: 1 });
+  const porter = createPorter(() => run, false);
 
   // The first tick puts him on her back, wherever within reach she stood.
   run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
@@ -147,8 +195,65 @@ test("does walk a carrier slower than a hen with nothing on her back", () => {
   assert.ok(Math.abs(walked - BRAWL_CREW_WORLD.henWalkSpeed * BACK_ROOM.carryShare) < 0.08, `${walked} a tick`);
 });
 
+test("does tug him off a carrier's back when one of the staff reaches her and nobody pecks it", () => {
+  let run: BackRoomRun = { ...liftHim({ ...SETTINGS, crew: 1 }) };
+
+  run = { ...run, settings: { ...run.settings, staff: "few" }, nextStaffTick: run.frame.tick };
+
+  // She stands still with him on her back and lets it come.
+  while (run.sleeper.carrier !== null && run.frame.tick < 60 * 60) {
+    run = stepBackRoom(run, []);
+  }
+
+  assert.equal(run.sleeper.carrier, null, "he came off her back");
+  assert.equal(run.tallies[0]?.drops, 1);
+
+  const from = run.sleeper.x;
+
+  for (let step = 0; step < 120; step += 1) {
+    run = stepBackRoom(run, []);
+  }
+
+  assert.ok(run.sleeper.isDragged || run.sleeper.x < from, "and it is taking him back");
+  assert.ok(run.sleeper.x >= run.frame.cameraX + BRAWL_CREW_WORLD.henMargin, "no further than the window's edge");
+  assert.ok((run.staff[0]?.x ?? 0) >= run.frame.cameraX, "and the one pulling him is still on the screen");
+});
+
+test("does put one of the staff down with one peck on its way and two once it has him", () => {
+  const base = liftHim({ ...SETTINGS, crew: 1 });
+  const hen = base.frame.hens[0];
+
+  assert.ok(hen !== undefined);
+
+  const stand = (hasHim: boolean): BackRoomRun => ({
+    ...base,
+    sleeper: { ...base.sleeper, carrier: null },
+    staff: [
+      { id: 0, x: hen.x + hen.facing * 10, z: hen.z, facing: 1, hasHim, grip: BACK_ROOM.staffGrip, grabSinceTick: null, koTick: null }
+    ]
+  });
+  const peck = (from: BackRoomRun): BackRoomRun => {
+    let run = stepBackRoom(from, [{ tick: from.frame.tick, hen: 0, kind: "peck", held: true }]);
+
+    run = stepBackRoom(run, [{ tick: run.frame.tick, hen: 0, kind: "peck", held: false }]);
+
+    for (let step = 0; step < 24; step += 1) {
+      run = stepBackRoom(run, []);
+    }
+
+    return run;
+  };
+
+  assert.notEqual(peck(stand(false)).staff[0]?.koTick ?? null, null, "one on its way goes down to a peck");
+
+  const once = peck(stand(true));
+
+  assert.equal(once.staff[0]?.koTick, null, "one that has him shrugs the first off");
+  assert.equal(once.staff[0]?.grip, 0);
+});
+
 test("does shove him the way she faces when a hen pecks him in herd mode", () => {
-  const start = createBackRoomRun({ ...SETTINGS, mode: "herd", crew: 1, isDragOn: false });
+  const start = createBackRoomRun({ ...SETTINGS, mode: "herd", crew: 1, staff: "off" });
   const hen = start.frame.hens[0];
 
   assert.ok(hen !== undefined);
@@ -165,38 +270,4 @@ test("does shove him the way she faces when a hen pecks him in herd mode", () =>
   assert.ok(run.sleeper.x > from + 8, `shoved ${run.sleeper.x - from}`);
   assert.equal(run.sleeper.carrier, null);
   assert.equal(run.tallies[0]?.lifts, 0);
-});
-
-test("does have one of the staff drag him back once the crew has moved him", () => {
-  let dragged = 0;
-
-  for (let seed = 1; seed <= 12 && dragged === 0; seed += 1) {
-    let run = createBackRoomRun({ ...SETTINGS, crew: 5, seed: SETTINGS.seed + seed });
-    const porter = createPorter(() => run);
-
-    while (run.outcome === null) {
-      const from = run.sleeper.x;
-
-      run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
-
-      if (run.sleeper.isDragged) {
-        assert.ok(run.sleeper.x <= from, "a goon that has him only ever takes him back");
-        dragged += from - run.sleeper.x;
-      }
-    }
-  }
-
-  assert.ok(dragged > 5, `dragged back ${dragged}`);
-});
-
-test("does leave him alone when the drag-back is switched off", () => {
-  let run = createBackRoomRun({ ...SETTINGS, crew: 5, isDragOn: false });
-  const porter = createPorter(() => run);
-
-  while (run.outcome === null) {
-    run = stepBackRoom(run, resolveBrawlCrewBotInputs(run.frame, run.block, [porter]));
-    assert.equal(run.sleeper.dragger, null);
-  }
-
-  assert.equal(run.outcome, "out");
 });

@@ -10,7 +10,7 @@ const copy = brawlBackRoomLabCopy;
 
 const DEFAULT_SETTINGS: BackRoomSettings = {
   mode: "carry",
-  isDragOn: true,
+  staff: "few",
   clockSeconds: 120,
   isChargeOn: true,
   crew: 3,

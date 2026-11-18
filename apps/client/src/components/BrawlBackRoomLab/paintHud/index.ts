@@ -81,6 +81,8 @@ const paintCalls = (ctx: CanvasRenderingContext2D, run: BackRoomRun): void => {
 
   if (sleeper.carrier !== null) {
     text(ctx, copy.hud.gotHim, WORLD.width / 2, 12, 6, backRoomInk.sleeper);
+  } else if (sleeper.isDragged && Math.floor(frame.tick / 12) % 2 === 0) {
+    text(ctx, copy.hud.dragged, WORLD.width / 2, 12, 6, backRoomInk.heat);
   }
 
   if (frame.cameraLocked) {
@@ -90,6 +92,10 @@ const paintCalls = (ctx: CanvasRenderingContext2D, run: BackRoomRun): void => {
   // Between waves: the street says go, unless the camera is waiting for him.
   const lead = Math.max(...frame.hens.filter((hen) => hen.state === "up").map((hen) => hen.x), 0);
   const isWaiting = sleeper.carrier === null && frame.cameraX >= sleeper.x - BACK_ROOM.cameraLead - 2 && lead > sleeper.x + 40;
+
+  if (sleeper.isDragged) {
+    return;
+  }
 
   if (isWaiting) {
     text(ctx, copy.hud.getHim, 6, 60, 6, backRoomInk.heat, "left");
@@ -111,16 +117,17 @@ const paintEndCard = (ctx: CanvasRenderingContext2D, run: BackRoomRun): void => 
     `${copy.end.time}  ${formatClock(run.frame.tick)}`,
     `${copy.end.bills}  ${run.billsLeft} ${copy.hud.of} ${BACK_ROOM.bills}`,
     `${copy.end.worth}  ${run.banked} / ${run.total}`,
+    `${copy.end.dragged}  ${Math.round(run.draggedBack)} ${copy.end.units}`,
     ...run.tallies
       .slice(0, run.settings.humans)
       .map(
         (tally, slot) =>
-          `${copy.scene.player}${slot + 1}: ${copy.end.lifts} ${tally.lifts} · ${copy.end.drops} ${tally.drops} · ${copy.end.carried} ${Math.round(tally.carried)} ${copy.end.units}`
+          `${copy.scene.player}${slot + 1}: ${copy.end.lifts} ${tally.lifts} · ${copy.end.drops} ${tally.drops} · ${copy.end.staff} ${tally.staff} · ${copy.end.carried} ${Math.round(tally.carried)} ${copy.end.units}`
       )
   ];
 
   lines.forEach((line, index) => {
-    text(ctx, line, WORLD.width / 2, 46 + index * 8, 5, backRoomInk.text);
+    text(ctx, line, WORLD.width / 2, 44 + index * 7.5, 4.6, backRoomInk.text);
   });
   text(ctx, copy.end.again, WORLD.width / 2, 98, 4, backRoomInk.muted);
 };

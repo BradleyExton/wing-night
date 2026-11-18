@@ -47,7 +47,8 @@ to get a downed friend up, and nobody can do two of those at once.
 - **A peck puts him down, and that is fine (Brad, 2026-11-18).** It stays inside the two-verb rule.
 - **The finale's clock is 120 seconds (Brad, 2026-11-18).** §4.
 - **The drag-back barely happened when he played (Brad, 2026-11-18).** Not a decision, a finding:
-  the tug of war the pitch rests on did not show up at the table. §3 says what that means.
+  the tug of war the pitch rests on did not show up at the table. §3 says why, and what replaced
+  it the same day; he has not played the replacement.
 - **The repo calls him "the sleeper" (Brad).** His name and head come from the pack on the night
   (§6). No real name, no real-life story and none of the reference photos go into a commit; this
   repo is public.
@@ -186,16 +187,14 @@ Walk, peck, and stand still. Three ways to move a sleeping bird with those:
 it, because the only way to know which is funnier is to play both; he played both and picked
 carry. The rest of this section is b.
 
-**What the play-test did not confirm: the staff putting him back.** Brad's word was that the
-drag-back "barely happened". That matches what the prototype's own bots showed (§7: about 50 units
-in a run at most, often none), and it is the prototype's weakest fake: one goon, steered from
-outside the sim, that a bot pecks before it arrives. So the rule below is still the proposal, but
-it is **unproven as a source of pressure**. With it this quiet, the best play is to set him down,
-clear the room with every beak and walk him out, and the block is a normal block with a slow walk
-at the end. Before a spec, the drag-back needs to bite in the prototype — more than one goon may
-go for him, they get to him faster, a goon that has him takes more than one peck to shake off — and
-be played again. If it cannot be made to matter, the pressure has to come from somewhere else
-(the wallet alone, or goons that go for the carrier), and that is a different finale.
+**What the first play-test did not confirm: the staff putting him back.** Brad's word was that
+the drag-back "barely happened". The cause was the prototype's fake, and a trace of one run showed
+it exactly: the goon "on him" was a wave goose borrowed from the sim, the sim kept sending it back
+at its own hen between the prototype's corrections, and a bot put it down within half a second of
+its being sent. Hurrying it, sending several and giving it a grip made no measurable difference.
+
+**So the rule changed (2026-11-18, rebuilt in the prototype, not yet played by Brad).** The staff
+are their own figures, not the wave's geese on loan:
 
 - **Lifting him is the revive.** An up hen standing still (stick centred, not pecking, not
   reeling) within reach of him for `reviveTicks` (90, a second and a half) has him. The same ring
@@ -203,11 +202,21 @@ be played again. If it cannot be made to matter, the pressure has to come from s
 - **Carrying him.** She walks at about 60% of her speed and her peck is shut. **A press of PECK
   puts him down** and pecks: the right thumb still means only "peck". A hit on her drops him where
   she stood. Going down drops him.
-- **The staff put him back.** One goon at a time is "on him". While he is on the floor it walks
-  to him and drags him back toward the back room at a crawl until it is pecked. While he is
-  carried, it is on his carrier. The bouncer always takes this job when he is in. So leaving him
-  on the floor to fight with every beak is a choice with a price, and the carrier always has
-  somebody coming for her that only a teammate can stop.
+- **The staff put him back, and they come from where he was.** Once the crew has moved him, the
+  staff come out of the back room for him one after another, from behind, on a clock: at the
+  window's left edge, running faster than a hen walks and more than twice as fast as one carrying
+  him. They are not part of the wave, the wave does not wait for them, and they are worth nothing.
+- **One on its way goes down to a single peck. One that has him takes two.** It takes hold from an
+  arm's length behind him and drags him back the way he came, so a hen stood over him pecking the
+  way she faces does not reach it: she has to turn round, which is the street's "BEHIND YOU" with
+  a body at stake.
+- **One that catches the carrier tugs.** It runs her down, and if nobody pecks it within a beat
+  (0.4 s) he comes off her back. A carrier cannot outrun the staff, so carrying him through a room
+  with nobody watching her back does not work. A crew of one puts him down, turns, pecks, lifts.
+- **The pace is the knob.** In the prototype, one every six seconds ("a few") or every three and a
+  half ("a lot"), shared between as many as may be out at once. So leaving him on the floor to
+  fight with every beak is a choice with a price that can be set, and the carrier always has
+  somebody coming for her.
 - **The loss is bounded.** He cannot be dragged out of the window the camera holds, so nothing
   the staff do undoes a room. A drop costs the second and a half to lift him again (principle 22).
 - **A hen who is down** is the existing rule and a second body on the floor: she needs somebody
@@ -284,7 +293,10 @@ bell.
 
 What the pick sets:
 
-- The roster needs no new goon and no new rule except "one of them is on him" (§3). In costume:
+- The wave's roster needs no new goon and no new rule. What is new is **the staff who come for
+  him** (§3): one more figure with one script — run to him, take hold, pull — which the first
+  version of this file hoped to borrow from the wave and could not. They are geese too, the ones
+  in the house's waistcoats. The wave, in costume:
   the **boss** is the bouncer, a head taller, black T-shirt. The **helmet goose** is the doorman
   with the earpiece, and his cage is what it was. The **goose** is floor staff in a bow tie with a
   tray. The **raccoon** is in the bins and comes in through the rear door. The **gull** is after
@@ -324,22 +336,34 @@ What the pick sets:
 sleeper bolted on in a wrapper round `stepBrawlCrew` (`backRoom/`), outside `packages/shared`, in
 flat shapes on a canvas. One or two people on the keyboard (W A S D and Space; arrows and Enter),
 or one on a touch screen with the real pad's stick laid over the street; the rest of the crew are
-the brawler bots that already exist. Toggles: carry or herd; the drag-back on or off; the clock at
-90 or 120; a bill a song on or off; crew of one to five.
+the brawler bots that already exist. Toggles: carry or herd; the staff off, a few or a lot; the
+clock at 90 or 120; a bill a song on or off; crew of one to five.
 
 It answers the three things no document can: is carrying a job or a chore, does the drag-back
 read from the couch, and how long real people take. What it measured on the way, with a scripted
-hen doing the carrying (fight like a brawler, put him down to do it, otherwise fetch him and walk
-him out) and bots for the rest, 30 seeds a cell on the 120 s clock: **every crew of one to five
-got him out, in a median 42 to 45 s, with all eight bills.** So the 50 s of grace is about right
-for perfect play and the 90 s clock is not obviously too short; people will say.
+hen in slot 0 and bots for the rest, 30 seeds a cell on the 120 s clock:
+
+| Scripted hen | Staff | Crew 1 | Crew 3 | Crew 5 |
+|---|---|---|---|---|
+| Carries him, fights the wave; nobody is sent for him | off | out 30 of 30, 45 s, 8 bills | 30 of 30, 43 s, 8 | 30 of 30, 45 s, 8 |
+| Also answers the staff: puts him down, turns, pecks | a few | 30 of 30, 51 s, 7 bills | 27 of 30, 49 s, 8 | 29 of 30, 51 s, 7 |
+| Also answers the staff | a lot | 30 of 30, 56 s, 7 | 28 of 30, 57 s, 7 | 29 of 30, 59 s, 7 |
+| Ignores the staff | a few | 0 of 30: broke, dragged back about 750 units | 0 of 30, about 600 | 0 of 30, about 590 |
+
+So with the staff as their own figures the pressure is real — a crew that does not guard him
+never gets him out — and a script that guards him perfectly pays six to fourteen seconds and a
+bill for it. A person will pay more. The 50 s of grace still covers perfect play with nobody sent,
+and no longer covers it with the staff out, which is the near miss the wallet was for.
 
 What it fakes, so nobody mistakes it for the rules:
 
-- **The goon that is "on him" is steered by the wrapper**, not by the sim: its place is written
-  after each step and its own script is held, so it does not honk while it has him. It hurries
-  (1.8 times its walk) because at a goose's own pace it never reached him before a bot pecked it.
-  Against bots it drags him back up to about 50 units in a run, and often not at all.
+- **The staff are the prototype's own figures**, outside the sim: the wave does not count them,
+  the bots do not see them (so guarding him is only ever a person's job, and one is out at a time
+  for each PERSON playing, not for each hen), and a peck finds one of them only if it has not
+  found a goose first. They do not honk, they are not hurt by hazards and nothing shoves them.
+- **The drag-back between waves is short by construction**: the camera sits thirty units behind
+  him and he cannot be dragged past the window's edge, so outside a locked wave the staff cost
+  time and pecks, not distance. Inside one they can take him most of a window.
 - **Bots never lift him or herd him on purpose** (a bot's stray peck does shove him in herd mode).
 - **The camera's wait is a clamp** applied after the sim's step, which also takes back a wave the
   sim opened by getting ahead of him.
@@ -350,9 +374,10 @@ What it fakes, so nobody mistakes it for the rules:
 
 **What Brad said after playing it (2026-11-18):** "decent"; carry over herd; 120 seconds is fine;
 a peck dropping him is fine; the drag-back barely happened. Three of the prototype's four toggles
-are therefore answered and the fourth is the open problem (§3). The lab stays until the drag-back
-has been made to bite and played once more; then delete the folder, its route, its dev-index entry
-and its two test-list entries.
+were therefore answered and the fourth was the open problem. **The same day the drag-back was
+rebuilt as the staff's own geese (§3) and now bites against scripts; Brad has not played that
+version.** The lab stays until he has; then delete the folder, its route, its dev-index entry and
+its two test-list entries.
 
 One caution stands: the core game has still not been on real phones as pads (crew spec step 9), and
 the finale rests on the same unfelt stick and revive count.
@@ -455,8 +480,11 @@ Brad's:
 - ~~Carry, herd, or both?~~ Carry (2026-11-18).
 - ~~Is "a peck puts him down" inside the two-verb rule?~~ Yes (2026-11-18).
 - ~~The clock: 120 s when every other block is 90?~~ Yes (2026-11-18).
-- **New, from the play-test:** the drag-back barely happened. Make it bite and play it again, or
-  find the pressure somewhere else? (§3)
+- **From the play-test:** the drag-back barely happened. It has been rebuilt as the staff's own
+  geese and bites against scripts (§3, §7). Does it read, and is "a few" or "a lot" the pace, when
+  a person plays it?
+- If the staff stay as their own figures: are they worth anything, and does the wave meter show
+  them?
 - The back room itself: where it is off the floor and what is in it. None of the references shows
   it.
 - When the sleeper is not at the party: everyone rescues him, or nobody does?
@@ -468,8 +496,11 @@ Brad's:
 
 Mine, for a spec:
 
-- ~~Whether one goon "on him" is enough pressure.~~ It is not: see the play-test (§3). How many,
-  how fast and how hard to shake off is now the first thing to find.
+- ~~Whether one goon "on him" is enough pressure.~~ It was not, and a borrowed wave goose could
+  not be made to be (§3). How many staff, how often, and whether they scale with the crew as the
+  wave does, is the tuning to find once the rule has been felt.
+- Whether a full crew of people makes the staff trivial (five beaks, one goose at a time) the way
+  the bots made the borrowed goon trivial. The prototype cannot say: its bots do not see them.
 - Whether the lift should take the revive's full second and a half or less: it happens more often.
 - What the wave meter shows in a block whose progress is one body's position. A track from the
   couch to the cab may say more than pips.

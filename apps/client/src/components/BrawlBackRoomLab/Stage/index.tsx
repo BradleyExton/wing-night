@@ -112,6 +112,16 @@ export const Stage = ({ settings, runKey }: StageProps): JSX.Element => {
       canvas.dataset.sleeperX = run.sleeper.x.toFixed(1);
       canvas.dataset.sleeperZ = run.sleeper.z.toFixed(1);
       canvas.dataset.carrier = run.sleeper.carrier === null ? "" : String(run.sleeper.carrier);
+      canvas.dataset.dragged = run.sleeper.isDragged ? "yes" : "";
+      canvas.dataset.draggedBack = run.draggedBack.toFixed(0);
+
+      // The staff still standing, nearest him first, as "x,z,h" (h is 1 once it has him).
+      canvas.dataset.staff = run.staff
+        .filter((one) => one.koTick === null)
+        .sort((left, right) => Math.abs(left.x - run.sleeper.x) - Math.abs(right.x - run.sleeper.x))
+        .map((one) => `${one.x.toFixed(1)},${one.z.toFixed(1)},${one.hasHim ? 1 : 0}`)
+        .join(";");
+      canvas.dataset.henFacing = String(run.frame.hens[0]?.facing ?? 1);
       canvas.dataset.henX = (run.frame.hens[0]?.x ?? 0).toFixed(1);
       canvas.dataset.henZ = (run.frame.hens[0]?.z ?? 0).toFixed(1);
       canvas.dataset.goons = String(run.frame.goons.filter((goon) => goon.state !== "ko" && goon.state !== "gone").length);

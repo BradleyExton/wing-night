@@ -1,6 +1,6 @@
 import { BRAWL_CREW_WORLD, type BrawlCrewGoon, type BrawlCrewHen } from "@wingnight/shared";
 
-import { BACK_ROOM, type BackRoomRun } from "../backRoom";
+import { BACK_ROOM, type BackRoomRun, type BackRoomStaff } from "../backRoom";
 import { brawlBackRoomLabCopy } from "../copy";
 import { backRoomGoonColours, backRoomInk, backRoomRooms, backRoomSlotColours } from "../palette";
 
@@ -172,11 +172,10 @@ const paintHenName = (ctx: CanvasRenderingContext2D, hen: BrawlCrewHen, run: Bac
   }
 };
 
-const paintGoon = (ctx: CanvasRenderingContext2D, goon: BrawlCrewGoon, run: BackRoomRun): void => {
+const paintGoon = (ctx: CanvasRenderingContext2D, goon: BrawlCrewGoon): void => {
   const stats = WORLD.goons[goon.kind];
   const feet = BAND_Y + goon.z;
   const middle = feet - goon.y - stats.height / 2;
-  const isOnHim = run.sleeper.dragger === goon.spawnIndex && goon.state !== "ko";
 
   ctx.fillStyle = backRoomInk.shadow;
   ellipse(ctx, goon.x, feet, stats.halfWidth + 1, 1.8);
@@ -190,7 +189,7 @@ const paintGoon = (ctx: CanvasRenderingContext2D, goon: BrawlCrewGoon, run: Back
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  if (goon.state === "telegraph" || isOnHim) {
+  if (goon.state === "telegraph") {
     ctx.strokeStyle = backRoomInk.heat;
     ctx.lineWidth = 1;
     ellipse(ctx, goon.x, middle, stats.halfWidth + 1.5, stats.height / 2 + 1.5);
@@ -201,8 +200,47 @@ const paintGoon = (ctx: CanvasRenderingContext2D, goon: BrawlCrewGoon, run: Back
     label(ctx, copy.scene.bouncer, goon.x, middle - stats.height / 2 - 6, 3.5, backRoomInk.heat);
   }
 
-  if (isOnHim) {
-    label(ctx, copy.scene.onHim, goon.x, middle - stats.height / 2 - 2, 3, backRoomInk.heat);
+};
+
+/**
+ * One of the staff: a goose in the house's purple, out of the back room for him. One that has him
+ * is tied to him by a line and says how many pecks it will take; one tugging at his carrier
+ * flashes.
+ */
+const paintStaff = (ctx: CanvasRenderingContext2D, one: BackRoomStaff, run: BackRoomRun): void => {
+  const feet = BAND_Y + one.z;
+  const middle = feet - 8;
+  const isTugging = one.grabSinceTick !== null && Math.floor(run.frame.tick / 4) % 2 === 0;
+
+  ctx.fillStyle = backRoomInk.shadow;
+  ellipse(ctx, one.x, feet, 6, 1.8);
+  ctx.fill();
+  ctx.globalAlpha = one.koTick === null ? 1 : 0.3;
+  ctx.fillStyle = backRoomInk.staff;
+  ellipse(ctx, one.x, middle, BACK_ROOM.staffHalfWidth, 7);
+  ctx.fill();
+  ellipse(ctx, one.x + one.facing * 3, middle - 10, 2.6, 2.6);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  if (one.koTick !== null) {
+    return;
+  }
+
+  ctx.strokeStyle = backRoomInk.heat;
+  ctx.lineWidth = isTugging ? 2 : 1;
+  ellipse(ctx, one.x, middle, BACK_ROOM.staffHalfWidth + 1.5, 8.5);
+  ctx.stroke();
+
+  if (one.hasHim) {
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(one.x, middle);
+    ctx.lineTo(run.sleeper.x, BAND_Y + run.sleeper.z - 3);
+    ctx.stroke();
+    label(ctx, `${copy.scene.hasHim} ×${one.grip + 1}`, one.x, middle - 15, 3.5, backRoomInk.heat);
+  } else {
+    label(ctx, one.grabSinceTick === null ? copy.scene.staff : copy.scene.tugging, one.x, middle - 15, 3.5, backRoomInk.heat);
   }
 };
 
@@ -224,7 +262,8 @@ export const paintBackRoomStreet = (ctx: CanvasRenderingContext2D, run: BackRoom
     ...frame.hens.map((hen): Figure => ({ z: hen.z, paint: () => paintHen(ctx, hen, run) })),
     ...frame.goons
       .filter((goon) => goon.state !== "gone")
-      .map((goon): Figure => ({ z: goon.z, paint: () => paintGoon(ctx, goon, run) }))
+      .map((goon): Figure => ({ z: goon.z, paint: () => paintGoon(ctx, goon) })),
+    ...run.staff.map((one): Figure => ({ z: one.z + 0.05, paint: () => paintStaff(ctx, one, run) }))
   ];
 
   if (sleeper.carrier === null) {
