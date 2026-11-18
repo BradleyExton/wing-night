@@ -6,10 +6,12 @@ confidence: sketch
 
 An expansion of a shipped game, not a new one: the first concrete candidate for
 [brawl-crew-spec.md](../brawl-crew-spec.md) §4.6 ("what expand it a lot adds"). Investigated
-2026-11-17. Nothing of the game is built and nothing should be until the throwaway prototype of §7
-(`/dev/lab/brawl-back-room`, built the same day) has been played. Decisions are marked the way the crew spec marks them: **(Brad)** is a call he made on
-2026-11-17, on a question card; everything else is mine and is his to overrule. A sketch of the
-building as a block is at `apps/client/public/mockups/brawl-back-room/index.html`.
+2026-11-17. Nothing of the game is built. The throwaway prototype of §7
+(`/dev/lab/brawl-back-room`) was built the same day and **Brad played it on 2026-11-18: "decent"**,
+with four calls that are recorded below. Decisions are marked the way the crew spec marks them:
+**(Brad)** is a call he made on a question card on 2026-11-17 or after playing the prototype on
+2026-11-18; everything else is mine and is his to overrule. A sketch of the building as a block is
+at `apps/client/public/mockups/brawl-back-room/index.html`.
 
 ## Pitch
 
@@ -41,6 +43,11 @@ to get a downed friend up, and nobody can do two of those at once.
 - **The opposition inside is geese on staff (Brad).** The dancers stay on the stage as scenery
   and as the thing that runs the tab. Nobody pecks a dancer. §5 has what that sets and what was
   not picked.
+- **He is carried, not herded (Brad, 2026-11-18, after playing both).** §3.
+- **A peck puts him down, and that is fine (Brad, 2026-11-18).** It stays inside the two-verb rule.
+- **The finale's clock is 120 seconds (Brad, 2026-11-18).** §4.
+- **The drag-back barely happened when he played (Brad, 2026-11-18).** Not a decision, a finding:
+  the tug of war the pitch rests on did not show up at the table. §3 says what that means.
 - **The repo calls him "the sleeper" (Brad).** His name and head come from the pack on the night
   (§6). No real name, no real-life story and none of the reference photos go into a commit; this
   repo is public.
@@ -102,7 +109,8 @@ minute and a quarter and four and a half, plus two holds.
 - **The finale is built on block 2's own skeleton**: three waves and an exit run, four windows of
   192. The beach's 33 s of perfect play is the floor; the lift, the carry (slower than a walk) and
   the tug of war go on top. The prototype's scripted crews take 42 to 45 s (§7), which puts a real
-  crew somewhere near 90. So **the finale's clock is its own number, and I would start it at 120 s** (§4). Worst
+  crew somewhere near 90. So **the finale's clock is its own number: 120 s (Brad, after
+  playing)** (§4). Worst
   case that is half a minute more per team than today. A fourth block would have been up to a
   minute and a half more, which is why I would not have recommended it.
 - **The boss goose becomes the bouncer.** Same goon, same rules, same `4 + 2 × (n − 1)` hp, a
@@ -174,8 +182,20 @@ Walk, peck, and stand still. Three ways to move a sleeping bird with those:
 | **b. Carry** | Stand over him and he is on her back. She walks slower and cannot peck: a peck puts him down. A hit drops him | One defenceless carrier and a crew of guards: jobs, not a queue. The clearest picture on the wall. The room's "BEHIND YOU" lands on the one hen who cannot answer it herself | A new arrangement to draw; a rule to learn on the clock |
 | c. Herd | He never wakes and is never lifted: a peck shoves him along the street the way a goon is shoved, and he bowls through geese | Smallest sim change of the three. The funniest thing to watch. A masher (hold right, hold peck) still gets him out, so the floor survives | No roles: five hens peck one body. A peck from the wrong side sends him back. Aim-assist has to choose between him and a goose. Less to shout |
 
-**Recommendation: b, carry — and prototype c beside it**, because c is a day's work on the same
-room and the only way to know which is funnier is to play both. The rest of this section is b.
+**Settled: b, carry (Brad, 2026-11-18).** I had recommended carry with herd prototyped beside
+it, because the only way to know which is funnier is to play both; he played both and picked
+carry. The rest of this section is b.
+
+**What the play-test did not confirm: the staff putting him back.** Brad's word was that the
+drag-back "barely happened". That matches what the prototype's own bots showed (§7: about 50 units
+in a run at most, often none), and it is the prototype's weakest fake: one goon, steered from
+outside the sim, that a bot pecks before it arrives. So the rule below is still the proposal, but
+it is **unproven as a source of pressure**. With it this quiet, the best play is to set him down,
+clear the room with every beak and walk him out, and the block is a normal block with a slow walk
+at the end. Before a spec, the drag-back needs to bite in the prototype — more than one goon may
+go for him, they get to him faster, a goon that has him takes more than one peck to shake off — and
+be played again. If it cannot be made to matter, the pressure has to come from somewhere else
+(the wallet alone, or goons that go for the carrier), and that is a different finale.
 
 - **Lifting him is the revive.** An up hen standing still (stick centred, not pecking, not
   reeling) within reach of him for `reviveTicks` (90, a second and a half) has him. The same ring
@@ -205,9 +225,10 @@ room and the only way to know which is funnier is to play both. The rest of this
   time), so it is not a new wall, but it is a wall: the finale cannot be mashed through at all.
   Under c it can.
 
-Is "a peck puts him down" a third verb? I think not — no new control, no new thumb, and the pad
-does not change — but it is the peck thumb gaining a second consequence, which is as close to the
-line as the October research's "do not add a third verb" allows. Brad's to rule.
+Is "a peck puts him down" a third verb? No **(Brad, 2026-11-18: "peck drop is fine")**. There is
+no new control, no new thumb, and the pad does not change; it is the peck thumb gaining a second
+consequence, which is as close to the line as the October research's "do not add a third verb"
+allows, and he has played it and ruled it inside.
 
 **Unresearched:** nothing in `docs/research/` covers an escort, carry or rescue objective. The
 genre's reputation for hated escort missions is common knowledge and not a finding here. If this
@@ -224,7 +245,8 @@ bell.
   number drops by twenty. Between charges the bill that is next burns down along its edge, so
   there is always something moving. Under the last bill the clock does what the house clock does
   in its last ten seconds (principle 1): it is the largest, loudest thing on the wall.
-- **Starting numbers, for the prototype to break:** a 120 s clock. The first song is a long one —
+- **The clock is 120 s (Brad, 2026-11-18).** The rest are starting numbers, which the prototype
+  did not break. The first song is a long one —
   nothing is charged for the first 50 s — then a bill every 10 s, and the eighth goes at the bell.
   The grace is there so that a perfect extraction keeps the whole wallet and a perfect course is
   still full points, the property the scoring's own comment promises.
@@ -297,7 +319,7 @@ What the pick sets:
 ## 7) What it costs, and what to try first
 
 **First, a throwaway prototype Brad plays** (the house way; the crew game itself began as one).
-**Built 2026-11-17, unplayed by a person: `/dev/lab/brawl-back-room`**
+**Built 2026-11-17, played by Brad 2026-11-18: `/dev/lab/brawl-back-room`**
 (`apps/client/src/components/BrawlBackRoomLab`). It is block 2 of the real crew sim with the
 sleeper bolted on in a wrapper round `stepBrawlCrew` (`backRoom/`), outside `packages/shared`, in
 flat shapes on a canvas. One or two people on the keyboard (W A S D and Space; arrows and Enter),
@@ -326,9 +348,14 @@ What it fakes, so nobody mistakes it for the rules:
   can open the page and play it alone with bots, which is enough to feel standing still on the
   real stick's dead zone.
 
-It should not be judged before the core game has been on real phones once (step 9), because the
-finale stands on things nobody has felt (below). Delete the lab folder, its route and its dev-index
-entry once it has been played.
+**What Brad said after playing it (2026-11-18):** "decent"; carry over herd; 120 seconds is fine;
+a peck dropping him is fine; the drag-back barely happened. Three of the prototype's four toggles
+are therefore answered and the fourth is the open problem (§3). The lab stays until the drag-back
+has been made to bite and played once more; then delete the folder, its route, its dev-index entry
+and its two test-list entries.
+
+One caution stands: the core game has still not been on real phones as pads (crew spec step 9), and
+the finale rests on the same unfelt stick and revive count.
 
 Then, if it is fun, in this order, each step ending with the gate green:
 
@@ -425,9 +452,11 @@ From [brawl-crew-spec.md](../brawl-crew-spec.md) §4, none of it felt on a real 
 
 Brad's:
 
-- Carry, herd, or both in the prototype and decide there?
-- Is "a peck puts him down" inside the two-verb rule?
-- The clock: 120 s for this block when every other is 90?
+- ~~Carry, herd, or both?~~ Carry (2026-11-18).
+- ~~Is "a peck puts him down" inside the two-verb rule?~~ Yes (2026-11-18).
+- ~~The clock: 120 s when every other block is 90?~~ Yes (2026-11-18).
+- **New, from the play-test:** the drag-back barely happened. Make it bite and play it again, or
+  find the pressure somewhere else? (§3)
 - The back room itself: where it is off the floor and what is in it. None of the references shows
   it.
 - When the sleeper is not at the party: everyone rescues him, or nobody does?
@@ -439,7 +468,8 @@ Brad's:
 
 Mine, for a spec:
 
-- Whether one goon "on him" is enough pressure for a crew of five and not too much for one.
+- ~~Whether one goon "on him" is enough pressure.~~ It is not: see the play-test (§3). How many,
+  how fast and how hard to shake off is now the first thing to find.
 - Whether the lift should take the revive's full second and a half or less: it happens more often.
 - What the wave meter shows in a block whose progress is one body's position. A track from the
   couch to the cab may say more than pips.
