@@ -28,5 +28,7 @@ export const yardNight = {
 export const padInk = {
   ring: "#f7f3ea",
   text: "#f7f3ea",
-  dim: "#8f8a99"
+  dim: "#8f8a99",
+  // The labels over the online lab's yard: there to find the halves, not to read.
+  faint: "#5a5763"
 } as const;

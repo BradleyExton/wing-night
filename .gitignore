@@ -16,6 +16,8 @@ content/local/
 # build is a deploy artefact.
 apps/client/teaser-public/
 apps/client/dist-teaser/
+# The online jump lab's build (vite.lab.config.ts), a deploy artefact like the teaser's.
+apps/client/dist-lab/
 # The teaser Worker's local secrets and wrangler dev's local D1/R2 state.
 .dev.vars
 .dev.vars.*

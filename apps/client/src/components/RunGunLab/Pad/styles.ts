@@ -1,12 +1,9 @@
-// The whole page is the controller: no scroll, no zoom, no selection, no long-press sheet.
-export const root =
-  "fixed inset-0 touch-none select-none overflow-hidden bg-bg text-text [-webkit-touch-callout:none] [-webkit-user-select:none]";
+// The whole page is the controller (`PadControls`); the header is drawn over it and lets touches through.
+export const root = "fixed inset-0 overflow-hidden bg-bg text-text";
 
 export const overlay = "pointer-events-none absolute inset-0 block";
 
 export const header = "fill-bg font-score text-lg font-bold";
-
-export const zoneLabel = "font-score text-4xl font-bold tracking-[0.08em]";
 
 export const zoneHint = "text-sm";
 

@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { BrawlCrewWalk } from "@wingnight/shared";
 
-import { crewNight } from "../CrewScene/palette.js";
+import { crewPadInk } from "../CrewScene/palette.js";
 import { crewPadCopy } from "./copy.js";
 import { STICK_RADIUS_PX, resolveStickCentre, resolveStickDir } from "./resolveStick/index.js";
 import * as styles from "./styles.js";
@@ -132,24 +132,24 @@ export const CrewPad = ({ colour, onWalk, onPeck, isLabelled }: CrewPadProps): J
         {isPecking && <rect x="50%" y={0} width="50%" height="100%" fill={colour} opacity={isLabelled ? 0.3 : 0.12} />}
         {isLabelled && (
           <>
-            <rect x="50%" y={0} width={1} height="100%" fill={crewNight.dim} opacity={0.5} />
-            <text className={styles.zoneLabel} x="25%" y="50%" textAnchor="middle" fill={crewNight.dim}>
+            <rect x="50%" y={0} width={1} height="100%" fill={crewPadInk.dim} opacity={0.5} />
+            <text className={styles.zoneLabel} x="25%" y="50%" textAnchor="middle" fill={crewPadInk.dim}>
               {crewPadCopy.walk}
             </text>
-            <text className={styles.zoneHint} x="25%" y="50%" dy={26} textAnchor="middle" fill={crewNight.dim}>
+            <text className={styles.zoneHint} x="25%" y="50%" dy={26} textAnchor="middle" fill={crewPadInk.dim}>
               {crewPadCopy.walkHint}
             </text>
-            <text className={styles.zoneLabel} x="75%" y="50%" textAnchor="middle" fill={isPecking ? crewNight.ink : crewNight.dim}>
+            <text className={styles.zoneLabel} x="75%" y="50%" textAnchor="middle" fill={isPecking ? crewPadInk.ink : crewPadInk.dim}>
               {crewPadCopy.peck}
             </text>
-            <text className={styles.zoneHint} x="75%" y="50%" dy={26} textAnchor="middle" fill={crewNight.dim}>
+            <text className={styles.zoneHint} x="75%" y="50%" dy={26} textAnchor="middle" fill={crewPadInk.dim}>
               {crewPadCopy.peckHint}
             </text>
           </>
         )}
         {stickView !== null && (
           <g>
-            <circle cx={stickView.cx} cy={stickView.cy} r={STICK_RADIUS_PX} fill="none" stroke={crewNight.ink} strokeWidth={2} opacity={0.5} />
+            <circle cx={stickView.cx} cy={stickView.cy} r={STICK_RADIUS_PX} fill="none" stroke={crewPadInk.ink} strokeWidth={2} opacity={0.5} />
             <circle cx={stickView.kx} cy={stickView.ky} r={24} fill={colour} opacity={0.85} />
           </g>
         )}

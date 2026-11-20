@@ -12,8 +12,14 @@ export const TEASER_ROUTES = {
   // The bird's wardrobe, a page of its own so a phone's back button leaves it for /me.
   wardrobe: `${PORTAL_HOME_PATH}/wardrobe`,
   admin: "/admin",
-  signIn: "/signin"
+  signIn: "/signin",
+  // Streets of Barrie together online (TeaserOnlineGame): `/play` makes a room, and
+  // `/play/<CODE>` is the link to send (TEASER_ROOM_PAGE_PREFIX in @wingnight/shared).
+  play: "/play"
 } as const;
+
+export const isTeaserPlayPath = (path: string): boolean =>
+  path === TEASER_ROUTES.play || path.startsWith(`${TEASER_ROUTES.play}/`);
 
 // A game's page is its slug. The slugs live here rather than on the games themselves
 // (TeaserSoloGame/teaserGames) so the landing and the page switch can name a game without

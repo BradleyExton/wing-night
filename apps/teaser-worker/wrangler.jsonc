@@ -54,13 +54,27 @@
     }
   ],
   // Per-IP limit on "email me a sign-in link" (src/authRoutes); the per-address limit is D1's.
+  // ROOM_LIMITER: per-IP limit on opening an online room's socket (src/index.ts). A phone opens
+  // one per room it joins and one per reload, so thirty a minute is far past a real player.
   "ratelimits": [
     {
       "name": "SIGNIN_LIMITER",
       "namespace_id": "1001",
       "simple": { "limit": 5, "period": 60 }
+    },
+    {
+      "name": "ROOM_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 30, "period": 60 }
     }
   ],
+  // The online rooms (docs/minigames/base-borden-spec.md §0.5): one Durable Object per room code,
+  // reached at /api/rooms/<CODE>/socket. SQLite-backed, as the Free plan requires; the room keeps
+  // nothing in storage yet, so the class carries no data to migrate.
+  "durable_objects": {
+    "bindings": [{ "name": "TEASER_ROOM", "class_name": "TeaserRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TeaserRoom"] }],
   "vars": {
     "MAIL_TRANSPORT": "resend",
     "MAIL_FROM": "party@wingnight.tv",

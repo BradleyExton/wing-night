@@ -64,15 +64,24 @@ const PORTAL_DEV_ORIGIN = process.env.TEASER_PORTAL_DEV_ORIGIN ?? "http://localh
 const portalProxy: ProxyOptions = {
   target: PORTAL_DEV_ORIGIN,
   changeOrigin: true,
-  // The Worker refuses a state-changing request whose Origin is not its own. A page Vite served
-  // is same-origin with Vite, so that Origin is translated to the Worker's, as one origin needs no
-  // translating in production; any other Origin passes through untouched and is refused.
+  // An online room's socket is under /api too (/api/rooms/<CODE>/socket, src/index.ts).
+  ws: true,
+  // The Worker refuses a state-changing request, and a room's socket, whose Origin is not its
+  // own. A page Vite served is same-origin with Vite, so that Origin is translated to the
+  // Worker's, as one origin needs no translating in production; any other Origin passes through
+  // untouched and is refused.
   configure: (proxy) => {
-    proxy.on("proxyReq", (proxyRequest, request) => {
+    const translateOrigin = (
+      proxyRequest: { setHeader: (name: string, value: string) => void },
+      request: { headers: { origin?: string; host?: string } }
+    ): void => {
       if (request.headers.origin === `http://${request.headers.host}`) {
         proxyRequest.setHeader("origin", PORTAL_DEV_ORIGIN);
       }
-    });
+    };
+
+    proxy.on("proxyReq", translateOrigin);
+    proxy.on("proxyReqWs", translateOrigin);
   }
 };
 

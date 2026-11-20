@@ -42,5 +42,24 @@ export const runGunLabCopy = {
     playerTag: (slot: number): string => `P${slot + 1}`,
     hearts: (hearts: number): string => "♥".repeat(Math.max(0, hearts)) || "down",
     roundTrip: (rttMs: number | null): string => (rttMs === null ? "— ms" : `${Math.round(rttMs)} ms`)
+  },
+  online: {
+    title: "Base Borden — online jump lab",
+    lede: "Two to four phones, anywhere, in one yard. Jump the low shots, duck the high ones.",
+    makeRoom: "Make a room",
+    shareHint: "Then send the link to whoever you're playing with.",
+    rotate: "Turn the phone sideways",
+    connecting: "Finding the room…",
+    reconnecting: "Lost the room — trying again…",
+    full: "The room is full: you're watching.",
+    share: "Share link",
+    copied: "Link copied",
+    shareTitle: "Base Borden jump lab",
+    roomTag: (code: string): string => `Room ${code}`,
+    playerTag: (slot: number): string => `P${slot + 1}`,
+    hearts: (hearts: number): string => "♥".repeat(Math.max(0, hearts)) || "down",
+    dodgeLine: (dodged: number, faced: number): string => (faced === 0 ? "no shots yet" : `dodged ${dodged} of ${faced}`),
+    inputLine: (ms: number | null): string => (ms === null ? "thumb → picture —" : `thumb → picture ${Math.round(ms)} ms`),
+    pingLine: (ms: number | null): string => (ms === null ? "ping —" : `ping ${Math.round(ms)} ms`)
   }
 } as const;

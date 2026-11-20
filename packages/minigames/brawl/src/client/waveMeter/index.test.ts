@@ -1,196 +1,73 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { BrawlFrame, BrawlGoon } from "@wingnight/shared";
-import { createBrawlRunStart, resolveBrawlBlock } from "@wingnight/shared";
+import { advanceBrawlCrew, createBrawlCrewStart, resolveBrawlCrewBlock, type BrawlCrewFrame } from "@wingnight/shared";
 
-import { paintWaveMeter, resolveWaveMeter } from "./index.js";
+import { resolveWaveMeter, resolveWaveMeterSignature } from "./index.js";
 
-// The sandbox's course: block 0 opens on three geese, then four.
-const block = resolveBrawlBlock({ seed: 20261001, blocks: 2, block: 0 });
-const start = createBrawlRunStart(block);
+const block = resolveBrawlCrewBlock({ seed: 20261001, blocks: 3, block: 0, crew: 3 });
+const start = createBrawlCrewStart(block);
 
-const goonFor = (spawnIndex: number, state: BrawlGoon["state"]): BrawlGoon => ({
-  spawnIndex,
-  kind: block.spawns[spawnIndex]?.kind ?? "goose",
-  x: 100,
-  y: 0,
-  vx: 0,
-  vy: 0,
-  facing: -1,
-  hp: 1,
-  state,
-  stateUntilTick: 0,
-  koTick: state === "ko" ? 10 : null
-});
-
-const firstWave = block.waves[0]?.spawns ?? [];
-
-test("does count every goon of the opening wave as still to come when the block is on the line", () => {
+test("does count the first wave goon by goon, every one of them still to come, with the edge each steps in from", () => {
   const meter = resolveWaveMeter(start, block);
+  const wave = block.waves[0];
 
   assert.equal(meter.waveIndex, 0);
   assert.equal(meter.waveCount, block.waves.length);
-  assert.equal(meter.pips.length, firstWave.length);
-  assert.ok(meter.pips.every((pip) => pip.state === "waiting" && !pip.down));
   assert.equal(meter.clear, false);
-  // Nothing has touched her: the star is lit and nothing is banked yet.
-  assert.equal(meter.clean, true);
-  assert.equal(meter.banked, false);
-});
-
-test("does tell the room which edge each waiting goon steps in from", () => {
-  const meter = resolveWaveMeter(start, block);
-
   assert.deepEqual(
-    meter.pips.map((pip) => pip.side),
-    firstWave.map((spawn) => spawn.side)
-  );
-  // Both edges, so the room has a BEHIND YOU to call before the goon is on the tablet.
-  assert.equal(new Set(meter.pips.map((pip) => pip.side)).size, 2);
-});
-
-test("does put the star out the moment she is hit in the wave, and relight it when the next wave opens", () => {
-  const fighting: BrawlFrame = { ...start, tick: 200, spawned: 2, goons: [goonFor(0, "approach")] };
-
-  assert.equal(resolveWaveMeter(fighting, block).clean, true);
-  assert.equal(resolveWaveMeter({ ...fighting, hits: [150] }, block).clean, false);
-  // A hit from the wave before does not count against this one.
-  assert.equal(resolveWaveMeter({ ...fighting, waveIndex: 1, waveOpenedTick: 160, hits: [150] }, block).clean, true);
-});
-
-test("does flare the star when the wave went down clean and keep it dark when it did not", () => {
-  const down: BrawlFrame = { ...start, tick: 400, cameraLocked: false, waveIndex: 1, spawned: firstWave.length, bonuses: [400] };
-  const clean = resolveWaveMeter(down, block);
-
-  assert.equal(clean.clear, true);
-  assert.equal(clean.clean, true);
-  assert.equal(clean.banked, true);
-
-  const bruised = resolveWaveMeter({ ...down, bonuses: [], hits: [300] }, block);
-
-  assert.equal(bruised.clear, true);
-  assert.equal(bruised.clean, false);
-  assert.equal(bruised.banked, false);
-});
-
-test("does light a goon that fell or was tidied away and not one still standing when the wave is fought", () => {
-  const frame: BrawlFrame = {
-    ...start,
-    tick: 200,
-    spawned: 2,
-    goons: [goonFor(1, "ko")]
-  };
-  const meter = resolveWaveMeter(frame, block);
-
-  // Spawn 0 stepped in and is gone (down), spawn 1 is falling (down), spawn 2 has not arrived.
-  assert.deepEqual(
-    meter.pips.map((pip) => pip.state),
-    ["down", "down", "waiting"]
-  );
-
-  const standing = resolveWaveMeter({ ...frame, goons: [goonFor(0, "telegraph"), goonFor(1, "ko")] }, block);
-
-  assert.deepEqual(
-    standing.pips.map((pip) => pip.down),
-    [false, true, false]
+    meter.pips.map((pip) => [pip.spawnIndex, pip.side, pip.state]),
+    wave?.spawns.map((spawn) => [spawn.index, spawn.side, "waiting"])
   );
 });
 
-test("does hold the wave just put down fully lit under GO when the camera lets go", () => {
-  const frame: BrawlFrame = { ...start, tick: 400, cameraLocked: false, waveIndex: 1, spawned: firstWave.length };
-  const meter = resolveWaveMeter(frame, block);
+test("does furnish the meter for the crew it was dealt for: more pips for more hens", () => {
+  const solo = resolveBrawlCrewBlock({ seed: 20261001, blocks: 3, block: 0, crew: 1 });
+
+  assert.ok(resolveWaveMeter(start, block).pips.length > resolveWaveMeter(createBrawlCrewStart(solo), solo).pips.length);
+});
+
+test("does stand a goon that has stepped in on the street and light one that has gone down", () => {
+  const fought = advanceBrawlCrew(start, block, [], 240);
+  const meter = resolveWaveMeter(fought, block);
+
+  assert.ok(fought.spawned > 0, "nobody stepped in");
+  assert.ok(meter.pips.some((pip) => pip.state === "in"));
+  assert.ok(meter.pips.filter((pip) => pip.state !== "waiting").length === Math.min(fought.spawned, meter.pips.length));
+
+  const first = fought.goons[0];
+  const swept: BrawlCrewFrame = { ...fought, goons: fought.goons.filter((goon) => goon !== first) };
+
+  assert.equal(resolveWaveMeter(swept, block).pips.find((pip) => pip.spawnIndex === first?.spawnIndex)?.state, "down");
+  assert.equal(
+    resolveWaveMeter({ ...fought, goons: fought.goons.map((goon) => (goon === first ? { ...goon, state: "ko" as const } : goon)) }, block).pips.find(
+      (pip) => pip.spawnIndex === first?.spawnIndex
+    )?.state,
+    "down"
+  );
+});
+
+test("does hold the wave just cleared, every pip lit, under GO once the camera lets go", () => {
+  const walkingOn: BrawlCrewFrame = { ...start, waveIndex: 1, cameraLocked: false, spawned: block.waves[0]?.spawns.length ?? 0, goons: [] };
+  const meter = resolveWaveMeter(walkingOn, block);
 
   assert.equal(meter.waveIndex, 0);
   assert.equal(meter.clear, true);
-  assert.equal(meter.pips.length, firstWave.length);
-  assert.ok(meter.pips.every((pip) => pip.down));
-
-  const last = resolveWaveMeter({ ...frame, waveIndex: block.waves.length }, block);
-
-  assert.equal(last.waveIndex, block.waves.length - 1);
-  assert.equal(last.clear, true);
+  assert.ok(meter.pips.every((pip) => pip.state === "down"));
 });
 
-type FakeElement = {
-  attributes: Map<string, string>;
-  children: FakeElement[];
-  getAttribute: (name: string) => string | null;
-  setAttribute: (name: string, value: string) => void;
-  querySelectorAll: (selector: string) => FakeElement[];
-};
+test("does count the next wave from its own first goon once the camera locks again", () => {
+  const next: BrawlCrewFrame = { ...start, waveIndex: 1, cameraLocked: true, spawned: block.waves[0]?.spawns.length ?? 0, goons: [] };
+  const meter = resolveWaveMeter(next, block);
 
-const createElement = (attributes: Record<string, string>, children: FakeElement[] = []): FakeElement => {
-  const map = new Map(Object.entries(attributes));
-  const element: FakeElement = {
-    attributes: map,
-    children,
-    getAttribute: (name) => map.get(name) ?? null,
-    setAttribute: (name, value) => {
-      map.set(name, value);
-    },
-    querySelectorAll: (selector) => {
-      const name = selector.slice(1, -1);
-      const found: FakeElement[] = [];
-      const walk = (node: FakeElement): void => {
-        for (const child of node.children) {
-          if (child.attributes.has(name)) {
-            found.push(child);
-          }
-
-          walk(child);
-        }
-      };
-
-      walk(element);
-      return found;
-    }
-  };
-
-  return element;
-};
-
-test("does mark the current wave's group, light its fallen pips, work the star and raise GO when it is painted", () => {
-  const pips = firstWave.map((spawn) => createElement({ "data-brawl-wave-pip": `${spawn.index}` }));
-  const star = createElement({ "data-brawl-wave-star": "" });
-  const groups = [createElement({ "data-brawl-wave-group": "0" }, pips), createElement({ "data-brawl-wave-group": "1" })];
-  const strip = createElement({}, [...groups, star]);
-  const frame: BrawlFrame = { ...start, tick: 200, spawned: 2, goons: [goonFor(1, "approach")] };
-
-  paintWaveMeter(strip as unknown as HTMLElement, resolveWaveMeter(frame, block));
-
-  assert.equal(groups[0]?.getAttribute("data-current"), "true");
-  assert.equal(groups[1]?.getAttribute("data-current"), "false");
-  assert.deepEqual(
-    pips.map((pip) => pip.getAttribute("data-lit")),
-    ["true", "false", "false"]
-  );
-  assert.equal(strip.getAttribute("data-brawl-wave-clear"), "false");
-  assert.equal(strip.getAttribute("data-brawl-wave-clean"), "true");
-  assert.equal(strip.getAttribute("data-brawl-wave-down"), "1");
-  assert.equal(star.getAttribute("data-clean"), "true");
-  assert.equal(star.getAttribute("data-banked"), "false");
-
-  // She is hit: the star dies on the spot, and the pips are untouched.
-  paintWaveMeter(strip as unknown as HTMLElement, resolveWaveMeter({ ...frame, tick: 210, hits: [210] }, block));
-
-  assert.equal(star.getAttribute("data-clean"), "false");
-  assert.equal(strip.getAttribute("data-brawl-wave-clean"), "false");
-  assert.equal(strip.getAttribute("data-brawl-wave-down"), "1");
-
-  paintWaveMeter(
-    strip as unknown as HTMLElement,
-    resolveWaveMeter({ ...frame, cameraLocked: false, waveIndex: 1, goons: [], bonuses: [300] }, block)
-  );
-
-  assert.equal(strip.getAttribute("data-brawl-wave-clear"), "true");
-  assert.ok(pips.every((pip) => pip.getAttribute("data-lit") === "true"));
-  // Down clean: the star flares.
-  assert.equal(star.getAttribute("data-clean"), "true");
-  assert.equal(star.getAttribute("data-banked"), "true");
+  assert.equal(meter.waveIndex, 1);
+  assert.ok(meter.pips.every((pip) => pip.state === "waiting"));
 });
 
-test("does nothing when there is no strip to write into", () => {
-  assert.doesNotThrow(() => {
-    paintWaveMeter(null, resolveWaveMeter(start, block));
-  });
+test("does keep its signature while the count stands and change it when a goon steps in or goes down", () => {
+  const before = resolveWaveMeterSignature(resolveWaveMeter(start, block));
+
+  const later: BrawlCrewFrame = { ...start, tick: 9 };
+
+  assert.equal(resolveWaveMeterSignature(resolveWaveMeter(later, block)), before);
+  assert.notEqual(resolveWaveMeterSignature(resolveWaveMeter(advanceBrawlCrew(start, block, [], 240), block)), before);
 });

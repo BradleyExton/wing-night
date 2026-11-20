@@ -15,6 +15,9 @@ export const teaserLandingCopy = {
   slingshlongSummary: "Pull back, let fly, topple the tower.",
   streetsOfBarrieTitle: "Streets of Barrie",
   streetsOfBarrieSummary: "Walk the street, peck the geese. Watch behind you.",
+  streetsTogetherTitle: "Streets of Barrie, together",
+  streetsTogetherSummary: "Two to five phones on one street. Make a room and send the link.",
+  playOnlineLabel: "Play online",
   playLabel: "Play",
   signInLabel: "Sign in"
 } as const;

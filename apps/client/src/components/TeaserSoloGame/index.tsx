@@ -3,7 +3,7 @@ import { wakeAudio } from "@wingnight/audio";
 import { CONTESTANT_CONTROLLERS } from "@wingnight/shared";
 import type { SerializableValue } from "@wingnight/minigames-core";
 
-import type { TeaserRoster } from "../../utils/parseTeaserRoster";
+import type { TeaserRoster } from "@wingnight/shared";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useRuntimeDeadline } from "../../utils/useRuntimeDeadline";
 import { useServerOrigin } from "../../utils/useServerOrigin";

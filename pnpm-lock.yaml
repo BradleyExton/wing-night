@@ -226,6 +226,15 @@ importers:
       '@wingnight/avatar-head':
         specifier: workspace:*
         version: link:../../packages/avatar-head
+      '@wingnight/minigames-brawl':
+        specifier: workspace:*
+        version: link:../../packages/minigames/brawl
+      '@wingnight/minigames-core':
+        specifier: workspace:*
+        version: link:../../packages/minigames/core
+      '@wingnight/minigames-schlonic':
+        specifier: workspace:*
+        version: link:../../packages/minigames/schlonic
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../packages/shared

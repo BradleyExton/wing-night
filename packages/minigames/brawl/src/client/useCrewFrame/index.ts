@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import {
   BRAWL_CREW_WORLD,
   advanceBrawlCrew,
@@ -40,9 +40,72 @@ export const resolveCrewAnchor = (held: Anchor | null, key: string, frame: Brawl
     : { key, frame, atMs: nowMs - ((reached - frame.tick) * 1000) / TICK_HZ };
 };
 
-type CrewStreet = {
-  /** The fight as this screen draws it now, stepped on from the last frame the server sent. */
-  frame: BrawlCrewFrame | null;
+/**
+ * One block of the street as this screen is drawing it: a little store, not React state. The
+ * fight moves sixty times a second and nothing a surface renders should re-render that often, so
+ * the scene and the sounds subscribe and paint from the frame themselves, and the chrome reads
+ * only the few values it shows (`useStreetValue`), re-rendering when one of them changes.
+ */
+export type CrewStreet = {
+  /** The frame on screen now, or null before the street is laid out. */
+  read: () => BrawlCrewFrame | null;
+  /**
+   * Which fight the frame belongs to: the block and the server clock it started on, or its line
+   * before it starts. It changes when the street does, so a listener can tell a new fight from
+   * the next frame of the old one.
+   */
+  key: () => string;
+  /** Called after every frame this screen draws. Returns the unsubscribe. */
+  subscribe: (listener: () => void) => () => void;
+};
+
+type StreetStore = CrewStreet & { set: (key: string, frame: BrawlCrewFrame | null) => void };
+
+const createStreetStore = (): StreetStore => {
+  const listeners = new Set<() => void>();
+  let frame: BrawlCrewFrame | null = null;
+  let key = "";
+
+  return {
+    read: () => frame,
+    key: () => key,
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return (): void => {
+        listeners.delete(listener);
+      };
+    },
+    set: (nextKey, nextFrame) => {
+      if (nextKey === key && nextFrame === frame) {
+        return;
+      }
+
+      key = nextKey;
+      frame = nextFrame;
+      listeners.forEach((listener) => {
+        listener();
+      });
+    }
+  };
+};
+
+/**
+ * One value off the street, as React state: re-rendered only when the value itself changes.
+ * `select` must hand back a primitive (a number, a string, a boolean, null) — it is compared by
+ * identity after every frame.
+ */
+export const useStreetValue = <Value extends string | number | boolean | null>(
+  street: CrewStreet,
+  select: (frame: BrawlCrewFrame | null) => Value
+): Value => {
+  const read = (): Value => select(street.read());
+
+  return useSyncExternalStore(street.subscribe, read, read);
+};
+
+type CrewStreetState = {
+  street: CrewStreet;
   layout: BrawlCrewBlock | null;
 };
 
@@ -54,7 +117,7 @@ type CrewStreet = {
 export const useCrewFrame = (
   block: BrawlMinigameBlock | null,
   course: { courseSeed: number; blocksPerTurn: number }
-): CrewStreet => {
+): CrewStreetState => {
   const crew = block === null ? 0 : (block.crewSize ?? block.crew.length);
   const blockIndex = block?.blockIndex ?? 0;
   const layout = useMemo(() => {
@@ -73,23 +136,38 @@ export const useCrewFrame = (
 
     return crew === 0 ? { ...start, hens: [] } : start;
   }, [layout, crew]);
+  const storeRef = useRef<StreetStore | null>(null);
   const anchor = useRef<Anchor | null>(null);
-  const current = useRef<BrawlCrewFrame | null>(null);
-  const [, setPaint] = useState(0);
+  // A frame has landed that the loop has not drawn yet: the next paint draws it even if the
+  // screen's clock has not moved past it (a frame ahead of the screen, or a block's last).
+  const isDirty = useRef(false);
   const serverFrame = block?.frame ?? null;
-  const key = `${blockIndex}:${block?.startedAtMs ?? "line"}`;
+  const key = block === null ? "" : `${blockIndex}:${block.startedAtMs ?? "line"}:${crew}`;
+
+  storeRef.current ??= createStreetStore();
+
+  const store = storeRef.current;
 
   useLayoutEffect(() => {
     if (serverFrame === null) {
       anchor.current = null;
-      current.current = null;
+      isDirty.current = false;
+      // The line, or nothing: drawn at once, there is no clock to wait for.
+      store.set(key, lineup);
 
       return;
     }
 
+    const isNewFight = anchor.current === null || anchor.current.key !== key;
+
     anchor.current = resolveCrewAnchor(anchor.current, key, serverFrame, performance.now());
-    current.current = serverFrame;
-  }, [key, serverFrame]);
+
+    if (isNewFight) {
+      store.set(key, serverFrame);
+    } else {
+      isDirty.current = true;
+    }
+  }, [key, serverFrame, lineup, store]);
 
   useEffect(() => {
     if (layout === null) {
@@ -100,15 +178,14 @@ export const useCrewFrame = (
 
     const paint = (nowMs: number): void => {
       const held = anchor.current;
-      const drawn = current.current;
 
-      if (held !== null && drawn !== null && drawn.outcome === null) {
+      if (held !== null) {
+        const from = isDirty.current ? held.frame : (store.read() ?? held.frame);
         const reached = Math.floor(resolveScreenTick(held, nowMs));
+        const drawn = from.outcome === null && reached > from.tick ? advanceBrawlCrew(from, layout, [], Math.min(reached, from.tick + MAX_TICKS_A_PAINT)) : from;
 
-        if (reached > drawn.tick) {
-          current.current = advanceBrawlCrew(drawn, layout, [], Math.min(reached, drawn.tick + MAX_TICKS_A_PAINT));
-          setPaint((count) => count + 1);
-        }
+        isDirty.current = false;
+        store.set(held.key, drawn);
       }
 
       handle = window.requestAnimationFrame(paint);
@@ -119,7 +196,7 @@ export const useCrewFrame = (
     return (): void => {
       window.cancelAnimationFrame(handle);
     };
-  }, [layout]);
+  }, [layout, store]);
 
-  return { frame: serverFrame === null ? lineup : (current.current ?? serverFrame), layout };
+  return { street: store, layout };
 };

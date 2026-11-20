@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { UserRound } from "lucide-react";
 
-import type { TeaserRoster } from "../../utils/parseTeaserRoster";
+import type { TeaserRoster } from "@wingnight/shared";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { useMediaQuery } from "../../utils/useMediaQuery";
 import { useBeatClock } from "../DisplayBoard/useBeatClock";
@@ -113,6 +113,13 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
             summary={teaserLandingCopy.streetsOfBarrieSummary}
             href={resolveTeaserGameHref(TEASER_GAME_SLUGS.streetsOfBarrie)}
             statusLabel={teaserLandingCopy.playLabel}
+          />
+          <TeaserGameCard
+            minigame="BRAWL"
+            title={teaserLandingCopy.streetsTogetherTitle}
+            summary={teaserLandingCopy.streetsTogetherSummary}
+            href={TEASER_ROUTES.play}
+            statusLabel={teaserLandingCopy.playOnlineLabel}
           />
         </div>
       </section>

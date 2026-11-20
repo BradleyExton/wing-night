@@ -1,4 +1,4 @@
-// PROTOTYPE — throwaway (docs/minigames/ideas/base-borden.md, open question 1). A yard with a
+// PROTOTYPE — throwaway (docs/minigames/base-borden-spec.md §0.2). A yard with a
 // turret wall at each end, stepped at 60 Hz on the page that draws it. Every shot flies level, so
 // there is exactly one way past each: jump the low ones, duck the high ones. That makes the count
 // of shots dodged a clean reading of whether a thumb's timing survives the trip from a phone,

@@ -71,7 +71,7 @@ test("links every dev lab and every minigame sandbox", async ({ page }) => {
     await expect(page.locator(`a[href="/dev/minigame/${slug}"]`)).toBeVisible();
   }
 
-  for (const labName of ["anamorph", "contraption", "contraption-ui"]) {
+  for (const labName of ["anamorph", "contraption", "contraption-ui", "brawl-back-room"]) {
     await expect(page.locator(`a[href="/dev/lab/${labName}"]`)).toBeVisible();
   }
 });

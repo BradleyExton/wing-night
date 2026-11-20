@@ -42,6 +42,11 @@ export const devRouteIndexCopy = {
       href: "/dev/lab/rungun-pad",
       label: "Base Borden jump lab — the pad (phone)",
       detail: "Throwaway controls prototype: the crew pad's stick on the left, JUMP on the right. Opens on a phone."
+    },
+    {
+      href: "/dev/lab/brawl-back-room",
+      label: "Streets of Barrie — Back Room Lab",
+      detail: "Throwaway prototype of the indoor finale idea: carry a sleeper out the back while his wallet runs down. Deleted once it has been played."
     }
   ] as const
 } as const;

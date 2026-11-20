@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { schlonicDevManifest } from "@wingnight/minigames-schlonic/dev";
 
-import {
-  parseTeaserRoster,
-  TEASER_ROSTER_PATH,
-  type TeaserRoster
-} from "../../../utils/parseTeaserRoster";
+import { parseTeaserRoster, TEASER_ROSTER_PATH, type TeaserRoster } from "@wingnight/shared";
 
 // A site built without the night pack — or one whose roster file is missing — still has
 // somebody to put on the street: the minigame's own fixture roster.

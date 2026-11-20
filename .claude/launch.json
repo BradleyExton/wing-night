@@ -153,6 +153,40 @@
       ],
       "port": 5473,
       "url": "http://localhost:5473"
+    },
+    {
+      "name": "wing-night-lab-client-share",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": [
+        "exec",
+        "--using=25",
+        "pnpm",
+        "--filter",
+        "@wingnight/client",
+        "exec",
+        "vite",
+        "--host",
+        "--port",
+        "5474",
+        "--strictPort",
+        "--mode",
+        "share"
+      ],
+      "port": 5474,
+      "url": "http://localhost:5474"
+    },
+    {
+      "name": "wing-night-lab-online-room",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": ["exec", "--using=25", "pnpm", "--filter", "@wingnight/teaser-worker", "lab:dev"],
+      "port": 8788
+    },
+    {
+      "name": "wing-night-lab-online",
+      "runtimeExecutable": "fnm",
+      "runtimeArgs": ["exec", "--using=25", "pnpm", "--filter", "@wingnight/client", "dev:lab"],
+      "port": 5475,
+      "url": "http://localhost:5475"
     }
   ]
 }

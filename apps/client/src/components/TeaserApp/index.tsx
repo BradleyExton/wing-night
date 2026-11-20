@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 
 import { AppErrorBoundary } from "../AppErrorBoundary";
 import { TeaserLanding } from "../TeaserLanding";
-import { isTeaserGamePath, resolveTeaserPath, TEASER_ROUTES } from "./teaserRoutes";
+import { isTeaserGamePath, isTeaserPlayPath, resolveTeaserPath, TEASER_ROUTES } from "./teaserRoutes";
 import { useTeaserRoster } from "./useTeaserRoster";
 import * as styles from "./styles";
 
@@ -12,6 +12,10 @@ import * as styles from "./styles";
 // path is read once and there is no router, so exactly one of these ever loads.
 const TeaserGamePage = lazy(() =>
   import("../TeaserSoloGame").then((module) => ({ default: module.TeaserGamePage }))
+);
+
+const TeaserOnlineGame = lazy(() =>
+  import("../TeaserOnlineGame").then((module) => ({ default: module.TeaserOnlineGame }))
 );
 
 const PortalProfile = lazy(() =>
@@ -43,6 +47,10 @@ export const TeaserApp = (): JSX.Element => {
   const page = ((): JSX.Element | null => {
     if (isTeaserGamePath(path)) {
       return isLoaded ? <TeaserGamePage path={path} roster={roster} /> : null;
+    }
+
+    if (isTeaserPlayPath(path)) {
+      return isLoaded ? <TeaserOnlineGame path={path} roster={roster} /> : null;
     }
 
     if (path === TEASER_ROUTES.me) {

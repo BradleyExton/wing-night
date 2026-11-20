@@ -32,6 +32,8 @@ export default [
       "**/dist/**",
       // The online teaser's build output and its pack-filled public dir (vite.teaser.config.ts).
       "apps/client/dist-teaser/**",
+      // The online jump lab's build (vite.lab.config.ts).
+      "apps/client/dist-lab/**",
       "apps/client/teaser-public/**",
       // wrangler dev's local D1/R2 state and its bundled Worker (apps/teaser-worker).
       "**/.wrangler/**",

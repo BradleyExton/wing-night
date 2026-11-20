@@ -73,6 +73,25 @@ export type {
 } from "./outfit/index.js";
 export type { Player } from "./player/index.js";
 export type { Team } from "./team/index.js";
+export { TEASER_ROSTER_PATH, parseTeaserRoster, type TeaserRoster } from "./teaserRoster/index.js";
+export {
+  TEASER_ROOM_CODE_PATTERN,
+  TEASER_ROOM_GAMES,
+  TEASER_ROOM_MESSAGE_CHARS_MAX,
+  TEASER_ROOM_PAGE_PREFIX,
+  TEASER_ROOM_SEATS_MAX,
+  TEASER_ROOM_SOCKETS_MAX,
+  isTeaserRoomCode,
+  parseTeaserRoomClientMessage,
+  resolveTeaserRoomSocketPath,
+  type TeaserRoomClientMessage,
+  type TeaserRoomGame,
+  type TeaserRoomPhase,
+  type TeaserRoomRefusal,
+  type TeaserRoomSeat,
+  type TeaserRoomServerMessage,
+  type TeaserRoomSnapshot
+} from "./teaserRoom/index.js";
 export { TEAM_AUDIO_ROUTE_PATH } from "./team/index.js";
 export {
   CHARACTER_APPARELS,

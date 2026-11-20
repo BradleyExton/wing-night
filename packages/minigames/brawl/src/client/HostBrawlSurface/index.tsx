@@ -6,7 +6,10 @@ import { CrewPad } from "../CrewPad/index.js";
 import { CrewScene } from "../CrewScene/index.js";
 import { resolveCrewSlotColour } from "../CrewScene/palette.js";
 import { resolveLiveBanked, resolveShownBlock } from "../shownBlock/index.js";
-import { useCrewFrame } from "../useCrewFrame/index.js";
+import { TurnAwards } from "../TurnAwards/index.js";
+import { resolveTurnAwards } from "../TurnAwards/resolveTurnAwards/index.js";
+import { useCrewFrame, useStreetValue } from "../useCrewFrame/index.js";
+import { useCrewSounds } from "../useCrewSounds/index.js";
 import { hostBrawlSurfaceCopy } from "./copy.js";
 import * as styles from "./styles.js";
 
@@ -48,9 +51,9 @@ const resolveStartLabel = (view: BrawlMinigameHostView, seat: MinigameSeat): str
     : hostBrawlSurfaceCopy.startTabletButtonLabel;
 };
 
-// BRAWL's host surface, INTERIM (docs/minigames/brawl-crew-spec.md §0.6, §0.7, §0.10). At play it
+// BRAWL's host surface (docs/minigames/brawl-crew-spec.md §0.6, §0.7, DESIGN.md §2.14). At play it
 // is a `<TakeoverCanvas>` whose body is the crew's street, drawn from the server's frame like the
-// wall's. In a crew's fight the tablet is the host's monitor and nothing else: Start, Skip block,
+// wall's and silent beside it. In a crew's fight the tablet is the host's monitor and nothing else: Start, Skip block,
 // Reset turn. When the block is the tablet's own — a turn locked to the tablet, nobody stepped
 // out, the teaser — the two thumbs are laid over the street and this screen plays the one hen.
 //
@@ -70,9 +73,13 @@ export const HostBrawlSurface = ({
 }: MinigameHostRendererProps): JSX.Element => {
   const view = minigameHostView?.minigame === "BRAWL" ? minigameHostView : null;
   const shown = view === null ? null : resolveShownBlock(view);
-  const { frame, layout } = useCrewFrame(shown, view ?? NO_COURSE);
+  const { street, layout } = useCrewFrame(shown, view ?? NO_COURSE);
+  const drawnBanked = useStreetValue(street, (frame) => frame?.banked ?? null);
   const { dispatchVerdict, isSettling: isVerdictSettling } = useVerdictDispatch(onDispatchAction);
   const canAct = canDispatchAction && view !== null;
+
+  // The TV is the room's speaker. This screen only sounds when it is the whole game: the teaser.
+  useCrewSounds({ street, hazard: layout?.hazard?.kind ?? null, serverOrigin, isSpeaker: seat === "solo" });
 
   // Every hook above runs on both beats: the intro is a panel in the host's own control deck.
   if (phase !== "play") {
@@ -102,7 +109,7 @@ export const HostBrawlSurface = ({
             </span>
             <span className={styles.counterTally}>
               <span className={styles.counterTallyValue} data-brawl-banked>
-                {hostBrawlSurfaceCopy.tally(resolveLiveBanked(view, shown, frame?.banked ?? null), view.total)}
+                {hostBrawlSurfaceCopy.tally(resolveLiveBanked(view, shown, drawnBanked), view.total)}
               </span>
               <span className={styles.counterLabel}>{hostBrawlSurfaceCopy.tallyLabel}</span>
             </span>
@@ -179,6 +186,12 @@ export const HostBrawlSurface = ({
               <p className={styles.finishTitle}>{hostBrawlSurfaceCopy.finishedTitle}</p>
               <span className={styles.finishPoints}>{hostBrawlSurfaceCopy.finishPoints(view.points ?? 0)}</span>
             </div>
+            <TurnAwards
+              awards={resolveTurnAwards(view.turnStats, view.roster)}
+              activeTurnTeamId={view.activeTurnTeamId}
+              serverOrigin={serverOrigin}
+              tone="tablet"
+            />
             {seat !== "contestant" && (
               <RunningTotals
                 pendingPointsByTeamId={view.pendingPointsByTeamId}
@@ -191,12 +204,12 @@ export const HostBrawlSurface = ({
         )
       }
     >
-      {view === null || shown === null || frame === null || layout === null ? (
+      {view === null || shown === null || layout === null ? (
         <p className={styles.waitingNote}>{hostBrawlSurfaceCopy.waitingStreetLabel}</p>
       ) : (
         <div className={styles.street} data-brawl-street-mode={isPlayingHere ? "pad" : "monitor"}>
           <CrewScene
-            frame={frame}
+            street={street}
             layout={layout}
             crew={shown.crew}
             activeTurnTeamId={view.activeTurnTeamId}

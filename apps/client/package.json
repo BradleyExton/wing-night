@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "dev:teaser": "vite --config vite.teaser.config.ts --port 5173 --strictPort",
     "build:teaser": "vite build --config vite.teaser.config.ts",
+    "dev:lab": "vite --config vite.lab.config.ts --port 5475 --strictPort",
+    "build:lab": "vite build --config vite.lab.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --tsconfig ../../tsconfig.tsx-runtime.json --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\""
   },

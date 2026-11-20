@@ -26,6 +26,7 @@ const ROUTE_PATHNAMES = [
   "/dev/lab/anamorph",
   "/dev/lab/contraption",
   "/dev/lab/contraption-ui",
+  "/dev/lab/brawl-back-room",
   "/no-such-route"
 ];
 

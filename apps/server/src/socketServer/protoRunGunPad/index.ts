@@ -1,7 +1,7 @@
 import type { Server } from "socket.io";
 
-// PROTOTYPE — throwaway, deleted with the client's RunGunLab when the run-and-gun idea
-// (docs/minigames/ideas/base-borden.md) is specced or dropped. A namespace of its own, so none of
+// PROTOTYPE — throwaway, deleted with the client's RunGunLab when the run-and-gun game
+// (docs/minigames/base-borden-spec.md §0.7 step 7) ships or is dropped. A namespace of its own, so none of
 // the room's seats, tokens or typed events are in reach of it: a phone pad says what its thumbs
 // are doing, the yard on the TV hears it, and the TV's acknowledgement goes back to that one pad
 // so it can time the round trip. The server relays and nothing else — the yard page runs the sim.

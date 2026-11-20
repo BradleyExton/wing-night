@@ -71,10 +71,14 @@ const RunGunYardLab = lazy(() =>
   import("../RunGunLab/Yard").then((module) => ({ default: module.RunGunYardLab }))
 );
 
-// Throwaway — the run-and-gun jump lab (docs/minigames/ideas/base-borden.md): a phone pad and the
-// yard it drives on the TV. Deleted when the game is specced or dropped.
+// Throwaway — the run-and-gun jump lab (docs/minigames/base-borden-spec.md): a phone pad and the
+// yard it drives on the TV. Deleted when the game ships or is dropped (spec §0.7 step 7).
 const RUNGUN_PAD_LAB_NAME = "rungun-pad";
 const RUNGUN_YARD_LAB_NAME = "rungun-yard";
+
+const BrawlBackRoomLab = lazy(() =>
+  import("../BrawlBackRoomLab").then((module) => ({ default: module.BrawlBackRoomLab }))
+);
 
 // Throwaway — deleted along with the lab when the ANAMORPH minigame ships
 // (BACKLOG.md § Minigames).
@@ -85,6 +89,10 @@ const CONTRAPTION_LAB_NAME = "contraption";
 
 // Throwaway — deleted along with the prototype when CONTRAPTION ships.
 const CONTRAPTION_UI_LAB_NAME = "contraption-ui";
+
+// Throwaway — deleted when Brad has played the Streets of Barrie finale idea
+// (docs/minigames/ideas/brawl-back-room-finale.md §7).
+const BRAWL_BACK_ROOM_LAB_NAME = "brawl-back-room";
 
 type RouteContentProps = {
   route: ClientRoute;
@@ -167,6 +175,10 @@ const resolveRouteElement = ({
 
   if (route === "DEV_LAB" && devLabName === RUNGUN_YARD_LAB_NAME) {
     return <RunGunYardLab />;
+  }
+
+  if (route === "DEV_LAB" && devLabName === BRAWL_BACK_ROOM_LAB_NAME) {
+    return <BrawlBackRoomLab />;
   }
 
 

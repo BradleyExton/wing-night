@@ -34,10 +34,10 @@ const DEFAULT_SETTINGS: LabSettings = {
 };
 
 /**
- * PROTOTYPE — throwaway (docs/minigames/ideas/base-borden.md, open question 1). The TV half of the
+ * PROTOTYPE — throwaway (docs/minigames/base-borden-spec.md §0.2). The TV half of the
  * run-and-gun jump lab: a yard run here at 60 Hz from whatever the phone pads say, the candidate
  * rules on a panel, and beside each hen the one number the lab exists for — how many of the shots
- * that came at her she got out of the way of. Deleted when the game is specced or dropped.
+ * that came at her she got out of the way of. Deleted when the game ships or is dropped (spec §0.7 step 7).
  */
 export const RunGunYardLab = (): JSX.Element => {
   const worldRef = useRef<YardWorld | null>(null);

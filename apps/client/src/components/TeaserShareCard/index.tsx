@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { TeaserRoster } from "../../utils/parseTeaserRoster";
+import type { TeaserRoster } from "@wingnight/shared";
 import { resolveTeamThemeById } from "../../utils/resolveTeamTheme";
 import { CastParade } from "../DisplayBoard/StageSurface/SetupStageBody/CastParade";
 import { Embers } from "../DisplayBoard/StageSurface/SetupStageBody/Embers";

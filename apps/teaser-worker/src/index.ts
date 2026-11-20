@@ -1,16 +1,25 @@
 // The Worker's entry: turns the bindings in wrangler.jsonc into the portal's deps and hands the
-// request to the app. Nothing else in src/ touches a workerd type, so the tests run on Node.
+// request to the app, after taking the one request the app cannot answer on Node: an online
+// room's socket, handed to that room's Durable Object (src/teaserRoomObject.ts). Nothing else in
+// src/ but that object touches a workerd type, so the tests run on Node.
 import { DEFAULT_GEMINI_IMAGE_MODEL } from "@wingnight/avatar-head";
+
+import { isTeaserRoomCode } from "@wingnight/shared";
 
 import { handleRequest } from "./app/index.ts";
 import { resolveHeadPainter } from "./headPainter/index.ts";
 import { resolveMailTransport } from "./mail/index.ts";
+import type { TeaserRoom } from "./teaserRoomObject.ts";
+
+export { TeaserRoom } from "./teaserRoomObject.ts";
 
 type Env = {
   ASSETS: Fetcher;
   DB: D1Database;
   BUCKET: R2Bucket;
   SIGNIN_LIMITER: RateLimit;
+  TEASER_ROOM: DurableObjectNamespace<TeaserRoom>;
+  ROOM_LIMITER: RateLimit;
   MAIL_TRANSPORT?: string;
   MAIL_FROM?: string;
   GEMINI_TRANSPORT?: string;
@@ -37,8 +46,48 @@ const sizeBody = (body: ReadableStream<Uint8Array>, byteLength: number): Readabl
   return sized.readable;
 };
 
+// `/api/rooms/<CODE>/socket` (the path in @wingnight/shared's resolveTeaserRoomSocketPath).
+const ROOM_SOCKET_PATH = /^\/api\/rooms\/([^/]+)\/socket$/;
+
+// An online room's socket, or null when the request is not one. A page on another site may not
+// open a room here (a browser always sends Origin on a WebSocket), and opening sockets is limited
+// per address, as signing in is.
+const routeRoomSocket = async (request: Request, env: Env): Promise<Response | null> => {
+  const url = new URL(request.url);
+  const match = ROOM_SOCKET_PATH.exec(url.pathname);
+
+  if (match === null) {
+    return null;
+  }
+
+  const code = match[1] ?? "";
+  const origin = request.headers.get("Origin");
+
+  if (!isTeaserRoomCode(code)) {
+    return new Response("Not a room", { status: 404 });
+  }
+
+  if (origin !== null && origin !== url.origin) {
+    return new Response("Forbidden", { status: 403 });
+  }
+
+  const { success } = await env.ROOM_LIMITER.limit({ key: request.headers.get("cf-connecting-ip") ?? "unknown" });
+
+  if (!success) {
+    return new Response("Too many rooms", { status: 429 });
+  }
+
+  return env.TEASER_ROOM.getByName(code).fetch(request);
+};
+
 export default {
-  fetch: (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> => {
+  fetch: async (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> => {
+    const roomResponse = await routeRoomSocket(request, env);
+
+    if (roomResponse !== null) {
+      return roomResponse;
+    }
+
     return handleRequest(request, {
       db: env.DB,
       bucket: env.BUCKET,
