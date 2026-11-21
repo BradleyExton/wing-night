@@ -6,7 +6,7 @@ A shipped game has one name: the `displayName` on its entry in `MINIGAME_DEFINIT
 which is what the **Game** column reads. **Id** is the enum key the code, the config and the
 package folder use; it is an identifier, never a title, and no game carries a third name.
 
-Last updated: 2026-10-02
+Last updated: 2026-11-21
 
 ## Stages
 
@@ -38,11 +38,11 @@ Last updated: 2026-10-02
 | Wing Roulette | — | idea | promising | [ideas/wing-roulette.md](ideas/wing-roulette.md) — push-your-luck peck at a wing rack; the roster's first chance game; cheapest build on the list |
 | Kempenfelt Curling | — | idea | promising | [ideas/kempenfelt-curling.md](ideas/kempenfelt-curling.md) — drag-release throw plus a teammate sweep after the commit; every team's stones stay in the house |
 | Scream Run | — | idea | promising | [ideas/scream-run.md](ideas/scream-run.md) — the tablet mic is the controller; blocked on HTTPS or a Chrome flag on the tablet |
-| Base Borden (working title) | — | spec | promising | [base-borden-spec.md](base-borden-spec.md) — a run-and-gun relay for two to four people on their own phones, online on the teaser in a Cloudflare room that any crew game can use; teaser only, not in the night; jump lab played by Brad 2026-11-19 |
+| Base Borden | `BORDEN` | shipped | — | [packages/minigames/borden/](../../packages/minigames/borden/) ([spec](base-borden-spec.md)) — a run-and-gun relay of the cast through an army base, two hens at a time spraying hot sauce, for two to four people on their own phones; teaser only, online at wingnight.tv/base-borden in the Cloudflare room any crew game can use (Streets of Barrie plays there too); registered for the night as a crew game but not in any lineup; played by headless phones only so far. Information asymmetry: the shooters flash before they fire, so the pair sees every shot coming and the open question is reaction, not knowledge; the partner watching the same base from her own phone is the lookout, and it collapses shot by shot, and hard at the gate or a wipe. |
 | Streets of Barrie — the back room | `BRAWL` | idea | sketch | [ideas/brawl-back-room-finale.md](ideas/brawl-back-room-finale.md) — not a new game: a finale level for Streets of Barrie's last block (indoors at Crossover's, carry a sleeping friend out the back while his wallet is the clock); the first candidate for [brawl-crew-spec.md](brawl-crew-spec.md) §4.6, with a throwaway prototype to play before any spec. Not counted in the target below |
 | Mount Your Hens | `MOUNT` | shipped | — | [packages/minigames/mount/](../../packages/minigames/mount/) ([spec](mount-your-hens-spec.md)) — Mount Your Friends with the cast: one climb per player onto a pile of everyone before them, kept as round memory; built and tested on both surfaces; not in the sample lineup, not yet played at a table. Information asymmetry: nobody knows where a fling lands, and the TV's fit-all camera sees holds the tablet's close-up does not |
 
-Target: **at least 8 games**. Current: 11 shipped, 3 spec'd, 8 ideas → 22 concepts, target covered.
+Target: **at least 8 games**. Current: 12 shipped, 2 spec'd, 8 ideas → 22 concepts, target covered.
 
 The four ideas added 2026-10-02 come from [docs/research/cast-minigame-candidates.md](../research/cast-minigame-candidates.md),
 a survey of known games worth giving the cast treatment; its scorecard says why the rest of

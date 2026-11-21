@@ -2471,6 +2471,50 @@ to itself. Spec: `docs/minigames/mount-your-hens-spec.md`.
     the whistle. *The fall* is the sim's own 0.75 s recovery: a thud, the
     picture flinches, the hen blinks at the start. Every beat ends on the pile.
 
+## 2.16 BORDEN Minigame Surface Language ("Base Borden")
+
+The BORDEN (Base Borden) surfaces are the teaser's run-and-gun: two hens of the
+cast (§2.8) at a time run a stretch of an army base, spraying hot sauce from the
+beak, and the base shoots back. It is played online on wingnight.tv, each player
+on her own phone and every phone drawing the whole base; it is not in the night.
+Spec: `docs/minigames/base-borden-spec.md`.
+
+-   **A base at night, in three settings.** One per stretch: **the fences**
+    (chain link and watchtowers), **the motor pool** (olive trucks), and **the
+    parade square** (flagpoles and a stand), under a far skyline that moves at
+    a third of the camera's speed, with the main gate at the stretch's end. One
+    SVG, viewBox 160×90 (the sim's own units), `xMidYMax meet`, so the ground
+    sits on the bottom of every screen. All of it on the house tokens through
+    the `--bb-*` custom properties on the scene's root
+    (`BordenScene/palette.ts`); no hex. Drawing content, exempt from the
+    two-accent budget like the other arenas.
+-   **Every hen is the player's own, and she never stops spraying.** Each hen is
+    `CharacterFigure` with the player's head, team colour and genre silhouette,
+    a ring in her slot colour and her name on a tag, posed off the frame
+    (`henArt`: down is `ko`, a hit `hurt`, airborne `fly`, stick down `duck`,
+    moving `walk`). The cast's sauce stream leaves her beak at the stick's
+    angle, mild or hot, and a hen that cannot be hit flickers.
+-   **Everything that shoots says so first.** Turrets and the tank flash a "!"
+    and light the barrel before they fire, a turret's barrel follows the
+    nearest hen, and every shot flies level, so the answer is always jump a low
+    one or duck a high one. The motor-pool goose and the drill sergeant are
+    Barrie's goose from Streets of Barrie (`GooseFigure`), the sergeant as its
+    boss with a megaphone tipped to the level of the coming shout.
+-   **The phone is the picture and the pad at once** (`CrewPhoneBordenSurface`),
+    landscape. The base fills the screen, Streets of Barrie's `CrewPad` lies
+    over it (a floating eight-way stick on the left half, jump on a press of the
+    right half), and a corner tag carries her hearts and her hot bottle
+    (`SPREAD`, `LONG`, `PUDDLE`). Veils say **DOWN** with *shout for your
+    partner to stand over you*, and a player whose pair is not running is told
+    which stretch is hers ("Your pair runs stretch 2. Watch this one.").
+    Every phone is its own speaker on the house cues and buzzes on its own
+    hen's hits where it can.
+-   **Party surfaces, for the sandbox.** The tablet is a `TakeoverCanvas` over
+    the base (Start, Skip stretch, Reset turn, the pad on the tablet's own
+    stretch, *Out the main gate* at the end), and the TV is the house neon sign
+    (§2.2D) over the base, so `/dev/minigame/borden` plays the game on one
+    device.
+
 ## 2.8 Cast (shared character system)
 
 Every rostered player has a little hen that recurs across the show.

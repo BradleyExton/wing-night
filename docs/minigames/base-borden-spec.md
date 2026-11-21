@@ -1,10 +1,11 @@
 # Base Borden (working title) Minigame Spec
 
-Status: **Spec (draft)** — steps 1 to 6 built (the online lab, the room, the sim, the cast's
-duck and sauce, the runtime, the phone and its page); not deployed, and not yet played by a person.
+Status: **Shipped** to main 2026-11-21 — all seven steps built (the room, the sim, the cast's duck
+and sauce, the runtime, the phone and its page, these docs), and the jump lab deleted. Live on
+wingnight.tv once Brad runs `pnpm teaser:deploy`; not yet played by a person.
 Promoted from the idea file on 2026-11-19, after Brad played the lab.
 
-Last updated: 2026-11-21 (step 6, the phone surface and `/base-borden`, built)
+Last updated: 2026-11-21 (step 7: shipped, as-built list in §0.7 step 7, the jump lab deleted)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made, dated; **(lab)** is a
@@ -350,6 +351,32 @@ Gate: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm test:e2e:portal` fo
      base borrows the house cues rather than sounds of its own, and nobody has played it on a phone.
 7. **Docs, and Brad deploys.** Flip this file to Shipped with an as-built list, the README row,
    `DESIGN.md`, and delete the jump lab (its LAN half and its server namespace go with it).
+
+   **Done 2026-11-21.** The README row is `BORDEN`, shipped (teaser only), and `DESIGN.md` §2.16 is
+   the surface language. Deleted: the LAN lab (`/dev/lab/rungun-yard`, `/dev/lab/rungun-pad`,
+   `apps/client/src/components/RunGunLab`), its party-server relay namespace
+   (`apps/server/src/socketServer/protoRunGunPad`), and the online lab with it (the
+   `wingnight-lab` Worker's config, `src/labWorker.ts`, `src/labRoom`, the third Vite entry and its
+   `dist-lab`, `pnpm lab:deploy`, and the two `wing-night-lab-online*` launch entries). The general
+   `wing-night-lab-server` and `wing-night-lab-client*` launch entries stay; other labs use them.
+   The lab Worker still runs on `workers.dev` until Brad removes it (`wrangler delete --name
+   wingnight-lab` from `apps/teaser-worker`); nothing links to it.
+
+   As built, where everything is:
+   - The wire: `packages/shared/src/teaserRoom` (`TEASER_ROOM_GAMES`, `TEASER_ROOM_GAME_RULES`,
+     the socket path with `?game=`).
+   - The room: `apps/teaser-worker/src/teaserRoom/session` (the game table: plugin, rules, start
+     action) and `TeaserRoom`, one Durable Object per game and code.
+   - The sim: `packages/shared/src/borden` (`world`, `simulate`, the stretches, the bots).
+   - The cast: the `duck` pose and the `spray` stream (`@wingnight/cast`).
+   - The runtime and every surface: `packages/minigames/borden` (id `BORDEN`, slug `borden`), a crew
+     game registered on the server, the client and the dev sandbox, in no lineup.
+   - The page: `TeaserOnlineGame` at `/base-borden` and `/base-borden/<CODE>`, with a landing card.
+   - The tests: the sim's and the session's on Node, `tests/e2e-portal/base-borden-room.spec.ts`.
+
+   Still open, none of it blocking: a results card naming who did what (`turnStats` is in the
+   view), sounds of its own instead of the house cues, the §4 calls only a table can settle (shot
+   speed and the flash, pressure, the kit and the name), and the first play by people.
 
 ### 0.8 Tests that pin it
 

@@ -29,7 +29,6 @@
     "teaser:build": "pnpm teaser:prepare && pnpm --filter @wingnight/client build:teaser",
     "teaser:card": "node tools/build-teaser/captureShareCard.mjs",
     "teaser:deploy": "pnpm teaser:build && pnpm --filter @wingnight/teaser-worker deploy:portal",
-    "lab:deploy": "pnpm --filter @wingnight/client build:lab && pnpm --filter @wingnight/teaser-worker lab:deploy",
     "test:build-teaser": "node --test tools/build-teaser/planTeaserRoster.test.ts tools/build-teaser/planSfxTakes.test.ts",
     "pack:pull": "node tools/pull-guests/index.ts",
     "test:pull-guests": "node --test \"tools/pull-guests/**/*.test.ts\""

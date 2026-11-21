@@ -9,8 +9,6 @@
     "deploy:portal": "wrangler d1 migrations apply wingnight-portal --remote && wrangler deploy",
     "seed:admin": "tsx scripts/seedAdmin.ts",
     "e2e:portal-stack": "tsx scripts/e2ePortalStack.ts",
-    "lab:dev": "node scripts/ensureLabAssetsDir.ts && wrangler dev -c wrangler.lab.jsonc --port 8788",
-    "lab:deploy": "wrangler deploy -c wrangler.lab.jsonc",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "test": "tsx --test \"src/**/*.test.ts\""
   },

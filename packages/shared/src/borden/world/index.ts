@@ -13,8 +13,8 @@ import type {
 
 /**
  * The base, in numbers (docs/minigames/base-borden-spec.md §0.3). The hen's own numbers are the
- * jump lab's (`apps/client/src/components/RunGunLab/yardSim`), which Brad played on his phone and
- * called fair; the shot's are the lab's defaults. Speeds are per tick at 60 Hz, lengths in the
+ * jump lab's (deleted with spec §0.7 step 7; its `yardSim` is in git history), which Brad played on
+ * his phone and called fair; the shot's are the lab's defaults. Speeds are per tick at 60 Hz, lengths in the
  * lab's units: the window is 160 by 90, and the ground is y = 0.
  */
 export const BORDEN_WORLD = {
