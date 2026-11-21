@@ -17,6 +17,8 @@ export const teaserLandingCopy = {
   streetsOfBarrieSummary: "Walk the street, peck the geese. Watch behind you.",
   streetsTogetherTitle: "Streets of Barrie, together",
   streetsTogetherSummary: "Two to five phones on one street. Make a room and send the link.",
+  baseBordenTitle: "Base Borden",
+  baseBordenSummary: "Two to four phones run the base in pairs. Spray sauce, jump low, duck high.",
   playOnlineLabel: "Play online",
   playLabel: "Play",
   signInLabel: "Sign in"

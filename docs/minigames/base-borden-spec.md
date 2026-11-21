@@ -1,9 +1,10 @@
 # Base Borden (working title) Minigame Spec
 
-Status: **Spec (draft)** — steps 1 to 5 built (the online lab, the room, the sim, the cast's
-duck and sauce, the runtime); no game on a phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
+Status: **Spec (draft)** — steps 1 to 6 built (the online lab, the room, the sim, the cast's
+duck and sauce, the runtime, the phone and its page); not deployed, and not yet played by a person.
+Promoted from the idea file on 2026-11-19, after Brad played the lab.
 
-Last updated: 2026-11-20 (steps 3 to 5, the sim, the cast and the runtime, built)
+Last updated: 2026-11-21 (step 6, the phone surface and `/base-borden`, built)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made, dated; **(lab)** is a
@@ -313,6 +314,40 @@ Gate: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm test:e2e:portal` fo
    three-minute cap ends the stretch as `timeout`.
 6. **The phone surface and the teaser page.** `/base-borden` on the teaser, its picker card, the
    lobby (make a room, share the link, pick your bird), play, the end card and the phone's best.
+
+   **Built 2026-11-21**, played in a local room by headless phones only. Where it is:
+   - **The room plays either game.** `TEASER_ROOM_GAMES` is `BRAWL` and `BORDEN`, and
+     `TEASER_ROOM_GAME_RULES` gives each its room page and its seats (Base Borden seats four). The
+     socket path carries the game (`/api/rooms/<CODE>/socket?game=BORDEN`); the Worker names the
+     Durable Object by game and code, so a code is a room only within its game, and the room plays
+     the game its first socket asked for. The room's game table carries each game's start action
+     (`startBlock`, `startStretch`), which was step 5's todo.
+   - **The page is the Streets of Barrie room page, made per game** (`TeaserOnlineGame`): `/base-borden`
+     makes a room, `/base-borden/<CODE>` is the link, the lobby, share sheet, seat count and end card
+     take the game's own words (`onlineGameCopy`), and the end card shows the phone's best
+     (`useRoomBest`, kept in the browser like the solo pages'). A landing card links it.
+   - **The phone** is `CrewPhoneBordenSurface` in the runtime package's client: the base
+     (`BordenScene`) stepped on between the room's frames by `useBordenFrame` (the crew games'
+     anchor rule), and Streets of Barrie's own `CrewPad` over it, the stick sending `stick` and the
+     right half sending `jump` on the press. Her corner tag shows her hearts and her hot bottle, and a
+     player sitting a stretch out is told which stretch is hers. Every phone is its own speaker, on
+     the house cues (`useBordenSounds`), and buzzes on its own hen's hits where it can.
+   - **The scene**: the three stretches' own backdrops (chain link and watchtowers, the motor pool's
+     trucks, the parade square's flagpoles and stand) under a far skyline at parallax, the gate, and
+     on them the bottle, the turrets and the tank (flashing "!" with the barrel lit before they
+     fire), the motor-pool goose and the drill sergeant (Barrie's goose from Streets of Barrie, the
+     sergeant as its boss with a megaphone tipped to the coming shout's level), the shots, the sauce
+     and the puddles, and each player's own cast hen in her slot colour, posed off the frame
+     (`henArt`: down is `ko`, a hit `hurt`, airborne `fly`, stick down `duck`) and spraying the cast's
+     stream at the stick's angle.
+   - **The party surfaces** are real too: the tablet's `TakeoverCanvas` (Start, Skip stretch, Reset
+     turn, the pad over the base on the tablet's own stretch) and the TV's marquee over the base, so
+     `/dev/minigame/borden` plays.
+   - The test: `tests/e2e-portal/base-borden-room.spec.ts`, two phones run and jump and see each
+     other, and a third is told she sits the first stretch out.
+
+   Not done in step 6: no results card naming people (the view's `turnStats` are there for it), the
+     base borrows the house cues rather than sounds of its own, and nobody has played it on a phone.
 7. **Docs, and Brad deploys.** Flip this file to Shipped with an as-built list, the README row,
    `DESIGN.md`, and delete the jump lab (its LAN half and its server namespace go with it).
 

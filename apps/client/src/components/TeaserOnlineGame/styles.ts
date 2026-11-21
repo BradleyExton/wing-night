@@ -42,9 +42,6 @@ export const notice = "m-0 rounded-lg bg-danger/15 px-3 py-2 text-sm text-text";
 
 export const status = "m-0 text-sm font-semibold text-muted";
 
-// The game itself: the phone frame takes the whole screen.
-export const playRoot = "fixed inset-0 bg-bg";
-
 export const finishCard = "flex flex-col items-start gap-2 rounded-xl border-2 border-gold bg-surface px-4 py-4";
 
 export const finishKicker = "m-0 text-xs font-black uppercase tracking-[0.2em] text-gold";

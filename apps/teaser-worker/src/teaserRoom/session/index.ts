@@ -3,11 +3,12 @@
 // carries sockets, a timer and the roster file to it. The room is the party server's crew turn
 // with no host and no TV: it seats phones as roster players, runs the game's own runtime
 // reducer, stamps every thumb with the room's clock and the seat it came from, refuses anything a
-// phone may not send, and fires the game's own deadline (Streets of Barrie's pulse).
+// phone may not send, and fires the game's own deadline (the crew games' pulse).
+import { bordenRuntimePlugin } from "@wingnight/minigames-borden";
 import { brawlRuntimePlugin } from "@wingnight/minigames-brawl";
 import type { MinigameRuntimePlugin, SerializableValue } from "@wingnight/minigames-core";
 import {
-  TEASER_ROOM_SEATS_MAX,
+  TEASER_ROOM_GAME_RULES,
   TEASER_ROOM_SOCKETS_MAX,
   parseTeaserRoomClientMessage,
   type Player,
@@ -26,12 +27,19 @@ const POINTS_MAX = 15;
 const BUCKET_BURST = 40;
 const BUCKET_REFILL_PER_SECOND = 30;
 
-type RoomGameEntry = { plugin: MinigameRuntimePlugin; rules: SerializableValue };
+type RoomGameEntry = {
+  plugin: MinigameRuntimePlugin;
+  rules: SerializableValue;
+  /** The host's action that starts the game's first stage once everyone has stepped out. */
+  startAction: string;
+};
 
-// The games a room plays, with the rules the teaser plays them by (the same as the solo pages',
-// apps/client/src/components/TeaserSoloGame/teaserGames).
+// The games a room plays, with the rules the teaser plays them by (Streets of Barrie's are the
+// solo page's, apps/client/src/components/TeaserSoloGame/teaserGames; Base Borden's are its
+// runtime's defaults).
 const ROOM_GAMES: Record<TeaserRoomGame, RoomGameEntry> = {
-  BRAWL: { plugin: brawlRuntimePlugin, rules: { blocksPerTurn: 3, courseSeed: 20261001 } }
+  BRAWL: { plugin: brawlRuntimePlugin, rules: { blocksPerTurn: 3, courseSeed: 20261001 }, startAction: "startBlock" },
+  BORDEN: { plugin: bordenRuntimePlugin, rules: { stretchesPerTurn: 3, courseSeed: 20261120 }, startAction: "startStretch" }
 };
 
 type RoomSocket = {
@@ -221,7 +229,7 @@ const startGame = (session: TeaserRoomSession, nowMs: number): boolean => {
     reduce(session, "stepOut", {}, nowMs, player.id);
   }
 
-  reduce(session, "startBlock", {}, nowMs);
+  reduce(session, entryOf(session).startAction, {}, nowMs);
 
   return true;
 };
@@ -301,7 +309,7 @@ export const receiveRoomMessage = (
       return changed();
     }
 
-    if (session.seats.length >= TEASER_ROOM_SEATS_MAX) {
+    if (session.seats.length >= TEASER_ROOM_GAME_RULES[session.game].seatsMax) {
       return unchanged([{ t: "refused", reason: "full" }]);
     }
 

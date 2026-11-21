@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { wakeAudio } from "@wingnight/audio";
-import { CrewPhoneBrawlSurface } from "@wingnight/minigames-brawl/client";
-import {
-  TEASER_ROOM_PAGE_PREFIX,
-  TEASER_ROOM_SEATS_MAX,
-  isTeaserRoomCode,
-  type TeaserRoster
-} from "@wingnight/shared";
+import { TEASER_ROOM_GAME_RULES, type TeaserRoomGame, type TeaserRoster } from "@wingnight/shared";
 
 import { useServerOrigin } from "../../utils/useServerOrigin";
-import { PhoneGameFrame } from "../PhoneGameFrame";
 import { TEASER_ROUTES } from "../TeaserApp/teaserRoutes";
-import { teaserOnlineGameCopy as copy } from "./copy";
+import { onlineGameCopy, teaserOnlineGameCopy as copy } from "./copy";
+import { RoomPlay } from "./RoomPlay";
+import { resolveOnlineGameFromPath, resolveRoomCodeFromPath } from "./roomPath";
 import * as styles from "./styles";
+import { useRoomBest } from "./useRoomBest";
 import { useTeaserRoom } from "./useTeaserRoom";
 
 // No I or O, so a code read out loud is never misheard as a digit.
@@ -22,17 +18,6 @@ const COPIED_MS = 2000;
 
 const makeRoomCode = (): string =>
   Array.from({ length: CODE_LENGTH }, () => CODE_LETTERS[Math.floor(Math.random() * CODE_LETTERS.length)] ?? "A").join("");
-
-/** The room a `/play/<CODE>` path names, or null for `/play` itself (or a code that is not one). */
-export const resolveRoomCodeFromPath = (path: string): string | null => {
-  if (!path.startsWith(TEASER_ROOM_PAGE_PREFIX)) {
-    return null;
-  }
-
-  const code = path.slice(TEASER_ROOM_PAGE_PREFIX.length).toUpperCase();
-
-  return isTeaserRoomCode(code) ? code : null;
-};
 
 const TopBar = ({ pingMs }: { pingMs: number | null }): JSX.Element => (
   <div className={styles.topBar}>
@@ -44,15 +29,15 @@ const TopBar = ({ pingMs }: { pingMs: number | null }): JSX.Element => (
   </div>
 );
 
-const ShareButton = ({ code }: { code: string }): JSX.Element => {
+const ShareButton = ({ code, game }: { code: string; game: TeaserRoomGame }): JSX.Element => {
   const [isCopied, setIsCopied] = useState(false);
 
   const share = async (): Promise<void> => {
-    const url = `${window.location.origin}${TEASER_ROOM_PAGE_PREFIX}${code}`;
+    const url = `${window.location.origin}${TEASER_ROOM_GAME_RULES[game].page}${code}`;
 
     try {
       if (typeof navigator.share === "function") {
-        await navigator.share({ title: copy.shareTitle, text: copy.shareText, url });
+        await navigator.share({ title: onlineGameCopy[game].shareTitle, text: onlineGameCopy[game].shareText, url });
 
         return;
       }
@@ -80,30 +65,16 @@ const ShareButton = ({ code }: { code: string }): JSX.Element => {
   );
 };
 
-const OnlineRoom = ({ code, roster }: { code: string; roster: TeaserRoster }): JSX.Element => {
+const OnlineRoom = ({ code, game, roster }: { code: string; game: TeaserRoomGame; roster: TeaserRoster }): JSX.Element => {
   const serverOrigin = useServerOrigin();
-  const { connection, room, you, refusal, pingMs, send } = useTeaserRoom(code);
-  const view = room?.view?.minigame === "BRAWL" ? room.view : null;
+  const { connection, room, you, refusal, pingMs, send } = useTeaserRoom(code, game);
+  const view = room?.view?.minigame === game ? room.view : null;
+  const gameCopy = onlineGameCopy[game];
+  const best = useRoomBest(game, room?.phase === "finished" && view !== null ? view.points : null);
 
+  // In play, every phone draws the game, a phone that came in mid-game included: it watches.
   if (room !== null && room.phase === "playing" && view !== null) {
-    return (
-      <div className={styles.playRoot} data-teaser-room={code} data-teaser-room-phase="playing">
-        <PhoneGameFrame>
-          <CrewPhoneBrawlSurface
-            view={view}
-            pad={you === null ? null : (room.pads[you] ?? null)}
-            status={room.crewStatus}
-            serverOrigin={serverOrigin}
-            onWalk={(dir): void => {
-              send({ t: "action", actionType: "walk", actionPayload: { dir } });
-            }}
-            onPeck={(held): void => {
-              send({ t: "action", actionType: "peck", actionPayload: { held } });
-            }}
-          />
-        </PhoneGameFrame>
-      </div>
-    );
+    return <RoomPlay room={room} you={you} serverOrigin={serverOrigin} send={send} />;
   }
 
   const seats = room?.seats ?? [];
@@ -115,17 +86,18 @@ const OnlineRoom = ({ code, roster }: { code: string; roster: TeaserRoster }): J
   return (
     <main className={styles.page} data-teaser-room={code} data-teaser-room-phase={room?.phase ?? "connecting"}>
       <TopBar pingMs={pingMs} />
-      <h1 className={styles.title}>{copy.title}</h1>
+      <h1 className={styles.title}>{gameCopy.title}</h1>
       <div className={styles.roomRow}>
         <span className={styles.roomCode}>{copy.roomTag(code)}</span>
-        <ShareButton code={code} />
+        <ShareButton code={code} game={game} />
       </div>
 
       {room?.phase === "finished" && view !== null && (
         <section className={styles.finishCard} data-teaser-room-finish="">
-          <p className={styles.finishKicker}>{copy.finishedKicker}</p>
+          <p className={styles.finishKicker}>{gameCopy.title}</p>
           <p className={styles.finishHeadline}>{copy.finishedHeadline(view.points)}</p>
-          <p className={styles.finishLine}>{copy.finishedLine(view.banked, view.total)}</p>
+          <p className={styles.finishLine}>{gameCopy.finishedLine(view.banked, view.total)}</p>
+          {best !== null && <p className={styles.finishLine} data-teaser-room-best={best}>{copy.best(best)}</p>}
         </section>
       )}
 
@@ -168,7 +140,7 @@ const OnlineRoom = ({ code, roster }: { code: string; roster: TeaserRoster }): J
         ))}
       </section>
 
-      <p className={styles.hint}>{copy.seated(seats.length, TEASER_ROOM_SEATS_MAX)}</p>
+      <p className={styles.hint}>{gameCopy.seated(seats.length, TEASER_ROOM_GAME_RULES[game].seatsMax)}</p>
       {refusal !== null && <p className={styles.notice}>{copy.refusals[refusal]}</p>}
       {status !== null && <p className={styles.status}>{status}</p>}
 
@@ -187,7 +159,7 @@ const OnlineRoom = ({ code, roster }: { code: string; roster: TeaserRoster }): J
           >
             {room?.phase === "finished" ? copy.playAgain : copy.start}
           </button>
-          <p className={styles.hint}>{you === null ? copy.needSeat : copy.startHint}</p>
+          <p className={styles.hint}>{you === null ? copy.needSeat : gameCopy.startHint}</p>
         </>
       )}
     </main>
@@ -195,29 +167,31 @@ const OnlineRoom = ({ code, roster }: { code: string; roster: TeaserRoster }): J
 };
 
 /**
- * Streets of Barrie on the teaser, played together online (docs/minigames/base-borden-spec.md
- * §0.7 step 2): `/play` makes a room, `/play/<CODE>` is the link to send. The room is a Durable
- * Object on the teaser's Worker that runs the party's own runtime; this page picks a bird, starts
- * the game, and draws the street with this phone's thumbs over it.
+ * A crew game on the teaser, played together online (docs/minigames/base-borden-spec.md §0.5,
+ * §0.6): `/play` and `/base-borden` each make a room of their own game, and `<page><CODE>` is the
+ * link to send. The room is a Durable Object on the teaser's Worker that runs the party's own
+ * runtime; this page picks a bird, starts the game, and draws it with this phone's thumbs over it.
  */
 export const TeaserOnlineGame = ({ path, roster }: { path: string; roster: TeaserRoster }): JSX.Element => {
-  const code = resolveRoomCodeFromPath(path);
+  const game = resolveOnlineGameFromPath(path) ?? "BRAWL";
+  const code = resolveRoomCodeFromPath(path, game);
+  const gameCopy = onlineGameCopy[game];
 
   if (code !== null) {
-    return <OnlineRoom code={code} roster={roster} />;
+    return <OnlineRoom code={code} game={game} roster={roster} />;
   }
 
   return (
-    <main className={styles.page} data-teaser-room-lobby="">
+    <main className={styles.page} data-teaser-room-lobby={game}>
       <TopBar pingMs={null} />
-      <h1 className={styles.title}>{copy.title}</h1>
-      <p className={styles.lede}>{copy.lede}</p>
+      <h1 className={styles.title}>{gameCopy.title}</h1>
+      <p className={styles.lede}>{gameCopy.lede}</p>
       <button
         type="button"
         className={styles.primaryButton}
         onClick={(): void => {
           // The teaser has no router: a page is a real navigation.
-          window.location.assign(`${TEASER_ROOM_PAGE_PREFIX}${makeRoomCode()}`);
+          window.location.assign(`${TEASER_ROOM_GAME_RULES[game].page}${makeRoomCode()}`);
         }}
       >
         {copy.makeRoom}

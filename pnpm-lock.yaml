@@ -232,6 +232,9 @@ importers:
       '@wingnight/avatar-head':
         specifier: workspace:*
         version: link:../../packages/avatar-head
+      '@wingnight/minigames-borden':
+        specifier: workspace:*
+        version: link:../../packages/minigames/borden
       '@wingnight/minigames-brawl':
         specifier: workspace:*
         version: link:../../packages/minigames/brawl
@@ -312,12 +315,24 @@ importers:
 
   packages/minigames/borden:
     dependencies:
+      '@wingnight/audio':
+        specifier: workspace:*
+        version: link:../../audio
+      '@wingnight/cast':
+        specifier: workspace:*
+        version: link:../../cast
+      '@wingnight/minigames-brawl':
+        specifier: workspace:*
+        version: link:../brawl
       '@wingnight/minigames-core':
         specifier: workspace:*
         version: link:../core
       '@wingnight/shared':
         specifier: workspace:*
         version: link:../../shared
+      '@wingnight/surface':
+        specifier: workspace:*
+        version: link:../../surface
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

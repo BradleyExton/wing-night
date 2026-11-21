@@ -169,3 +169,75 @@ test("does run the game to its end card on the room's clock when a thumb starts 
   assert.equal(say(session, "a", { t: "start" }, nowMs + 10).changed, true, "the end card's start plays again");
   assert.equal(createRoomSnapshot(session).phase, "playing");
 });
+
+// Base Borden's room: the same room, its own start action, two hens at a time, four seats.
+const bordenRoster: TeaserRoster = {
+  players: ["rob", "jaz", "sam", "kim", "lee"].map((name) => ({ id: `p-${name}`, name })),
+  teams: [{ id: "t-metal", name: "Iron Hens", genre: "metal", playerIds: ["p-rob", "p-jaz", "p-sam", "p-kim", "p-lee"], totalScore: 0 }]
+};
+
+test("does start Base Borden's first stretch with the first pair up and the third player out", () => {
+  const session = createTeaserRoomSession("ABCD", bordenRoster, "BORDEN");
+
+  seat(session, "a", "p-rob");
+  seat(session, "b", "p-jaz");
+  seat(session, "c", "p-sam");
+
+  assert.equal(say(session, "a", { t: "start" }).changed, true);
+
+  const snapshot = createRoomSnapshot(session);
+
+  assert.equal(snapshot.game, "BORDEN");
+  assert.equal(snapshot.view?.minigame, "BORDEN");
+  assert.equal(snapshot.crewStatus, "running");
+  assert.deepEqual(snapshot.pads["p-rob"], { state: "up", slot: 0, hearts: 3 });
+  assert.deepEqual(snapshot.pads["p-jaz"], { state: "up", slot: 1, hearts: 3 });
+  assert.equal(snapshot.pads["p-sam"]?.state, "out");
+});
+
+test("does seat only four phones in a Base Borden room", () => {
+  const session = createTeaserRoomSession("ABCD", bordenRoster, "BORDEN");
+
+  ["a", "b", "c", "d"].forEach((socketId, index) => {
+    seat(session, socketId, bordenRoster.players[index]?.id ?? "");
+  });
+  openRoomSocket(session, "e", 0);
+  say(session, "e", { t: "hello", clientId: "tab-e" });
+
+  assert.deepEqual(say(session, "e", { t: "seat", playerId: "p-lee" }).reply, [{ t: "refused", reason: "full" }]);
+  assert.equal(session.seats.length, 4);
+});
+
+test("does play Base Borden's thumbs and refuse another game's when a phone in the pair sends them", () => {
+  const session = createTeaserRoomSession("ABCD", bordenRoster, "BORDEN");
+
+  seat(session, "a", "p-rob");
+  seat(session, "b", "p-jaz");
+  say(session, "a", { t: "start" });
+
+  assert.equal(say(session, "a", { t: "action", actionType: "stick", actionPayload: { dir: 1 } }, 1100).changed, true);
+  assert.equal(say(session, "b", { t: "action", actionType: "jump", actionPayload: {} }, 1150).changed, true);
+  assert.deepEqual(say(session, "a", { t: "action", actionType: "walk", actionPayload: { dir: 1 } }, 1200).reply, [
+    { t: "refused", reason: "refused" }
+  ]);
+  assert.deepEqual(say(session, "a", { t: "action", actionType: "skipStretch", actionPayload: {} }, 1250).reply, [
+    { t: "refused", reason: "refused" }
+  ]);
+});
+
+test("does step Base Borden's quiet stretch on the room's own pulse", () => {
+  const session = createTeaserRoomSession("ABCD", bordenRoster, "BORDEN");
+
+  seat(session, "a", "p-rob");
+  say(session, "a", { t: "start" });
+
+  const atMs = resolveRoomDeadline(session);
+
+  assert.notEqual(atMs, null);
+  assert.equal(fireRoomDeadline(session, atMs ?? 0), true);
+
+  const view = createRoomSnapshot(session).view;
+  const tick = view?.minigame === "BORDEN" ? (view.stretches[0]?.frame?.tick ?? 0) : 0;
+
+  assert.ok(tick > 0);
+});

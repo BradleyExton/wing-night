@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@wingnight/avatar-head": "workspace:*",
+    "@wingnight/minigames-borden": "workspace:*",
     "@wingnight/minigames-brawl": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/minigames-schlonic": "workspace:*",

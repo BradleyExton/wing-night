@@ -1,5 +1,5 @@
 // An online room's Durable Object (docs/minigames/base-borden-spec.md §0.5): one per room code,
-// reached through `/api/rooms/<CODE>/socket` (src/index.ts). It carries sockets, a timer and the
+// reached through `/api/rooms/<CODE>/socket?game=<GAME>` (src/index.ts). It carries sockets, a timer and the
 // roster file to the room's rules in ./teaserRoom/session, which run on Node; this file and
 // src/index.ts are the only ones that touch a workerd type.
 //
@@ -11,6 +11,7 @@ import { schlonicDevManifest } from "@wingnight/minigames-schlonic/dev";
 import {
   TEASER_ROSTER_PATH,
   isTeaserRoomCode,
+  isTeaserRoomGame,
   parseTeaserRoster,
   type TeaserRoomServerMessage,
   type TeaserRoster
@@ -64,7 +65,14 @@ export class TeaserRoom extends DurableObject<RoomEnv> {
       return new Response("Not a room", { status: 404 });
     }
 
-    this.session ??= createTeaserRoomSession(code, await loadRoster(this.env.ASSETS, url.origin));
+    const game = url.searchParams.get("game") ?? "BRAWL";
+
+    if (!isTeaserRoomGame(game)) {
+      return new Response("Not a game", { status: 404 });
+    }
+
+    // The Worker names this object by its game and code, so the first socket's game is the room's.
+    this.session ??= createTeaserRoomSession(code, await loadRoster(this.env.ASSETS, url.origin), game);
 
     const session = this.session;
     const pair = new WebSocketPair();

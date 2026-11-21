@@ -4,7 +4,7 @@
 // src/ but that object touches a workerd type, so the tests run on Node.
 import { DEFAULT_GEMINI_IMAGE_MODEL } from "@wingnight/avatar-head";
 
-import { isTeaserRoomCode } from "@wingnight/shared";
+import { isTeaserRoomCode, isTeaserRoomGame } from "@wingnight/shared";
 
 import { handleRequest } from "./app/index.ts";
 import { resolveHeadPainter } from "./headPainter/index.ts";
@@ -46,7 +46,7 @@ const sizeBody = (body: ReadableStream<Uint8Array>, byteLength: number): Readabl
   return sized.readable;
 };
 
-// `/api/rooms/<CODE>/socket` (the path in @wingnight/shared's resolveTeaserRoomSocketPath).
+// `/api/rooms/<CODE>/socket?game=<GAME>` (the path in @wingnight/shared's resolveTeaserRoomSocketPath).
 const ROOM_SOCKET_PATH = /^\/api\/rooms\/([^/]+)\/socket$/;
 
 // An online room's socket, or null when the request is not one. A page on another site may not
@@ -77,7 +77,14 @@ const routeRoomSocket = async (request: Request, env: Env): Promise<Response | n
     return new Response("Too many rooms", { status: 429 });
   }
 
-  return env.TEASER_ROOM.getByName(code).fetch(request);
+  // A code is a room within its game (the page names it): two games never share an object.
+  const game = url.searchParams.get("game") ?? "BRAWL";
+
+  if (!isTeaserRoomGame(game)) {
+    return new Response("Not a game", { status: 404 });
+  }
+
+  return env.TEASER_ROOM.getByName(game === "BRAWL" ? code : `${game}:${code}`).fetch(request);
 };
 
 export default {

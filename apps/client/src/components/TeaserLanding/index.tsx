@@ -121,6 +121,13 @@ export const TeaserLanding = ({ roster }: TeaserLandingProps): JSX.Element => {
             href={TEASER_ROUTES.play}
             statusLabel={teaserLandingCopy.playOnlineLabel}
           />
+          <TeaserGameCard
+            minigame="BORDEN"
+            title={teaserLandingCopy.baseBordenTitle}
+            summary={teaserLandingCopy.baseBordenSummary}
+            href={TEASER_ROUTES.baseBorden}
+            statusLabel={teaserLandingCopy.playOnlineLabel}
+          />
         </div>
       </section>
 

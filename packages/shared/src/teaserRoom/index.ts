@@ -9,9 +9,9 @@ import type { MinigameHostView } from "../roomState/index.js";
 
 /** A room code: four to six capital letters, so a room link can be read out loud. */
 export const TEASER_ROOM_CODE_PATTERN = /^[A-Z]{4,6}$/;
-/** The phone page for a room: `/play/<CODE>` (apps/client, TeaserOnlineGame). */
+/** The phone page for a Streets of Barrie room: `/play/<CODE>` (apps/client, TeaserOnlineGame). */
 export const TEASER_ROOM_PAGE_PREFIX = "/play/";
-/** Players in one room. Streets of Barrie's street is furnished for one to five hens. */
+/** The most players any room seats: Streets of Barrie's street is furnished for one to five hens. */
 export const TEASER_ROOM_SEATS_MAX = 5;
 /** Sockets on one room, phones that only watch included. */
 export const TEASER_ROOM_SOCKETS_MAX = 8;
@@ -20,12 +20,28 @@ export const TEASER_ROOM_MESSAGE_CHARS_MAX = 512;
 
 export const isTeaserRoomCode = (value: string): boolean => TEASER_ROOM_CODE_PATTERN.test(value);
 
-/** Where a phone opens a room's socket, on the teaser's own origin. */
-export const resolveTeaserRoomSocketPath = (code: string): string => `/api/rooms/${code}/socket`;
-
 /** The games a room can play: the crew games, whose every player steers her own hen. */
-export const TEASER_ROOM_GAMES = ["BRAWL"] as const;
+export const TEASER_ROOM_GAMES = ["BRAWL", "BORDEN"] as const;
 export type TeaserRoomGame = (typeof TEASER_ROOM_GAMES)[number];
+
+export const isTeaserRoomGame = (value: unknown): value is TeaserRoomGame =>
+  typeof value === "string" && (TEASER_ROOM_GAMES as readonly string[]).includes(value);
+
+/**
+ * Each game's room: the phone page a room link opens (`<page><CODE>`), and how many it seats.
+ * Base Borden runs two hens at a time and deals its pairs from at most four players.
+ */
+export const TEASER_ROOM_GAME_RULES: Record<TeaserRoomGame, { page: string; seatsMax: number }> = {
+  BRAWL: { page: TEASER_ROOM_PAGE_PREFIX, seatsMax: TEASER_ROOM_SEATS_MAX },
+  BORDEN: { page: "/base-borden/", seatsMax: 4 }
+};
+
+/**
+ * Where a phone opens a room's socket, on the teaser's own origin. The game rides along, because a
+ * code is a room only within its game: the Worker names the room's Durable Object by both, and the
+ * room plays the game its first socket asked for.
+ */
+export const resolveTeaserRoomSocketPath = (code: string, game: TeaserRoomGame): string => `/api/rooms/${code}/socket?game=${game}`;
 
 /**
  * Where a room is: picking birds, mid-game, or on the end card (where any player can start the

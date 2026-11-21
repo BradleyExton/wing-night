@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   resolveTeaserRoomSocketPath,
   type TeaserRoomClientMessage,
+  type TeaserRoomGame,
   type TeaserRoomRefusal,
   type TeaserRoomServerMessage,
   type TeaserRoomSnapshot
@@ -63,7 +64,7 @@ const isServerMessage = (value: unknown): value is TeaserRoomServerMessage =>
  * room's Durable Object on this page's own origin, which says hello as this tab, keeps the room's
  * latest snapshot, pings once a second for the readout, and reconnects on its own.
  */
-export const useTeaserRoom = (code: string): TeaserRoomState => {
+export const useTeaserRoom = (code: string, game: TeaserRoomGame): TeaserRoomState => {
   const [connection, setConnection] = useState<TeaserRoomConnection>("connecting");
   const [room, setRoom] = useState<TeaserRoomSnapshot | null>(null);
   const [you, setYou] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export const useTeaserRoom = (code: string): TeaserRoomState => {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const url = `${protocol}//${window.location.host}${resolveTeaserRoomSocketPath(code)}`;
+    const url = `${protocol}//${window.location.host}${resolveTeaserRoomSocketPath(code, game)}`;
     const clientId = resolveClientId();
     const pings: number[] = [];
     let pingId = 0;
@@ -149,7 +150,7 @@ export const useTeaserRoom = (code: string): TeaserRoomState => {
       window.clearTimeout(reconnectTimer);
       socketRef.current?.close();
     };
-  }, [code]);
+  }, [code, game]);
 
   const send = useCallback((message: TeaserRoomClientMessage): void => {
     const socket = socketRef.current;

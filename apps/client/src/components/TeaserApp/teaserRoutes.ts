@@ -15,11 +15,16 @@ export const TEASER_ROUTES = {
   signIn: "/signin",
   // Streets of Barrie together online (TeaserOnlineGame): `/play` makes a room, and
   // `/play/<CODE>` is the link to send (TEASER_ROOM_PAGE_PREFIX in @wingnight/shared).
-  play: "/play"
+  play: "/play",
+  // Base Borden, the same way: `/base-borden` makes a room, `/base-borden/<CODE>` is the link
+  // (TEASER_ROOM_GAME_RULES in @wingnight/shared). It is online only, so it has no solo page.
+  baseBorden: "/base-borden"
 } as const;
 
+const ONLINE_PAGES = [TEASER_ROUTES.play, TEASER_ROUTES.baseBorden];
+
 export const isTeaserPlayPath = (path: string): boolean =>
-  path === TEASER_ROUTES.play || path.startsWith(`${TEASER_ROUTES.play}/`);
+  ONLINE_PAGES.some((page) => path === page || path.startsWith(`${page}/`));
 
 // A game's page is its slug. The slugs live here rather than on the games themselves
 // (TeaserSoloGame/teaserGames) so the landing and the page switch can name a game without
