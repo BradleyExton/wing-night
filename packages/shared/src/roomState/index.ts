@@ -16,6 +16,7 @@ import type {
 import type { RecreatePrompt } from "../content/recreate/index.js";
 import { isContestantPhoneLeg, type ContestantTurn, type RoundDeviceModes } from "../contestantTurn/index.js";
 import type { CrewTurn } from "../crewTurn/index.js";
+import type { BordenBottle, BordenFrame, BordenHenStats, BordenOutcome } from "../borden/types.js";
 import type { BrawlCrewFrame, BrawlCrewHenStats, BrawlCrewOutcome } from "../brawl/crew/types.js";
 import type {
   MountClimbRules,
@@ -657,6 +658,71 @@ export type BrawlMinigameViewFields = {
 
 export type BrawlMinigameHostView = MinigameHostViewBase & BrawlMinigameViewFields;
 
+export type BordenStretchStatus = "ready" | "running" | "done";
+
+export type BordenPhase = "ready" | "running" | "finished";
+
+// One player as the run-and-gun names them, BRAWL's twin: `avatarSrc` stays pack-relative, and
+// team id and genre are the hen's colour and silhouette.
+export type BordenPlayerFigure = CastPlayerFigure;
+
+// One player in the room's crew: whose hen it is and her seat, the order she stepped out in. The
+// seat is her colour on every screen for the whole game, whichever stretch she runs and in which of
+// the pair's two places. A null player is the house hen (a team with no roster).
+export type BordenCrewMember = {
+  player: BordenPlayerFigure | null;
+  seat: number;
+};
+
+// One stretch of the base as the room sees it (docs/minigames/base-borden-spec.md §0.3). `pair`
+// is who runs it, as seats, in the frame's hen order: `pair[0]` is hen 0. While the crew is still
+// stepping out the pairs are dealt for the crew as it stands; once the first stretch starts the
+// crew is locked and so is every pair. `bottles` are what the pair carries in, hen by hen: the hot
+// bottles handed on through the last gate. Started, `frame` is the room's own reading of the
+// stretch at `frame.tick`, with `startedAtMs` the room clock at tick nought; only the stretch in
+// hand and the one just finished carry one.
+export type BordenMinigameStretch = {
+  stretchIndex: number;
+  status: BordenStretchStatus;
+  pair: number[];
+  bottles: BordenBottle[];
+  startedAtMs: number | null;
+  // From stretch two on, the room clock from which a thumb of the pair may start it: the beat after
+  // the last stretch is held until then. Null on the first, which is the host's (or the room's).
+  readyAtMs: number | null;
+  frame: BordenFrame | null;
+  outcome: BordenOutcome | null;
+  // What the stretch banked (live while it runs) and everything it could, for the pair it was dealt.
+  banked: number;
+  total: number;
+  skipped: boolean;
+};
+
+// Nothing about a stretch is secret, so the host and display carry the same fields. The base is a
+// RULE, not a roll: every room runs the same stretches off `courseSeed`, each furnished for its pair.
+export type BordenMinigameViewFields = {
+  minigame: "BORDEN";
+  phase: BordenPhase;
+  stretchIndex: number;
+  stretchesPerTurn: number;
+  courseSeed: number;
+  // The team's players in roster order: who could step out.
+  roster: BordenPlayerFigure[];
+  // Who stepped out, in seat order: the players the pairs are dealt from. On a tablet turn (nobody
+  // stepped out) it is the roster, one hen a stretch, and `tablet` is set.
+  crew: BordenCrewMember[];
+  tablet: boolean;
+  stretches: BordenMinigameStretch[];
+  // The worth banked over the game so far and everything the base holds for this crew.
+  banked: number;
+  total: number;
+  points: number | null;
+  // Once the game is over: what each player did, by player id, for the end card.
+  turnStats: Record<string, BordenHenStats> | null;
+};
+
+export type BordenMinigameHostView = MinigameHostViewBase & BordenMinigameViewFields;
+
 export type MountClimbStatus = "ready" | "running" | "done";
 
 export type MountPhase = "ready" | "running" | "finished";
@@ -724,6 +790,7 @@ export type MinigameHostView =
   | FappyMinigameHostView
   | SchlonicMinigameHostView
   | BrawlMinigameHostView
+  | BordenMinigameHostView
   | MountMinigameHostView
   | RecreateMinigameHostView
   | DrawingMinigameHostView
@@ -843,6 +910,8 @@ export type SchlonicMinigameDisplayView = MinigameDisplayViewBase & SchlonicMini
 
 export type BrawlMinigameDisplayView = MinigameDisplayViewBase & BrawlMinigameViewFields;
 
+export type BordenMinigameDisplayView = MinigameDisplayViewBase & BordenMinigameViewFields;
+
 export type MountMinigameDisplayView = MinigameDisplayViewBase & MountMinigameViewFields;
 
 export type MinigameDisplayView =
@@ -853,6 +922,7 @@ export type MinigameDisplayView =
   | FappyMinigameDisplayView
   | SchlonicMinigameDisplayView
   | BrawlMinigameDisplayView
+  | BordenMinigameDisplayView
   | MountMinigameDisplayView
   | RecreateMinigameDisplayView
   | DrawingMinigameDisplayView

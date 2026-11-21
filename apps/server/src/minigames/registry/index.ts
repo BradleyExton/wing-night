@@ -1,3 +1,4 @@
+import { bordenRuntimePlugin } from "@wingnight/minigames-borden/runtime";
 import { brawlRuntimePlugin } from "@wingnight/minigames-brawl/runtime";
 import { drawingRuntimePlugin } from "@wingnight/minigames-drawing/runtime";
 import { emojiCharadesRuntimePlugin } from "@wingnight/minigames-emoji-charades/runtime";
@@ -23,6 +24,7 @@ const runtimePluginByMinigameType: Record<MinigameType, MinigameRuntimePlugin> =
   RECREATE: recreateRuntimePlugin,
   SCHLONIC: schlonicRuntimePlugin,
   BRAWL: brawlRuntimePlugin,
+  BORDEN: bordenRuntimePlugin,
   MOUNT: mountRuntimePlugin,
   DRAWING: drawingRuntimePlugin,
   EMOJI_CHARADES: emojiCharadesRuntimePlugin

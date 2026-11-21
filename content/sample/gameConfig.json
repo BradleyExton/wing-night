@@ -82,6 +82,10 @@
       "blocksPerTurn": 3,
       "courseSeed": 20261001
     },
+    "borden": {
+      "stretchesPerTurn": 3,
+      "courseSeed": 20261120
+    },
     "mount": {
       "climbSeconds": 30,
       "secondsPerHen": 3,

@@ -19,6 +19,7 @@
     "@wingnight/audio": "workspace:*",
     "@wingnight/avatar-head": "workspace:*",
     "@wingnight/cast": "workspace:*",
+    "@wingnight/minigames-borden": "workspace:*",
     "@wingnight/minigames-brawl": "workspace:*",
     "@wingnight/minigames-core": "workspace:*",
     "@wingnight/minigames-drawing": "workspace:*",

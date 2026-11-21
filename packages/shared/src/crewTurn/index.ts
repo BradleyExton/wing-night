@@ -10,7 +10,7 @@ import { CONTESTANT_MINIGAME_TYPES, MINIGAME_DEVICE_MODES, type MinigameDeviceMo
 
 // The games a whole team plays at once from its phones. The server's registry test pins the
 // `selectCrew` hook to this list the way it pins the relays' hooks to `CONTESTANT_MINIGAME_TYPES`.
-export const CREW_MINIGAME_TYPES: readonly MinigameType[] = ["BRAWL"];
+export const CREW_MINIGAME_TYPES: readonly MinigameType[] = ["BRAWL", "BORDEN"];
 
 export const isCrewMinigameType = (value: unknown): value is MinigameType => {
   return (CREW_MINIGAME_TYPES as readonly unknown[]).includes(value);

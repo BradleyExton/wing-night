@@ -1,9 +1,9 @@
 # Base Borden (working title) Minigame Spec
 
-Status: **Spec (draft)** — steps 1 to 4 built (the online lab, the room, the sim, the cast's
-duck and sauce); no game on a phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
+Status: **Spec (draft)** — steps 1 to 5 built (the online lab, the room, the sim, the cast's
+duck and sauce, the runtime); no game on a phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
 
-Last updated: 2026-11-20 (steps 3 and 4, the sim and the cast, built)
+Last updated: 2026-11-20 (steps 3 to 5, the sim, the cast and the runtime, built)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made, dated; **(lab)** is a
@@ -281,6 +281,36 @@ Gate: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm test:e2e:portal` fo
 5. **The runtime package** `packages/minigames/borden` with the crew hooks, its rules, scoring
    and views, and the registry entries, scaffolded from Streets of Barrie. Not added to
    `content/sample/gameConfig.json`'s schedule.
+
+   **Built 2026-11-20**, played through only by the sim's bots. Where it is:
+   - `BORDEN` ("Base Borden", slug `borden`, rules key `borden`) in `MINIGAME_DEFINITIONS`, and a
+     crew game (`CREW_MINIGAME_TYPES`), so the party server's crew turn would take it as one. The
+     view is `BordenMinigameHostView` / `BordenMinigameDisplayView` in shared `roomState`.
+   - `packages/minigames/borden/src/runtime`, Streets of Barrie's reducer in the base's terms: the
+     room's clock is the only clock, a thumb is stamped at the tick it reads, a `pulse` steps the
+     lulls, and the frame the room holds is the one that scores. Phones send `stepOut`, `stick`
+     (`{ dir: 0..8 }`) and `jump` (`{}`); the host (online, the room) sends `startStretch`,
+     `skipStretch` and `resetTurn`.
+   - **The crew is locked when the first stretch starts.** Stepping out is open only while the
+     fences are on the line; the order is the seats, up to four, and the pairs are dealt from them
+     (`resolveBordenPairs`). A stretch's `pair` names the seats hen by hen, and a seat is a
+     player's colour for the whole game.
+   - **Later stretches start on the first thumb of their own pair**, 2.5 s after the last one
+     ended, carrying the hot bottles handed on through the gate (none after a wipe or a skip).
+   - **Nobody stepped out is the tablet's game:** one hen a stretch, the roster's players in turn,
+     steered by the host's thumbs. This is what the sandbox plays.
+   - **A player waiting for her stretch** gets an `out` pad; the view's `crew` and `pair` are how her
+     phone knows she is next.
+   - Registered on the server, the client and the dev sandbox (`/dev/minigame/borden`), with a
+     briefing line, a SETUP glyph (a sauce bottle spraying) and an illustration, and rule defaults
+     in `content/sample/gameConfig.json` with no round. The surfaces are placeholders until step 6.
+   - Through the reducer, with a pulse in every quiet tick as the room would send it, the runner
+     clears all three stretches for a room of two, three and four, banking 72 of 74 (15 points).
+
+   For step 6: the teaser room still sends Streets of Barrie's `startBlock` to start a game, so its
+   game table has to carry each game's start action. And from the bots: a pair that never moves
+   forward is never shot at, because no shooter is in the window yet, so it sits until the
+   three-minute cap ends the stretch as `timeout`.
 6. **The phone surface and the teaser page.** `/base-borden` on the teaser, its picker card, the
    lobby (make a room, share the link, pick your bird), play, the end card and the phone's best.
 7. **Docs, and Brad deploys.** Flip this file to Shipped with an as-built list, the README row,

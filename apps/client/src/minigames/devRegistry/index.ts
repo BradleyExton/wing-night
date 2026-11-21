@@ -3,6 +3,8 @@ import type {
   MinigameDevManifest,
   MinigameRuntimePlugin
 } from "@wingnight/minigames-core";
+import { bordenDevManifest } from "@wingnight/minigames-borden/dev";
+import { bordenRuntimePlugin } from "@wingnight/minigames-borden/runtime";
 import { brawlDevManifest } from "@wingnight/minigames-brawl/dev";
 import { brawlRuntimePlugin } from "@wingnight/minigames-brawl/runtime";
 import { drawingDevManifest } from "@wingnight/minigames-drawing/dev";
@@ -75,6 +77,10 @@ const MINIGAME_DEV_REGISTRY: Record<MinigameType, MinigameDevRegistration> = {
   BRAWL: {
     devManifest: brawlDevManifest,
     runtimePlugin: brawlRuntimePlugin
+  },
+  BORDEN: {
+    devManifest: bordenDevManifest,
+    runtimePlugin: bordenRuntimePlugin
   },
   MOUNT: {
     devManifest: mountDevManifest,

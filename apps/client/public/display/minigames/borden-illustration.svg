@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Base Borden mini-game artwork">
+  <defs>
+    <linearGradient id="borden-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1b2a3a" />
+      <stop offset="60%" stop-color="#5a4a3c" />
+      <stop offset="100%" stop-color="#c27a3a" />
+    </linearGradient>
+    <pattern id="borden-chain" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M0 0 L8 8 M8 0 L0 8" stroke="#8d9aa3" stroke-width="0.7" />
+    </pattern>
+  </defs>
+  <rect width="240" height="180" fill="url(#borden-sky)" />
+
+  <!-- The base's fence line: posts, chain-link, wire along the top -->
+  <rect x="0" y="92" width="240" height="56" fill="url(#borden-chain)" opacity="0.55" />
+  <g fill="#3a4148">
+    <rect x="14" y="86" width="4" height="62" />
+    <rect x="84" y="86" width="4" height="62" />
+    <rect x="154" y="86" width="4" height="62" />
+    <rect x="224" y="86" width="4" height="62" />
+  </g>
+  <path d="M0 90 Q10 84 20 90 T40 90 T60 90 T80 90 T100 90 T120 90 T140 90 T160 90 T180 90 T200 90 T220 90 T240 90" fill="none" stroke="#a7b2ba" stroke-width="1.2" />
+
+  <!-- Parade ground -->
+  <rect y="148" width="240" height="32" fill="#4a3a2a" />
+  <path d="M0 148 H240" stroke="#2a2018" stroke-width="2" />
+
+  <!-- The sentry turret on its post, flashing before it fires -->
+  <rect x="186" y="120" width="22" height="28" rx="2" fill="#56603a" stroke="#1e2414" stroke-width="2" />
+  <rect x="166" y="126" width="22" height="6" rx="2" fill="#3c4428" stroke="#1e2414" stroke-width="2" />
+  <circle cx="164" cy="129" r="6" fill="#ffd27a" opacity="0.75" />
+
+  <!-- A level shot, low: jump it -->
+  <circle cx="132" cy="140" r="4" fill="#ffd27a" stroke="#1e2414" stroke-width="1.5" />
+  <path d="M138 140 H152" stroke="#ffd27a" stroke-width="2" stroke-dasharray="3 3" />
+
+  <!-- The hen mid-jump, spraying from the beak -->
+  <g transform="translate(46 96)">
+    <path d="M6 22 C0 10 10 0 24 2 C38 4 42 18 34 28 C28 34 14 34 6 22 Z" fill="#f2e6d0" stroke="#1e1410" stroke-width="2.5" />
+    <circle cx="36" cy="6" r="9" fill="#f2e6d0" stroke="#1e1410" stroke-width="2.5" />
+    <path d="M30 -2 L33 -8 L36 -2 L39 -8 L41 -1" fill="#d23a2a" stroke="#1e1410" stroke-width="1.5" />
+    <path d="M44 4 L52 7 L44 10 Z" fill="#f0a020" stroke="#1e1410" stroke-width="1.5" />
+    <circle cx="38" cy="4" r="1.6" fill="#1e1410" />
+    <path d="M14 30 L10 40 M24 32 L24 42" stroke="#f0a020" stroke-width="3" stroke-linecap="round" />
+  </g>
+  <path d="M98 103 C112 102 124 104 136 108 C138 110 136 112 134 112 C122 110 110 108 98 107 Z" fill="#ff6a1a" stroke="#1e1410" stroke-width="1.5" />
+  <circle cx="142" cy="110" r="2.6" fill="#ff6a1a" stroke="#1e1410" stroke-width="1" />
+  <circle cx="150" cy="113" r="1.8" fill="#ff6a1a" stroke="#1e1410" stroke-width="1" />
+</svg>

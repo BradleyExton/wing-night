@@ -50,6 +50,12 @@ const minigameBriefingContentByType: Record<MinigameType, MinigameBriefingConten
     summary:
       "The whole team brawls down Dunlop Street at once. Left thumb walks, right thumb pecks. Stand over a fallen friend to get her up."
   },
+  BORDEN: {
+    illustrationPath: `${DISPLAY_ASSET_ROOT}/borden-illustration.svg`,
+    illustrationAlt: "Base Borden mini-game artwork",
+    summary:
+      "Two hens at a time run the base, spraying hot sauce the whole way. Aim with the stick, tap to jump. Jump the low shots, duck the high ones, and hand off at the gate."
+  },
   MOUNT: {
     illustrationPath: `${DISPLAY_ASSET_ROOT}/mount-illustration.svg`,
     illustrationAlt: "Mount Your Hens mini-game artwork",

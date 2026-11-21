@@ -70,6 +70,9 @@ const MINIGAME_RENDERER_REGISTRY: Record<MinigameType, MinigameRendererRegistrat
     // The TV is the speaker for the street's soundboard (spec §0.10).
     requiresDisplayAudio: true
   },
+  BORDEN: {
+    loadBundle: async () => (await import("@wingnight/minigames-borden/client")).bordenRendererBundle
+  },
   MOUNT: {
     loadBundle: async () => (await import("@wingnight/minigames-mount/client")).mountRendererBundle,
     // The TV is the speaker for the climb's soundboard (spec §0.7).

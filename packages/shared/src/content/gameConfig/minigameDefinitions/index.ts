@@ -81,6 +81,15 @@ export const MINIGAME_DEFINITIONS = {
     timerKey: null,
     rulesKey: "brawl"
   },
+  BORDEN: {
+    id: "BORDEN",
+    slug: "borden",
+    displayName: "Base Borden",
+    // Host-paced: the turn ends when the room has run its stretches, a pair at a time, not when a
+    // clock runs out. A stretch has its own tick cap, and it is the base's, not the room's.
+    timerKey: null,
+    rulesKey: "borden"
+  },
   MOUNT: {
     id: "MOUNT",
     slug: "mount",
