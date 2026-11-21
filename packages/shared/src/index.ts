@@ -33,6 +33,7 @@ export * from "./joust/index.js";
 export * from "./fappy/index.js";
 export * from "./schlonic/index.js";
 export * from "./brawl/index.js";
+export * from "./borden/index.js";
 export * from "./mount/index.js";
 export {
   isCastPlayerFigure,

@@ -1,9 +1,9 @@
 # Base Borden (working title) Minigame Spec
 
-Status: **Spec (draft)** — nothing built but the jump lab. Promoted from the idea file on
-2026-11-19, after Brad played the lab.
+Status: **Spec (draft)** — steps 1 to 3 built (the online lab, the room, the sim); no game on a
+phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
 
-Last updated: 2026-11-19 (Brad confirmed §4's picks; step 1 started)
+Last updated: 2026-11-20 (step 3, the sim, built)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made, dated; **(lab)** is a
@@ -220,6 +220,42 @@ Gate: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm test:e2e:portal` fo
    - **Names, not faces, in the lobby.** The birds are picked by name, grouped by team.
 3. **The sim.** `packages/shared/src/borden`, from the lab's `yardSim`, with its bots and the
    no-transcendentals test.
+
+   **Built 2026-11-20**, not yet played by anyone but its bots. Where it is:
+   - `world`: `BORDEN_WORLD` (the lab's hen and shot numbers), the three stretches' kit,
+     `resolveBordenStretch` (seeded layout, one stream a stretch), `resolveBordenPairs` (the
+     round-robin above) and `resolveBordenCourseTotal`.
+   - `simulate`: `stepBorden` / `advanceBorden` over a `BordenFrame`, the crew sim's shape (inputs
+     stamped by tick, a terminal `outcome`, events kept for two seconds), and
+     `resolveBordenHandoffBottles` for the next pair. A step never touches the frame it is handed,
+     and a frame sent as JSON steps on to the same result (pinned by test).
+   - `bots`: `bordenRunner` (jumps low, ducks high, stops to spray what is ahead, goes back for a
+     downed partner) and `bordenMasher` (holds right). Across four seeds the runner clears all three
+     stretches for a room of two, three and four, banking 72 or 73 of 74; the masher wipes most
+     stretches.
+
+   Calls the sim made that this file did not, all mine and all cheap to change:
+   - **Every shot is level, the tank's too.** It fires a slow, big, low shell (half the shot's
+     speed) rather than lobbing one, so the tank keeps the one-answer rule: jump it.
+   - **Height decides what the sauce meets.** Standing, the stream leaves her at 11 units: it hits a
+     high turret, a tank and the sergeant, and goes over a low turret and a goose. To spray those
+     she ducks (the stream runs along the floor) or aims down from a jump. That is what gives the
+     stick's aim a job beyond facing.
+   - **The goose is low**, so it can be jumped as well as sprayed, and it hurts each hen once as it
+     runs through her. A tank's body hurts her whenever she can be hurt.
+   - **One shooter at a time.** Turrets, a parked tank and the sergeant take turns, round-robin, and
+     only while they are in the window: one flashes for 600 ms, fires at the nearest hen, then the
+     stretch's rest (900, 700, 550 ms). The first shot of each stretch flies at 60% speed.
+   - **The sergeant holds the gate**: nobody gets past him while he stands, and he has 18 hp a hen.
+   - **One hot bottle per stretch**, a different one in each stretch of a game, lying in the first
+     screen or so. Spread: three streams about 19° apart. Long: faster and further. Puddle: a
+     falling stream that leaves a two-second splash, burning what stands in it four times a second.
+   - **A three-minute cap** ends a stretch as `timeout`. Nobody sees it; it is there so a stuck
+     room ends.
+
+   Open from the bots, for step 5 and the table: the runner dodges only one to five shots a hen a
+   stretch, and a stretch takes 15 to 28 seconds. That is light pressure; whether it is too light is
+   for people to say, and the knobs are `restTicks` per stretch and `BORDEN_WORLD`.
 4. **The cast.** A `duck` pose and a sauce stream from the beak, in `packages/cast`. A new motion
    is a new pose in the cast, never a private redraw. The jump uses `fly` unless it looks wrong.
 5. **The runtime package** `packages/minigames/borden` with the crew hooks, its rules, scoring
