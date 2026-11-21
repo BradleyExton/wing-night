@@ -95,8 +95,36 @@ export const CHARACTER_PIVOTS: Record<CharacterPart, CharacterPivot> = {
 // back with its legs splayed, and the knockout flat on its back with its feet
 // in the air. Static like `fly`: the sim says which one a frame is, and a
 // surface swaps the pose rather than waiting on a loop.
-export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance", "ride", "peck", "hurt", "ko"] as const;
+// `duck` is the run-and-gun's (Base Borden): down low under a high shot, the
+// legs folded under the ride's crouch and the head pulled down and pitched
+// forward, so the bird stands about a quarter shorter. Static too.
+export const CHARACTER_POSES = ["still", "idle", "walk", "fly", "dance", "ride", "peck", "hurt", "ko", "duck"] as const;
 export type CharacterPose = (typeof CHARACTER_POSES)[number];
+
+// The turn, in degrees clockwise on screen, that a static pose holds the head
+// at, and the one it leans the whole bird by about its foot. The pose classes
+// (`CharacterFigure/styles`) have to spell these as literals for Tailwind to
+// see them, and a test holds the two together; these are the numbers a
+// drawing that has to point the way the bird is looking reads (the sauce
+// stream, `CharacterFigure`'s `spray`). A looping pose's head is at rest here:
+// its beat is a few degrees either side of nought.
+export const CHARACTER_HEAD_TURNS: Partial<Record<CharacterPose, number>> = {
+  ride: -8,
+  peck: 38,
+  hurt: -34,
+  ko: 84,
+  duck: 30
+};
+
+export const CHARACTER_STANCE_TURNS: Partial<Record<CharacterPose, number>> = {
+  peck: 14,
+  hurt: -16,
+  ko: 180
+};
+
+// How far the `duck` pulls the head down into the shoulders, on top of the
+// crouch every part above the knees sinks by.
+export const CHARACTER_DUCK_HEAD_DROP = 12;
 
 // The bird's own proportions, for surfaces that have to stand it up somewhere
 // that is not a page: the sole of its feet, how tall it stands from there to
@@ -162,6 +190,13 @@ const RIDE_FOOT_REACH = 6;
 const RIDE_BACK_FOOT_X = 22;
 
 const RIDE_FRONT_FOOT_X = 54;
+
+// The `duck`'s feet: folded in under the crouched body rather than spread
+// along a board, each just outside its own hip so the knees bow apart.
+export const CHARACTER_DUCK_STANCE = {
+  nearFootX: 27,
+  farFootX: 48
+} as const;
 
 export const CHARACTER_RIDE_STANCE = {
   toeY: CHARACTER_FOOT.y,

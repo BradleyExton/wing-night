@@ -32,7 +32,10 @@ export {
 export {
   CHARACTER_BODY,
   CHARACTER_BOX,
+  CHARACTER_DUCK_HEAD_DROP,
+  CHARACTER_DUCK_STANCE,
   CHARACTER_FOOT,
+  CHARACTER_HEAD_TURNS,
   CHARACTER_PARTS,
   CHARACTER_PIVOTS,
   CHARACTER_POSES,
@@ -41,6 +44,7 @@ export {
   CHARACTER_LEG_STROKE_WIDTH,
   CHARACTER_RIDE_STANCE,
   CHARACTER_STAND_HEIGHT,
+  CHARACTER_STANCE_TURNS,
   COSTUME_HEAD_ANCHORS,
   COSTUME_HEAD_HEIGHT,
   DRAWN_HEAD,
@@ -51,6 +55,8 @@ export {
   type CharacterPose,
   type HeadAnchors
 } from "./Character/geometry/index.js";
+// Sauce leaving a bird's mouth (Base Borden), for the `spray` a figure takes.
+export { type CharacterSpray, type CharacterSprayTone } from "./Character/CharacterSauce/index.js";
 // The hen as a physics ragdoll (Mount Your Hens): the bones a sim builds its
 // bodies from, the four limbs a player grabs with, and the figure drawn from
 // the transforms the sim hands back. The cast is the source of truth for every

@@ -4,13 +4,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { Character, CharacterWing } from "./index.js";
 import {
+  CHARACTER_DUCK_HEAD_DROP,
+  CHARACTER_DUCK_STANCE,
   CHARACTER_FOOT,
+  CHARACTER_HEAD_TURNS,
   CHARACTER_LEG_STROKE_WIDTH,
   CHARACTER_PARTS,
   CHARACTER_PIVOTS,
   CHARACTER_POSES,
   CHARACTER_RIDE_STANCE,
-  CHARACTER_STANCE_PIVOT
+  CHARACTER_STANCE_PIVOT,
+  CHARACTER_STANCE_TURNS
 } from "./geometry/index.js";
 import { resolveCharacterRideStance, resolveCharacterShapes, resolveCharacterWingPath } from "./shapes/index.js";
 import {
@@ -628,4 +632,66 @@ test("does keep a spiky wing's feather points mitered on the wing's own layer, a
   assert.ok(rigWing?.includes("miter"));
   assert.match(layer, new RegExp(`<path class="${rigWing?.replace(/[[\]:]/g, "\\$&")}"`));
   assert.doesNotMatch(renderToStaticMarkup(<CharacterWing />), /miter/);
+});
+
+test("does hold the head and the lean at the turns the geometry names, for whatever points the way she looks", () => {
+  const degrees = (className: string | undefined): number => Number(className?.match(/rotate\((-?[\d.]+)deg\)/)?.[1] ?? 0);
+
+  for (const pose of CHARACTER_POSES) {
+    if (pose === "dance") {
+      continue;
+    }
+
+    assert.equal(degrees(figureStyles.poses[pose].head), CHARACTER_HEAD_TURNS[pose] ?? 0, `${pose}: the head's turn`);
+    assert.equal(degrees(figureStyles.stances[pose]), CHARACTER_STANCE_TURNS[pose] ?? 0, `${pose}: the lean`);
+  }
+});
+
+test("does fold both feet flat on the toe line, just outside the hips, when ducking", () => {
+  for (const rider of RIDERS) {
+    for (const appearance of [drawn, costume]) {
+      const html = renderToStaticMarkup(
+        <Character appearance={{ ...appearance, body: rider.body }} silhouette={rider.silhouette} pose="duck" />
+      );
+      const { near, far } = ridingLegs(html);
+      const soleXs = (leg: Point[]): number[] => leg.filter((point) => point.y === CHARACTER_RIDE_STANCE.toeY).map((point) => point.x);
+      const centre = (leg: Point[]): number => (Math.min(...soleXs(leg)) + Math.max(...soleXs(leg))) / 2;
+
+      for (const leg of [near, far]) {
+        assert.equal(Math.max(...leg.map((point) => point.y)), CHARACTER_RIDE_STANCE.toeY, `${rider.silhouette ?? rider.body}: nothing below the toe line`);
+      }
+
+      assert.equal(centre(near), CHARACTER_DUCK_STANCE.nearFootX);
+      assert.equal(centre(far), CHARACTER_DUCK_STANCE.farFootX);
+      assert.ok(CHARACTER_DUCK_STANCE.nearFootX < CHARACTER_PIVOTS.legNear.x, "the near knee bows back");
+      assert.ok(CHARACTER_DUCK_STANCE.farFootX > CHARACTER_PIVOTS.legFar.x, "the far knee bows forward");
+    }
+  }
+});
+
+test("does crouch as deep as the ride and pull the head down into the shoulders when ducking", () => {
+  for (const rider of RIDERS) {
+    const html = renderToStaticMarkup(
+      <Character appearance={{ ...drawn, body: rider.body }} silhouette={rider.silhouette} pose="duck" />
+    );
+    const { crouch } = resolveCharacterRideStance(rider);
+
+    for (const part of ["tail", "body", "wing", "head"]) {
+      assert.equal(partDrop(html, part), crouch, `${rider.silhouette ?? rider.body}: the ${part} sinks`);
+    }
+  }
+
+  assert.ok((figureStyles.poses.duck.head ?? "").includes(`translateY(${CHARACTER_DUCK_HEAD_DROP}px)`));
+  assert.ok((CHARACTER_HEAD_TURNS.duck ?? 0) > 0, "the head pitches forward");
+  assert.equal(figureStyles.stances.duck, undefined, "a lean would sink one toe through the ground");
+});
+
+test("does loop nothing and take the boots off when ducking, so a surface swaps it per frame", () => {
+  const booted = { ...drawn, outfit: { boots: { item: "combat-boots-a" } } };
+  const html = renderToStaticMarkup(<Character appearance={booted} pose="duck" />);
+
+  assert.match(renderToStaticMarkup(<Character appearance={booted} />), /data-outfit-slot="boots"/, "standing, she has them on");
+  assert.match(html, /data-character-pose="duck"/);
+  assert.doesNotMatch(html, /animation:|data-character-jig/);
+  assert.doesNotMatch(html, /data-outfit-slot="boots"/);
 });

@@ -89,6 +89,16 @@ export const poses: Record<Exclude<CharacterPose, "dance">, Partial<Record<Chara
     wing: "[transform:rotate(20deg)]",
     legNear: "[transform:rotate(-24deg)]",
     legFar: "[transform:rotate(22deg)]"
+  },
+  // Ducked under a shot: the head pulled down into the shoulders
+  // (`CHARACTER_DUCK_HEAD_DROP`) and pitched forward, the wing pressed in and
+  // the tail flattened. The folded legs are geometry, as the ride's are, and
+  // the bird does not lean: a lean about the foot would lift one heel and sink
+  // the other toe through the ground.
+  duck: {
+    head: "[transform:translateY(12px)_rotate(30deg)]",
+    wing: "[transform:rotate(-12deg)]",
+    tail: "[transform:rotate(-18deg)]"
   }
 };
 

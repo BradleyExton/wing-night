@@ -36,6 +36,8 @@ export type CharacterProps = {
   stage?: "drawn" | "none";
   // A Move to play once, in place of the pose (`CharacterFigure`'s `move`).
   move?: CharacterFigureProps["move"];
+  // Sauce leaving the mouth (`CharacterFigure`'s `spray`).
+  spray?: CharacterFigureProps["spray"];
 };
 
 export const Character = ({
@@ -49,7 +51,8 @@ export const Character = ({
   dance,
   showpieces,
   stage,
-  move
+  move,
+  spray
 }: CharacterProps): JSX.Element => {
   return (
     <svg
@@ -67,6 +70,7 @@ export const Character = ({
         showpieces={showpieces}
         stage={stage}
         move={move}
+        spray={spray}
       />
     </svg>
   );

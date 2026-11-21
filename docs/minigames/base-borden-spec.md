@@ -1,9 +1,9 @@
 # Base Borden (working title) Minigame Spec
 
-Status: **Spec (draft)** — steps 1 to 3 built (the online lab, the room, the sim); no game on a
-phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
+Status: **Spec (draft)** — steps 1 to 4 built (the online lab, the room, the sim, the cast's
+duck and sauce); no game on a phone yet. Promoted from the idea file on 2026-11-19, after Brad played the lab.
 
-Last updated: 2026-11-20 (step 3, the sim, built)
+Last updated: 2026-11-20 (steps 3 and 4, the sim and the cast, built)
 
 > **§0 is the build plan; §1–§3 are the reasoning it rests on; §4 is what is still open.**
 > Decisions are marked with whose they are: **(Brad)** is a call he made, dated; **(lab)** is a
@@ -258,6 +258,26 @@ Gate: `pnpm lint && pnpm typecheck && pnpm test`, plus `pnpm test:e2e:portal` fo
    for people to say, and the knobs are `restTicks` per stretch and `BORDEN_WORLD`.
 4. **The cast.** A `duck` pose and a sauce stream from the beak, in `packages/cast`. A new motion
    is a new pose in the cast, never a private redraw. The jump uses `fly` unless it looks wrong.
+
+   **Built 2026-11-20**, seen in a static preview of drawn and costumed birds, not yet in a game:
+   - **`duck`** is a new static pose. It takes the ride's crouch with the legs folded under the
+     body (feet flat on the toe line just outside the hips, `CHARACTER_DUCK_STANCE`, socks not
+     boots), pulls the head down into the shoulders (`CHARACTER_DUCK_HEAD_DROP`) and pitches it
+     30° forward, presses the wing in and flattens the tail. It does not lean the bird: a lean
+     about the foot lifted one heel and sank the other toe through the ground. A ducked bird
+     stands about a quarter shorter, not the sim's half; the scene draws the sim's box, so
+     nothing reads off the drawing's height.
+   - **`spray`** on `Character` / `CharacterFigure` (`{ angle, tone }`) draws the stream
+     (`CharacterSauce`): a jet pinching off into three drops, `primary` for mild and `heat` for a
+     hot bottle. `angle` is degrees clockwise from straight ahead (-90 up, 90 down), so a
+     left-facing bird the surface flips aims with it. It is drawn on the head, under the head's own
+     drawing, so it rides the walk's nod and starts behind the beak, and it takes off whatever turn
+     the pose holds the head and the bird at (`CHARACTER_HEAD_TURNS`, `CHARACTER_STANCE_TURNS`, held
+     to the pose classes by test), so it always points where it is aimed.
+   - **A costume head sprays from its rim, not its mouth.** From the mouth the stream crossed the
+     likeness, and aimed up it hid the face. It now leaves the edge of the head on the side it is
+     aimed, a little below the photo's middle, from behind the face.
+   - The jump stays `fly`, as planned.
 5. **The runtime package** `packages/minigames/borden` with the crew hooks, its rules, scoring
    and views, and the registry entries, scaffolded from Streets of Barrie. Not added to
    `content/sample/gameConfig.json`'s schedule.

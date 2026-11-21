@@ -4,6 +4,7 @@ import type { CharacterAppearance, CharacterDance } from "../../resolvePlayerApp
 import type { CharacterApparel } from "../../resolveTeamApparel/index.js";
 import type { CharacterSilhouette } from "../../resolveTeamSilhouette/index.js";
 import { CharacterHead } from "../CharacterHead/index.js";
+import { CharacterSauce, resolveCharacterSauceOrigin, type CharacterSpray } from "../CharacterSauce/index.js";
 import { resolveCharacterMoveClassName, type CharacterMovePlay } from "../moves/index.js";
 import * as moveStyles from "../moves/styles.js";
 import { useSyncedBodyLoops } from "./bodyLoops/index.js";
@@ -19,9 +20,12 @@ import {
   type CharacterRideStance
 } from "../shapes/index.js";
 import {
+  CHARACTER_DUCK_STANCE,
+  CHARACTER_HEAD_TURNS,
   CHARACTER_PIVOTS,
   CHARACTER_RIDE_STANCE,
   CHARACTER_STANCE_PIVOT,
+  CHARACTER_STANCE_TURNS,
   COSTUME_HEAD_ANCHORS,
   DRAWN_HEAD_ANCHORS,
   type CharacterPart,
@@ -71,6 +75,10 @@ export type CharacterFigureProps = {
   // when — the parade every few bars, the intro lineup once — and plays it
   // again by clearing it and setting it back (or by keying the figure).
   move?: CharacterMovePlay;
+  // Sauce leaving the bird's mouth (`CharacterSauce`): drawn on the head, so it
+  // rides every turn and bob the head makes, and aimed by `angle` whatever
+  // turn the pose has put on it. Nothing when unset.
+  spray?: CharacterSpray;
 };
 
 export type CharacterFigureLayer = "whole" | "underWing" | "overWing";
@@ -198,7 +206,8 @@ export const CharacterFigure = ({
   dance,
   showpieces = false,
   stage = "drawn",
-  move
+  move,
+  spray
 }: CharacterFigureProps): JSX.Element => {
   const haloId = useId();
   const shapes = resolveCharacterShapes({ ...appearance, silhouette });
@@ -227,21 +236,26 @@ export const CharacterFigure = ({
   const propRig: CharacterRig = { pose: { wing: moveStyles.moveProp }, jig: {} };
   const topDrawn = isOutfitSlotDrawn(outfit, "top");
   const { bodyRef, topRef } = useSyncedBodyLoops(topDrawn);
-  // Riding is the one pose that redraws anything: a crouch is a bent knee, and
-  // no turn of a straight shank bends one. Everything above the knees sinks by
-  // the shape's crouch; the legs are drawn from the sunk hips down to the
-  // stance's fixed feet, which is what lets a surface put a deck under them
-  // without knowing what the bird looks like. It is not grooved — there is no
-  // loop in it for a groove's phase to scatter, and a surface that rides the
+  // Riding and ducking are the poses that redraw anything: a crouch is a bent
+  // knee, and no turn of a straight shank bends one. Everything above the knees
+  // sinks by the shape's crouch; the legs are drawn from the sunk hips down to
+  // the stance's fixed feet — spread along the board for a ride, folded under
+  // the hips for a duck — which is what lets a surface put a deck under them
+  // without knowing what the bird looks like. Neither is grooved — there is no
+  // loop in it for a groove's phase to scatter, and a surface that moves the
   // bird along a zone moves the whole figure itself.
   const riding = pose === "ride";
-  const crouch = riding ? resolveCharacterRideStance({ body: appearance.body, silhouette }).crouch : 0;
+  const ducking = pose === "duck";
+  const crouch = riding || ducking ? resolveCharacterRideStance({ body: appearance.body, silhouette }).crouch : 0;
   const hipNear = { x: CHARACTER_PIVOTS.legNear.x, y: CHARACTER_PIVOTS.legNear.y + crouch };
   const hipFar = { x: CHARACTER_PIVOTS.legFar.x, y: CHARACTER_PIVOTS.legFar.y + crouch };
-  // Boots are drawn round a straight leg; the ride crouch redraws the legs
-  // bent, and a boot would hang off the shin. On the board the bird rides in
-  // its socks.
-  const booted = !riding;
+  // Boots are drawn round a straight leg; a crouch redraws the legs bent, and a
+  // boot would hang off the shin. Crouched, the bird is in its socks.
+  const booted = !riding && !ducking;
+  const bentLegFar = riding ? CHARACTER_RIDE_STANCE.frontFootX : CHARACTER_DUCK_STANCE.farFootX;
+  const bentLegNear = riding ? CHARACTER_RIDE_STANCE.backFootX : CHARACTER_DUCK_STANCE.nearFootX;
+  const sprayTurn = (spray?.angle ?? 0) - (CHARACTER_HEAD_TURNS[pose] ?? 0) - (CHARACTER_STANCE_TURNS[pose] ?? 0);
+  const sprayFrom = resolveCharacterSauceOrigin(appearance.avatarSrc !== undefined, sprayTurn);
   const under = layer !== "overWing";
   const over = layer !== "underWing";
   const winged = layer === "whole" && wing === "drawn";
@@ -271,7 +285,7 @@ export const CharacterFigure = ({
               <g className={styles.legFar}>
                 <path
                   className={styles.legs}
-                  d={riding ? rideLegPath(hipFar, CHARACTER_RIDE_STANCE.frontFootX) : legPath(CHARACTER_PIVOTS.legFar)}
+                  d={booted ? legPath(CHARACTER_PIVOTS.legFar) : rideLegPath(hipFar, bentLegFar)}
                 />
                 {booted && (
                   <OutfitLayer
@@ -291,7 +305,7 @@ export const CharacterFigure = ({
               <path className={ink} d={thighPath(hipNear)} />
               <path
                 className={styles.legs}
-                d={riding ? rideLegPath(hipNear, CHARACTER_RIDE_STANCE.backFootX) : legPath(CHARACTER_PIVOTS.legNear)}
+                d={booted ? legPath(CHARACTER_PIVOTS.legNear) : rideLegPath(hipNear, bentLegNear)}
               />
               {booted && (
                 <OutfitLayer
@@ -329,6 +343,8 @@ export const CharacterFigure = ({
         )}
         {over && (
           <Part part="head" rig={rig} drop={crouch}>
+            {/* Under the head, so the beak or the face covers where the stream starts. */}
+            {spray !== undefined && <CharacterSauce x={sprayFrom.x} y={sprayFrom.y} turn={sprayTurn} tone={spray.tone} />}
             <path className={ink} d={shapes.neck} />
             <CharacterHead appearance={appearance} apparel={apparel} combPath={shapes.comb} ink={ink} haloId={haloId} />
           </Part>
